@@ -317,35 +317,64 @@ export class DotGrid {
 
 let dotGridInstance = null;
 
-export function isDotGridDisabled() {
-  if (typeof document === 'undefined') return true;
+export function shouldEnableDotGrid() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return false;
 
+  // 1. Explicitly disabled via class or data attribute
   if (
     document.body?.classList.contains('no-dotgrid') ||
     document.body?.dataset.noDotgrid === 'true' ||
     document.documentElement?.classList.contains('no-dotgrid') ||
     document.documentElement?.dataset.noDotgrid === 'true'
   ) {
-    return true;
+    return false;
   }
 
+  // 2. Explicitly disabled file list (auth, dashboard, profile, new pages)
   const path = (window.location.pathname || '').toLowerCase();
-  if (
-    path.endsWith('forgot-password.html') ||
-    path.endsWith('signup.html') ||
-    path.includes('/forgot-password') ||
-    path.includes('/signup')
-  ) {
+  const filename = path.split('/').pop().split('?')[0];
+  const disabledPages = [
+    'forgot-password.html',
+    'signup.html',
+    'reset-password.html',
+    'complete-profile.html',
+    'teacher-dashboard.html',
+    'page.html',
+    'dashboard.html'
+  ];
+  if (disabledPages.some(f => filename.endsWith(f) || path.includes('/' + f.replace('.html', '')))) {
+    return false;
+  }
+
+  // 3. Strict Opt-In rule for future pages:
+  // DotGrid is strictly opt-in and will NEVER run on any new or future page by default.
+  // It only runs if the page explicitly opts in via:
+  // - data-dotgrid="true" or class "has-dotgrid" on body/html, OR
+  // - An explicit container/hero element (.dotgrid, .dotgrid-hero) AND the dotgrid.css stylesheet is loaded
+  const explicitlyOptedIn =
+    document.body?.dataset.dotgrid === 'true' ||
+    document.documentElement?.dataset.dotgrid === 'true' ||
+    document.body?.classList.contains('has-dotgrid') ||
+    document.documentElement?.classList.contains('has-dotgrid');
+
+  if (explicitlyOptedIn) {
     return true;
   }
 
-  return false;
+  const hasStylesheet = !!document.querySelector('link[href*="dotgrid.css"]');
+  const hasDotGridElement = !!document.querySelector('.dotgrid, .dotgrid-hero, .dot-grid');
+
+  return hasStylesheet && hasDotGridElement;
+}
+
+export function isDotGridDisabled() {
+  return !shouldEnableDotGrid();
 }
 
 export function initDotGrid(options = {}) {
   if (typeof window === 'undefined') return null;
 
-  if (isDotGridDisabled()) {
+  if (!shouldEnableDotGrid()) {
     if (dotGridInstance) {
       dotGridInstance.destroy();
     }

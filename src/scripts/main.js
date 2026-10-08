@@ -4,7 +4,7 @@
 import ThemeManager from './theme.js';
 import { authService } from '../services/auth.js';
 import { Toast } from '../utils/toast.js';
-import { initDotGrid } from './dotgrid.js';
+import { initDotGrid, shouldEnableDotGrid } from './dotgrid.js';
 
 // Attach Toast to window for easy access in inline HTML scripts
 window.Toast = Toast;
@@ -12,12 +12,7 @@ window.Toast = Toast;
 document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
 
-  const isDotGridDisabled = document.body.classList.contains('no-dotgrid') ||
-    document.body.dataset.noDotgrid === 'true' ||
-    window.location.pathname.toLowerCase().includes('forgot-password') ||
-    window.location.pathname.toLowerCase().includes('signup');
-
-  if (!isDotGridDisabled) {
+  if (shouldEnableDotGrid()) {
     initDotGrid();
   }
   

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>لوحة المعلم | سراج – مدرسة أبو عبيدة</title>
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/favicon.svg">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark') {document.documentElement.setAttribute('data-theme', 'dark');}
+      else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {document.documentElement.setAttribute('data-theme', 'dark');}
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar">
+      <div class="td-sidebar-header">
+        <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" alt="شعار سراج"></a>
+        <button id="td-sidebar-close" class="btn-icon td-sidebar-close-btn">&times;</button>
+      </div>
+      
+      <nav class="td-nav">
+        <a class="td-nav-item active" data-target="home">
+          <span>🏠</span> الصفحة الرئيسية
+        </a>
+        <a class="td-nav-item" data-target="content">
+          <span>📝</span> إدارة المحتوى
+        </a>
+        <a class="td-nav-item" data-target="profile">
+          <span>👤</span> الملف الشخصي
+        </a>
+        
+        <div class="td-nav-section">أقسام مستقبلية</div>
+        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
+          <span>📚</span> تحديات القراءة
+        </a>
+        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
+          <span>🏆</span> مسابقات السراج
+        </a>
+        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
+          <span>🔬</span> البحث العلمي
+        </a>
+        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
+          <span>👥</span> المشاركون
+        </a>
+      </nav>
+      
+      <div style="padding: 1.5rem; border-top: 1px solid var(--color-border);">
+        <button id="td-logout-btn" class="btn btn-outline" style="width: 100%;">تسجيل خروج</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">لوحة المعلم</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">حساب معلم</div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- Home Section -->
+        <section id="section-home" class="td-section active">
+          <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+            <h3>نظرة عامة</h3>
+          </div>
+          
+          <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card" style="padding: 1.5rem;">
+              <h4 style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">الصفحات المنشورة</h4>
+              <div id="stat-published" style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">--</div>
+            </div>
+            <div class="card" style="padding: 1.5rem;">
+              <h4 style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">المسودات</h4>
+              <div id="stat-drafts" style="font-size: 2rem; font-weight: 700; color: var(--color-secondary);">--</div>
+            </div>
+            <div class="card" style="padding: 1.5rem;">
+              <h4 style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">إجمالي الطلاب</h4>
+              <div style="font-size: 2rem; font-weight: 700;">--</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Content Management Section -->
+        <section id="section-content" class="td-section">
+          <div id="content-list-view">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+              <h3>الصفحات التعليمية</h3>
+              <div class="flex gap-2">
+                <input type="text" id="content-search" class="form-control" placeholder="بحث بالاسم..." style="width: 200px;">
+                <select id="content-filter" class="form-control" style="width: auto;">
+                  <option value="all">الكل</option>
+                  <option value="published">منشور</option>
+                  <option value="draft">مسودة</option>
+                </select>
+                <button id="btn-add-page" class="btn btn-primary">إضافة صفحة</button>
+              </div>
+            </div>
+            
+            <div class="td-table-wrapper">
+              <table class="td-table">
+                <thead>
+                  <tr>
+                    <th>العنوان</th>
+                    <th>الحالة</th>
+                    <th>آخر تعديل</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="content-table-body">
+                  <tr><td colspan="4" style="text-align: center;">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Content Editor (Hidden by default) -->
+          <div id="content-editor-view" style="display: none;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+              <h3 id="editor-title">إضافة صفحة جديدة</h3>
+              <button id="btn-back-list" class="btn btn-outline">عودة للقائمة</button>
+            </div>
+            
+            <div class="editor-layout">
+              <div class="editor-main card" style="padding: 1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">العنوان</label>
+                  <input type="text" id="page-title" class="form-control" placeholder="أدخل عنوان الصفحة">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">الرابط (Slug)</label>
+                  <input type="text" id="page-slug" class="form-control" placeholder="رابط-مخصص-للصفحة (إنجليزي أو أرقام وشرطات)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">وصف مختصر</label>
+                  <textarea id="page-summary" class="form-control" rows="3" placeholder="وصف قصير يظهر في البطاقات..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">المحتوى</label>
+                  <div class="wysiwyg-toolbar">
+                    <button class="wysiwyg-btn" data-command="bold" title="عريض"><b>B</b></button>
+                    <button class="wysiwyg-btn" data-command="italic" title="مائل"><i>I</i></button>
+                    <button class="wysiwyg-btn" data-command="underline" title="تسطير"><u>U</u></button>
+                    <button class="wysiwyg-btn" data-command="insertUnorderedList" title="قائمة نقطية">•</button>
+                    <button class="wysiwyg-btn" data-command="insertOrderedList" title="قائمة رقمية">1.</button>
+                    <button class="wysiwyg-btn" data-command="justifyRight" title="محاذاة لليمين">➔</button>
+                    <button class="wysiwyg-btn" data-command="justifyCenter" title="توسيط">↔</button>
+                    <button class="wysiwyg-btn" data-command="justifyLeft" title="محاذاة لليسار">←</button>
+                    <button class="wysiwyg-btn" id="btn-insert-link" title="إدراج رابط">🔗</button>
+                    <button class="wysiwyg-btn" id="btn-insert-image" title="إدراج صورة بالرابط">🖼️</button>
+                  </div>
+                  <div id="page-content" class="wysiwyg-content" contenteditable="true" dir="rtl"></div>
+                </div>
+              </div>
+              
+              <div class="editor-sidebar">
+                <div class="card" style="padding: 1.5rem; margin-bottom: 1rem;">
+                  <h4 style="margin-bottom: 1rem;">النشر</h4>
+                  <div class="form-group">
+                    <label class="form-label">الحالة</label>
+                    <select id="page-status" class="form-control">
+                      <option value="draft">مسودة</option>
+                      <option value="published">منشور</option>
+                    </select>
+                  </div>
+                  <div class="flex gap-2" style="margin-top: 1.5rem;">
+                    <button id="btn-save-page" class="btn btn-primary" style="flex: 1;">حفظ</button>
+                    <button id="btn-preview-page" class="btn btn-outline">معاينة</button>
+                  </div>
+                </div>
+                
+                <div class="card" style="padding: 1.5rem;">
+                  <h4 style="margin-bottom: 1rem;">صورة الغلاف</h4>
+                  <div class="image-upload-area" id="cover-upload-area">
+                    <span id="cover-upload-text">اضغط لرفع صورة</span>
+                    <img id="cover-preview" class="image-preview" src="" alt="غلاف">
+                    <input type="file" id="cover-input" accept="image/*" style="display: none;">
+                  </div>
+                  <button id="btn-remove-cover" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem; display: none;">إزالة الصورة</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Profile Section -->
+        <section id="section-profile" class="td-section">
+          <h3>الملف الشخصي</h3>
+          <div class="card" style="max-width: 600px; margin-top: 1.5rem; padding: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--color-primary-light); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                👨‍🏫
+              </div>
+              <div>
+                <h4 id="prof-name">--</h4>
+                <p style="color: var(--color-text-muted);">حساب معلم / إدارة</p>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">الاسم الكامل</label>
+              <input type="text" id="prof-name-input" class="form-control" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">البريد الإلكتروني</label>
+              <input type="text" id="prof-email-input" class="form-control" disabled>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: var(--color-text-muted);">
+              ملاحظة: لا يمكن تغيير الصلاحيات (الدور) من هنا. يجب أن يتم ذلك عبر مدير النظام.
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content card" style="max-width: 400px; text-align: center;">
+      <h3 id="confirm-title" style="margin-bottom: 1rem;">تأكيد الحذف</h3>
+      <p id="confirm-message" style="margin-bottom: 1.5rem; color: var(--color-text-muted);">هل أنت متأكد من هذا الإجراء؟ لا يمكن التراجع عنه.</p>
+      <div class="flex gap-2 justify-center">
+        <button id="btn-confirm-yes" class="btn btn-primary" style="background-color: #ef4444; border-color: #ef4444;">نعم، متأكد</button>
+        <button id="btn-confirm-no" class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-dashboard.js"></script>
+</body>
+</html>

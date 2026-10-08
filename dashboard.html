@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="./src/styles/global.css">
   <link rel="stylesheet" href="./src/styles/layout.css">
   <link rel="stylesheet" href="./src/styles/components.css">
-  <link rel="stylesheet" href="./src/styles/dotgrid.css">
   <script>
     (function () {
       const savedTheme = localStorage.getItem('siraj-theme');
@@ -18,7 +17,7 @@
     })();
   </script>
 </head>
-<body style="background-color: var(--color-bg);">
+<body class="no-dotgrid" data-no-dotgrid="true" style="background-color: var(--color-bg);">
 
   <header class="header">
     <div class="container flex items-center justify-between" style="height: 100%;">
@@ -152,8 +151,8 @@
           document.getElementById('profile-grade').innerText = profile.role === 'teacher' ? 'إدارة المنصة' : `الصف ${profile.grade} - شعبة ${profile.section}`;
           
           if (profile.role === 'teacher') {
-              document.getElementById('role-badge').innerText = 'لوحة المعلم';
-              document.getElementById('role-badge').style.backgroundColor = '#4A90E2';
+              window.location.replace('teacher-dashboard.html');
+              return;
           } else {
               document.getElementById('role-badge').innerText = 'طالب';
           }
