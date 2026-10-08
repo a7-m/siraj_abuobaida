@@ -11,7 +11,15 @@ window.Toast = Toast;
 
 document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
-  initDotGrid();
+
+  const isDotGridDisabled = document.body.classList.contains('no-dotgrid') ||
+    document.body.dataset.noDotgrid === 'true' ||
+    window.location.pathname.toLowerCase().includes('forgot-password') ||
+    window.location.pathname.toLowerCase().includes('signup');
+
+  if (!isDotGridDisabled) {
+    initDotGrid();
+  }
   
   const hamburgerBtn = document.getElementById('hamburger-btn');
   const mobileMenu = document.getElementById('mobile-menu');

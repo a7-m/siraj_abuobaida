@@ -307,12 +307,54 @@ export class DotGrid {
     window.removeEventListener('click', this.onClick);
     if (this.ro) this.ro.disconnect();
     else window.removeEventListener('resize', this.buildGrid);
+    if (this.container && this.container.id === 'dotgrid-canvas-wrap') {
+      this.container.remove();
+    }
+    document.body.classList.remove('has-interactive-dotgrid');
+    dotGridInstance = null;
   }
 }
 
 let dotGridInstance = null;
+
+export function isDotGridDisabled() {
+  if (typeof document === 'undefined') return true;
+
+  if (
+    document.body?.classList.contains('no-dotgrid') ||
+    document.body?.dataset.noDotgrid === 'true' ||
+    document.documentElement?.classList.contains('no-dotgrid') ||
+    document.documentElement?.dataset.noDotgrid === 'true'
+  ) {
+    return true;
+  }
+
+  const path = (window.location.pathname || '').toLowerCase();
+  if (
+    path.endsWith('forgot-password.html') ||
+    path.endsWith('signup.html') ||
+    path.includes('/forgot-password') ||
+    path.includes('/signup')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export function initDotGrid(options = {}) {
   if (typeof window === 'undefined') return null;
+
+  if (isDotGridDisabled()) {
+    if (dotGridInstance) {
+      dotGridInstance.destroy();
+    }
+    const wrap = document.getElementById('dotgrid-canvas-wrap');
+    if (wrap) wrap.remove();
+    document.body?.classList.remove('has-interactive-dotgrid');
+    return null;
+  }
+
   if (!dotGridInstance) {
     dotGridInstance = new DotGrid(options);
   }
