@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="100%" height="100%" fill="none">
+  <!-- ═══════════════════════════════════════════════
+       MONOCHROME LOGO (SINGLE COLOR: #127547 / CURRENTCOLOR)
+       ═══════════════════════════════════════════════ -->
+  <g id="symbol-mark" transform="translate(4, 0)">
+    <!-- Aura Rays -->
+    <path d="M 11 23 A 18 18 0 0 0 11 37" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4" />
+    <path d="M 49 23 A 18 18 0 0 1 49 37" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4" />
+
+    <!-- Open Book Base -->
+    <path d="M 30 46 C 21 46 13 49.5 7 53 C 7 45.5 13 38.5 23 36.5 C 26 36 28.5 37 30 38.5 Z" 
+          fill="currentColor" />
+    <path d="M 30 46 C 39 46 47 49.5 53 53 C 53 45.5 47 38.5 37 36.5 C 34 36 31.5 37 30 38.5 Z" 
+          fill="currentColor" />
+
+    <!-- The Siraj Flame -->
+    <path d="M 30 14 C 34.5 20 39.5 25 39.5 31 C 39.5 36.5 35.2 41 30 41 C 24.8 41 20.5 36.5 20.5 31 C 20.5 25 25.5 20 30 14 Z" 
+          fill="currentColor" />
+
+    <!-- Negative Space Cutout for Core Flame -->
+    <path d="M 30 22 C 32 25.5 33.5 28 33.5 31 C 33.5 33 32 34.5 30 34.5 C 28 34.5 26.5 33 26.5 31 C 26.5 28 28 25.5 30 22 Z" 
+          fill="#ffffff" />
+
+    <!-- Beacon Star -->
+    <path d="M 30 3 L 31.8 7.2 L 36 8 L 31.8 8.8 L 30 13 L 28.2 8.8 L 24 8 L 28.2 7.2 Z" 
+          fill="currentColor" />
+  </g>
+
+  <!-- Typography -->
+  <text x="68" y="35" 
+        font-family="'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+        font-weight="800" 
+        font-size="28" 
+        fill="currentColor" 
+        letter-spacing="-0.3">
+    السراج
+  </text>
+  <text x="69" y="50" 
+        font-family="'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+        font-weight="600" 
+        font-size="10.5" 
+        fill="currentColor" 
+        opacity="0.8" 
+        letter-spacing="0.2">
+    مدرسة أبو عبيدة
+  </text>
+</svg>

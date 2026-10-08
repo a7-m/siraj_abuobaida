@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>نبذة | سراج –- مدرسة أبو عبيدة</title>
+
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/favicon.svg">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/dotgrid.css">
+
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="index.html" class="logo">
+        <img src="./src/assets/images/logo.svg" alt="شعار سراج">
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link active">نبذة</a>
+        <a href="develop.html" class="nav-link">طوّر نفسك</a>
+        <a href="competition.html" class="nav-link">مسابقة السراج</a>
+        <a href="research.html" class="nav-link">البحث العلمي</a>
+        <a href="identity.html" class="nav-link">الهوية الوطنية</a>
+        <a href="dashboard.html" class="nav-link auth-required hidden">لوحة التحكم</a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="btn-icon theme-toggle-btn" aria-label="تبديل الثيم"></button>
+        <a href="login.html" class="btn btn-primary d-none-mobile guest-only">تسجيل الدخول</a>
+        <button id="hamburger-btn" class="hamburger">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="mobile-menu" class="mobile-menu-overlay">
+    <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" alt="شعار سراج"
+          style="height:35px;"></a>
+      <button onclick="document.getElementById('mobile-menu').classList.remove('active')" class="btn-icon"
+        style="font-size: 2rem; margin-top: -10px;">&times;</button>
+    </div>
+    <a href="index.html" class="mobile-nav-link active">نبذة</a>
+    <a href="develop.html" class="mobile-nav-link">طوّر نفسك</a>
+    <a href="competition.html" class="mobile-nav-link">مسابقة السراج</a>
+    <a href="research.html" class="mobile-nav-link">البحث العلمي</a>
+    <a href="identity.html" class="mobile-nav-link">الهوية الوطنية</a>
+    <a href="dashboard.html" class="mobile-nav-link auth-required hidden">لوحة التحكم</a>
+    <a href="login.html" class="btn btn-primary guest-only" style="margin-top: 1rem; text-align: center;">تسجيل
+      الدخول</a>
+  </div>
+
+  <!-- Main Content: About Page -->
+  <main class="main-content container">
+
+    <!-- Hero Section -->
+    <section class="empty-state dotgrid-hero" style="padding: 6rem 2rem; border-color: transparent;">
+      <img src="./src/assets/images/logo.svg" alt="سراج" style="height: 100px; margin-bottom: 1rem;">
+      <h1 style="font-size: 2.5rem; color: var(--color-accent); margin-bottom: 0.5rem;">سراج – مدرسة أبو عبيدة</h1>
+      <p style="font-size: 1.25rem; color: var(--color-text-muted); max-width: 600px;">
+        منصة تعليمية تفاعلية مستقبلية مرتبطة بالموسوعة العمانية، تهدف إلى إثراء معرفة الطالب من خلال التحديات، البحث
+        العلمي، والمحتوى القيم.
+      </p>
+
+      <div class="flex gap-2" style="margin-top: 2rem;">
+        <a href="develop.html" class="btn btn-primary">ابدأ التحدي الآن</a>
+        <a href="competition.html" class="btn btn-outline">تصفح المسابقات</a>
+      </div>
+    </section>
+
+    <!-- Placeholder Sections -->
+    <section style="margin-top: 4rem;">
+      <h3 style="color: var(--color-accent); margin-bottom: 1.5rem; text-align: center;">أهداف المنصة</h3>
+      <div class="grid grid-3">
+        <div class="card" style="text-align: center;">
+          <h4 style="margin-bottom: 0.5rem;">الإثراء المعرفي</h4>
+          <p style="color: var(--color-text-muted); font-size: 0.95rem;">ربط الطالب بالمعلومات القيمة والمحتوى الخاص
+            بالموسوعة العمانية.</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h4 style="margin-bottom: 0.5rem;">التفكير العلمي</h4>
+          <p style="color: var(--color-text-muted); font-size: 0.95rem;">تطوير مهارات البحث والتقصي من خلال مسابقات
+            البحث العلمي المنهجية.</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h4 style="margin-bottom: 0.5rem;">تعزيز الهوية</h4>
+          <p style="color: var(--color-text-muted); font-size: 0.95rem;">ربط الأجيال الشابة بالهوية الوطنية والتاريخ
+            العماني العريق.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/scripts/main.js"></script>
+</body>
+
+</html>

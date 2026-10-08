@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>لوحة التحكم | سراج – مدرسة أبو عبيدة</title>
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/favicon.svg">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/dotgrid.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark') {document.documentElement.setAttribute('data-theme', 'dark');}
+      else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {document.documentElement.setAttribute('data-theme', 'dark');}
+    })();
+  </script>
+</head>
+<body style="background-color: var(--color-bg);">
+
+  <header class="header">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" alt="شعار سراج"></a>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">نبذة</a>
+        <a href="develop.html" class="nav-link">طوّر نفسك</a>
+        <a href="competition.html" class="nav-link">مسابقة السراج</a>
+        <a href="research.html" class="nav-link">البحث العلمي</a>
+        <a href="identity.html" class="nav-link">الهوية الوطنية</a>
+        <a href="dashboard.html" class="nav-link active">لوحة التحكم</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
+        <button onclick="window.mockLogout()" class="btn btn-outline" style="padding: 0.3rem 1rem; font-size: 0.9rem;">تسجيل خروج</button>
+        <button id="hamburger-btn" class="hamburger">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="mobile-menu" class="mobile-menu-overlay">
+    <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" style="height:35px;"></a>
+      <button onclick="document.getElementById('mobile-menu').classList.remove('active')" class="btn-icon" style="font-size: 2rem; margin-top: -10px;">&times;</button>
+    </div>
+    <a href="index.html" class="mobile-nav-link">نبذة</a>
+    <a href="develop.html" class="mobile-nav-link">طوّر نفسك</a>
+    <a href="competition.html" class="mobile-nav-link">مسابقة السراج</a>
+    <a href="research.html" class="mobile-nav-link">البحث العلمي</a>
+    <a href="identity.html" class="mobile-nav-link">الهوية الوطنية</a>
+    <a href="dashboard.html" class="mobile-nav-link active">لوحة التحكم</a>
+    <button onclick="window.mockLogout()" class="btn btn-outline" style="margin-top: 1rem; text-align: center;">تسجيل خروج</button>
+  </div>
+
+  <main id="auth-content" class="main-content container" style="opacity: 0; transition: opacity 0.3s ease;">
+    <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+      <h2 id="user-welcome">مرحباً... جاري التحميل 👋</h2>
+      <span id="role-badge" style="background: var(--color-gold); color: white; padding: 0.25rem 1rem; border-radius: 20px; font-weight: 600;">--</span>
+    </div>
+
+    <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 3rem;">
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-accent);">🏆</div>
+            <h4>الإنجازات</h4>
+            <p style="color: var(--color-text-muted); font-size: 0.9rem;">3 شارات مكتسبة</p>
+        </div>
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-accent);">📚</div>
+            <h4>التحديات</h4>
+            <p style="color: var(--color-text-muted); font-size: 0.9rem;">1 تحدي مستمر</p>
+        </div>
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-accent);">📝</div>
+            <h4>المسابقات</h4>
+            <p style="color: var(--color-text-muted); font-size: 0.9rem;">0 مسابقة حالية</p>
+        </div>
+    </div>
+
+    <div class="grid grid-2">
+      <!-- Activity Feed -->
+      <section class="card">
+        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">آخر الإشعارات والأنشطة</h3>
+        <ul style="display: flex; flex-direction: column; gap: 1rem;">
+            <li style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="background: var(--color-bg); padding: 0.5rem; border-radius: 50%;">🔔</div>
+                <div>
+                    <h5 style="margin-bottom: 0.25rem;">تم إطلاق تحدي القراءة الجديد</h5>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted);">منذ 3 أيام. انضم الآن لجمع النقاط.</p>
+                </div>
+            </li>
+            <li style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="background: var(--color-bg); padding: 0.5rem; border-radius: 50%;">⭐</div>
+                <div>
+                    <h5 style="margin-bottom: 0.25rem;">حصلت على شارة "الباحث الصغير"</h5>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted);">لإتمامك مسابقة البحث بنجاح.</p>
+                </div>
+            </li>
+        </ul>
+      </section>
+
+      <!-- Profile Quick View -->
+      <section class="card">
+        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">الملف الشخصي المستقبلي</h3>
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--color-bg); border: 2px solid var(--color-border); display:flex; justify-content:center; align-items:center; font-size:1.5rem;">👤</div>
+            <div>
+                <h4 id="profile-name">جاري التحميل...</h4>
+                <p id="profile-grade" style="font-size: 0.85rem; color: var(--color-text-muted);">---</p>
+            </div>
+        </div>
+        <button class="btn btn-outline" style="width: 100%;">تعديل الملف الشخصي</button>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="footer"><div class="container"><p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p></div></footer>
+  
+  <script type="module">
+    import { authService } from './src/services/auth.js';
+    import { supabase } from './src/services/supabase.js';
+    import './src/scripts/main.js';
+
+    // Route Protection
+    authService.getSessionAsync().then(async ({ session }) => {
+      if (!session) {
+        // If not logged in, redirect immediately without showing dashboard content
+        window.location.replace('login.html');
+      } else {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('full_name, grade, section, role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error) throw error;
+
+          if (profile) {
+              // Redirect to onboarding if they haven't set their academic details.
+              // Useful for Google SSO or users upgrading from V1
+              if (!profile.grade || !profile.section) {
+                  window.location.replace('complete-profile.html');
+                  return;
+              }
+
+              document.getElementById('user-welcome').innerText = `مرحباً، ${profile.full_name.split(' ')[0]} 👋`;
+              document.getElementById('profile-name').innerText = profile.full_name;
+              document.getElementById('profile-grade').innerText = profile.role === 'teacher' ? 'إدارة المنصة' : `الصف ${profile.grade} - شعبة ${profile.section}`;
+              
+              if (profile.role === 'teacher') {
+                  document.getElementById('role-badge').innerText = 'لوحة المعلم';
+                  document.getElementById('role-badge').style.backgroundColor = '#4A90E2';
+              } else {
+                  document.getElementById('role-badge').innerText = 'طالب';
+              }
+          }
+        } catch(err) {
+          console.error("Error fetching profile metrics:", err);
+          window.Toast.error("لم نتمكن من جلب بيانات الملف الشخصي.");
+        }
+        
+        // Reveal content
+        document.getElementById('auth-content').style.opacity = '1';
+      }
+    });
+
+    // Attach global mock logout
+    window.mockLogout = async () => {
+      try {
+        await authService.logout();
+        window.location.href = 'index.html';
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+/**
+ * DotGrid — Interactive Canvas & Pattern Styles
+ * Siraj Educational Platform — Olive Modern Theme
+ * ─────────────────────────────────────────────────────────────
+ * CSS companion for the interactive DotGrid Vanilla JS component.
+ */
+
+/* ── Interactive Canvas DotGrid (React Bits converted) ── */
+.dot-grid-wrap {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dot-grid-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
+}
+
+/* Standalone container component variant */
+.dot-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.dot-grid__wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.dot-grid__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
+}
+
+/* Ensure all interactive page content sits cleanly above the canvas background */
+.header,
+.main-content,
+.footer,
+.modal,
+.toast-container,
+.card,
+.empty-state,
+.floating-card,
+.mobile-menu-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+/* Guarantee 100% solid opaque background on all content boxes — no dots can bleed through */
+.card,
+.empty-state,
+.floating-card,
+.footer,
+.toast {
+  background-color: var(--color-bg-secondary) !important;
+  opacity: 1 !important;
+}
+
+.header,
+.mobile-menu-overlay {
+  background-color: var(--color-bg) !important;
+  opacity: 1 !important;
+}
+
+/* Disable static CSS ::before pattern when interactive canvas is running */
+body.has-interactive-dotgrid .dotgrid::before,
+body.has-interactive-dotgrid .dotgrid-hero::before {
+  display: none !important;
+}
+
+/* Reduced motion preference fallback */
+@media (prefers-reduced-motion: reduce) {
+  .dot-grid-wrap,
+  .dot-grid-canvas {
+    display: none !important;
+  }
+}

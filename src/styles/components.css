@@ -1,0 +1,510 @@
+/**
+ * Components (Buttons, Cards, Header, Footer, Forms, etc.)
+ * Siraj Educational Platform — Olive Modern Theme
+ */
+
+/* ═══════════════════════════════════════════════
+   HEADER / NAVBAR
+   ═══════════════════════════════════════════════ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background-color var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+  background-color: var(--color-bg);
+  box-shadow: var(--shadow-xs);
+}
+
+[data-theme="dark"] .header {
+  background-color: var(--color-bg);
+}
+
+.header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--header-height);
+}
+
+/* ── Logo ── */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  transition: opacity var(--transition-speed) ease;
+}
+
+.logo:hover {
+  opacity: 0.85;
+}
+
+.logo img {
+  height: 42px;
+  transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .logo img,
+[data-theme="dark"] img[src*="logo.svg"] {
+  filter: invert(0.88) hue-rotate(180deg) brightness(1.1);
+}
+
+.logo:hover img {
+  transform: scale(1.05);
+}
+
+/* ── Navigation Links ── */
+.nav-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: 0.55rem 1rem;
+  border-radius: var(--border-radius-btn);
+  transition: color var(--transition-speed) ease,
+              background-color var(--transition-speed) ease,
+              transform var(--transition-fast) ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+  background-color: var(--nav-hover-bg);
+}
+
+.nav-link.active {
+  color: var(--color-primary);
+  background-color: var(--nav-active-bg);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.65rem;
+  border-radius: var(--border-radius-btn);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1.5px solid transparent;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Primary Button (Rich Olive/Emerald) */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 14px rgba(18, 117, 71, 0.22);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 6px 22px rgba(18, 117, 71, 0.32);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  background-color: var(--color-primary-dark);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 6px rgba(18, 117, 71, 0.2);
+}
+
+[data-theme="dark"] .btn-primary {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  color: #111713;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+}
+
+/* Secondary / Outline Button (Neutral & Sophisticated) */
+.btn-outline {
+  background-color: var(--color-bg-secondary);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text);
+  box-shadow: var(--shadow-xs);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Icon Button */
+.btn-icon {
+  background: transparent;
+  color: var(--color-text);
+  border: none;
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  border-radius: var(--border-radius-btn);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-speed) ease,
+              color var(--transition-speed) ease,
+              transform var(--transition-speed) ease;
+}
+
+.btn-icon:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--color-primary);
+}
+
+.btn-icon:active {
+  transform: scale(0.92);
+}
+
+/* ── Theme Toggle Button ── */
+.theme-toggle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--border-radius-btn);
+  position: relative;
+  border: 1px solid var(--color-border-light);
+  background-color: var(--color-bg-secondary);
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--color-border);
+}
+
+.theme-toggle-btn .theme-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity var(--transition-speed) ease;
+}
+
+.theme-toggle-btn:hover .theme-icon {
+  transform: rotate(20deg) scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════
+   CARDS
+   ═══════════════════════════════════════════════ */
+.card {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1),
+              border-color var(--transition-speed) ease,
+              background-color var(--transition-speed) ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-border);
+}
+
+/* Floating Card Element Style */
+.floating-card {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: 1.15rem 1.65rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border-light);
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATES
+   ═══════════════════════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: var(--color-gold);
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════ */
+.footer {
+  background-color: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border-light);
+  padding: var(--space-xl) 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  margin-top: auto;
+  font-size: var(--font-size-sm);
+  transition: background-color var(--transition-speed) ease,
+              border-color var(--transition-speed) ease;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE HEADER & NAVIGATION
+   ═══════════════════════════════════════════════ */
+.hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 60;
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-speed) ease;
+}
+
+.hamburger:hover {
+  background-color: var(--nav-hover-bg);
+}
+
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-bg);
+  z-index: 55;
+  padding: 6rem 2rem 2rem;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: background-color var(--transition-speed) ease;
+}
+
+.mobile-menu-overlay.active {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .nav-links {
+    display: none; 
+  }
+  
+  .hamburger {
+    display: block;
+  }
+  
+  .d-none-mobile {
+    display: none;
+  }
+}
+
+.mobile-nav-link {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border-light);
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  transition: color var(--transition-speed) ease,
+              background-color var(--transition-speed) ease,
+              padding-right var(--transition-speed) ease;
+}
+
+.mobile-nav-link:hover {
+  color: var(--color-primary);
+  background-color: var(--nav-hover-bg);
+  padding-right: 1rem;
+}
+
+.mobile-nav-link.active {
+  color: var(--color-primary);
+  background-color: var(--nav-active-bg);
+  font-weight: 700;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════
+   FORM CONTROLS
+   ═══════════════════════════════════════════════ */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  transition: border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease,
+              background-color var(--transition-speed) ease;
+  font-family: var(--font-primary);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-focus-ring) !important;
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════ */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 300px;
+  max-width: 400px;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--color-border);
+  border-right: 4px solid var(--color-gold);
+  transform: translateX(-120%);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.34, 1, 0.64, 1),
+              opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast.error {
+  border-right-color: #d94040; /* Muted red for errors */
+}
+
+.toast.success {
+  border-right-color: var(--color-primary); /* Olive green for success */
+}
+
+.toast-message {
+  flex-grow: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════════ */
+/* Generic progress bar styles for use across the site */
+
+/* ═══════════════════════════════════════════════
+   BADGES / TAGS
+   ═══════════════════════════════════════════════ */
+/* Badge-like spans used in dashboard and elsewhere inherit from the design system */
+
+/* ═══════════════════════════════════════════════
+   PAGE-SPECIFIC: HERO SECTION
+   ═══════════════════════════════════════════════ */
+/* The hero on index.html uses .empty-state with overridden styles.
+   The olive gradient subtly appears behind it via CSS. */
+
+/* ═══════════════════════════════════════════════
+   MOBILE SPECIFIC
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .card {
+    padding: var(--space-md);
+  }
+
+  .card:hover {
+    transform: none; /* Disable hover lift on mobile */
+  }
+
+  .btn-primary:hover,
+  .btn-outline:hover {
+    transform: none;
+  }
+
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  .toast {
+    min-width: auto;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header .container {
+    height: 60px;
+  }
+
+  .logo img {
+    height: 32px;
+  }
+}

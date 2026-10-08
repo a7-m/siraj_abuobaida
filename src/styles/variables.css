@@ -1,0 +1,124 @@
+/**
+ * Variables - Siraj Educational Platform (Olive Modern Theme)
+ * Design System: Olive / Sage / Deep Green
+ * ─────────────────────────────────────────────────────────────
+ * All colors are centralized here. Dark mode overrides via [data-theme="dark"].
+ */
+
+:root {
+  /* ── Typography ── */
+  --font-primary: "Cairo", "Tajawal", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-size-base: 16px;
+  --font-size-sm: 0.875rem;
+  --font-size-xs: 0.8rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.75rem;
+  --letter-spacing: -0.01em;
+
+  /* ── Modern Olive & Emerald Palette ── */
+  --color-primary: #127547;          /* Refined modern olive/emerald green */
+  --color-primary-light: #1b8e57;    /* Vibrant olive green */
+  --color-primary-dark: #0d5c37;     /* Deep forest olive */
+  --color-secondary: #4a755b;        /* Muted sage olive */
+  --color-secondary-light: #709a80;  /* Soft sage */
+  --color-accent: #127547;           /* Olive accent */
+  --color-accent-hover: #0d5c37;     /* Darker olive for hover */
+  --color-gold: #c29938;             /* Warm gold-olive for highlights */
+  --color-gold-light: #deb559;       /* Lighter gold */
+
+  /* ── Transitions & Radii ── */
+  --transition-speed: 0.3s;
+  --transition-fast: 0.15s;
+  --transition-slow: 0.5s;
+  --border-radius: 12px;             /* Standard component radius */
+  --border-radius-btn: 9999px;       /* Modern pill button radius */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;          /* Spacious rounded card radius */
+  --border-radius-xl: 28px;
+  --border-radius-full: 9999px;
+
+  /* ── Spacing ── */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4.5rem;
+
+  /* ── Navbar ── */
+  --header-height: 72px;
+}
+
+/* ═══════════════════════════════════════════════
+   Light Theme (Pure Clean White)
+   ═══════════════════════════════════════════════ */
+:root {
+  --color-bg: #ffffff;              /* Pure crisp white background */
+  --color-bg-secondary: #ffffff;     /* Pure white card surfaces */
+  --color-bg-alt: #f7faf8;          /* Very subtle section contrast */
+  --color-surface: #ffffff;
+  --color-surface-hover: #f2f7f4;
+  --color-text: #0e1711;            /* Crisp high-contrast dark charcoal text */
+  --color-text-muted: #506155;      /* Clean readable muted text */
+  --color-text-light: #7b8e81;      /* Secondary muted text */
+  --color-border: #e2ede5;          /* Crisp light border */
+  --color-border-light: #edf4ef;    /* Soft hairline border */
+  --color-focus-ring: rgba(18, 117, 71, 0.25);
+  --color-overlay: rgba(10, 18, 12, 0.45);
+
+  /* Shadows — soft, elegant, floating */
+  --shadow-xs: 0 1px 3px rgba(18, 60, 36, 0.04);
+  --shadow-sm: 0 4px 16px rgba(18, 60, 36, 0.06);
+  --shadow-md: 0 8px 24px rgba(18, 60, 36, 0.08);
+  --shadow-lg: 0 16px 40px rgba(18, 60, 36, 0.09);
+  --shadow-xl: 0 24px 60px rgba(18, 60, 36, 0.11);
+  --shadow-card-hover: 0 14px 34px rgba(18, 60, 36, 0.1);
+
+  /* Nav link indicators */
+  --nav-active-bg: rgba(18, 117, 71, 0.08);
+  --nav-hover-bg: rgba(18, 117, 71, 0.05);
+}
+
+/* ═══════════════════════════════════════════════
+   Dark Theme (Sleek Deep Black)
+   ═══════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --color-bg: #090b0a;              /* Sleek true deep black background */
+  --color-bg-secondary: #121614;    /* Elevated dark card & section surface */
+  --color-bg-alt: #0d100e;          /* Subtle alternate dark background */
+  --color-surface: #171c19;         /* Elevated surface */
+  --color-surface-hover: #1f2622;   /* Surface hover state */
+  --color-text: #ffffff;            /* Pure crisp white text */
+  --color-text-muted: #9eb1a5;      /* Clean readable muted text */
+  --color-text-light: #73857a;      /* Secondary muted text */
+  --color-border: #222a25;          /* Crisp dark border */
+  --color-border-light: #19201b;    /* Hairline dark border */
+  --color-focus-ring: rgba(34, 197, 94, 0.35);
+  --color-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Primary adjustments for dark — vibrant luminous emerald */
+  --color-primary: #10b981;         /* Crisp glowing emerald green */
+  --color-primary-light: #34d399;
+  --color-primary-dark: #059669;
+  --color-secondary: #6ee7b7;
+  --color-secondary-light: #a7f3d0;
+  --color-accent: #10b981;
+  --color-accent-hover: #34d399;
+  --color-gold: #f59e0b;
+  --color-gold-light: #fbbf24;
+
+  /* Shadows — deep for black mode */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.8);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.85);
+  --shadow-card-hover: 0 14px 34px rgba(16, 185, 129, 0.15);
+
+  --nav-active-bg: rgba(16, 185, 129, 0.12);
+  --nav-hover-bg: rgba(16, 185, 129, 0.07);
+}

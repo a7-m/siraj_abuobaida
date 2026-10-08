@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <defs>
+    <linearGradient id="flAME" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#CBA052" />
+      <stop offset="100%" stop-color="#E8C678" />
+    </linearGradient>
+  </defs>
+
+  <!-- Omani Arch/Lamp handle hint -->
+  <path d="M 10 25 Q 10 10 20 10 Q 30 10 30 25" fill="none" stroke="#C43831" stroke-width="2" stroke-linecap="round" />
+  
+  <!-- Open Book -->
+  <path d="M 5 30 Q 15 30 20 35 Q 25 30 35 30 L 33 20 Q 25 20 20 25 Q 15 20 7 20 Z" fill="#C43831" />
+  
+  <!-- Flame/Light -->
+  <path d="M 20 20 Q 16 15 20 5 Q 24 15 20 20" fill="url(#flAME)" />
+</svg>

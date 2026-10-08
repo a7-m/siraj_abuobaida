@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>البحث العلمي | سراج – مدرسة أبو عبيدة</title>
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/favicon.svg">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/dotgrid.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark') {document.documentElement.setAttribute('data-theme', 'dark');}
+      else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {document.documentElement.setAttribute('data-theme', 'dark');}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" alt="شعار سراج"></a>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">نبذة</a>
+        <a href="develop.html" class="nav-link">طوّر نفسك</a>
+        <a href="competition.html" class="nav-link">مسابقة السراج</a>
+        <a href="research.html" class="nav-link active">البحث العلمي</a>
+        <a href="identity.html" class="nav-link">الهوية الوطنية</a>
+        <a href="dashboard.html" class="nav-link auth-required hidden">لوحة التحكم</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
+        <a href="login.html" class="btn btn-primary d-none-mobile guest-only">تسجيل الدخول</a>
+        <button id="hamburger-btn" class="hamburger">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu-->
+  <div id="mobile-menu" class="mobile-menu-overlay">
+    <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" style="height:35px;"></a>
+      <button onclick="document.getElementById('mobile-menu').classList.remove('active')" class="btn-icon" style="font-size: 2rem; margin-top: -10px;">&times;</button>
+    </div>
+    <a href="index.html" class="mobile-nav-link">نبذة</a>
+    <a href="develop.html" class="mobile-nav-link">طوّر نفسك</a>
+    <a href="competition.html" class="mobile-nav-link">مسابقة السراج</a>
+    <a href="research.html" class="mobile-nav-link active">البحث العلمي</a>
+    <a href="identity.html" class="mobile-nav-link">الهوية الوطنية</a>
+    <a href="dashboard.html" class="mobile-nav-link auth-required hidden">لوحة التحكم</a>
+    <a href="login.html" class="btn btn-primary guest-only" style="margin-top: 1rem; text-align: center;">تسجيل الدخول</a>
+  </div>
+
+  <main class="main-content container">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <h2 style="color: var(--color-accent);">مسابقة البحث العلمي</h2>
+      <p style="color: var(--color-text-muted);">طوّر مهاراتك البحثية وادرس قضايا حيوية.</p>
+    </div>
+
+    <!-- Details block -->
+    <div class="grid grid-2" style="margin-bottom: 3rem;">
+      <div class="card">
+        <h3 style="margin-bottom: 1rem; color: var(--color-gold);">شروط المسابقة</h3>
+        <ul style="list-style: disc; padding-right: 1.5rem; color: var(--color-text-muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li>الالتزام بالأمانة العلمية وذكر المراجع.</li>
+          <li>أن تكون فكرة البحث مبتكرة وتقع ضمن المجالات المحددة.</li>
+          <li>أن لا يتجاوز البحث 20 صفحة.</li>
+        </ul>
+        
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--color-gold);">المجالات</h3>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="background: var(--color-bg); padding: 0.5rem 1rem; border-radius: var(--border-radius); font-size: 0.85rem; border: 1px solid var(--color-border);">العلوم والتكنولوجيا</span>
+          <span style="background: var(--color-bg); padding: 0.5rem 1rem; border-radius: var(--border-radius); font-size: 0.85rem; border: 1px solid var(--color-border);">التاريخ العماني</span>
+          <span style="background: var(--color-bg); padding: 0.5rem 1rem; border-radius: var(--border-radius); font-size: 0.85rem; border: 1px solid var(--color-border);">الاستدامة البيئية</span>
+        </div>
+      </div>
+
+      <div class="card" style="background-color: var(--color-bg);">
+        <h3 style="margin-bottom: 1rem; color: var(--color-accent);">الجدول الزمني</h3>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+          <strong>موعد التسجيل:</strong> <span style="color: var(--color-text-muted);">1 نوفمبر 2026 (مغلق حالياً)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+          <strong>آخر موعد لتسليم البحث:</strong> <span style="color: var(--color-text-muted);">1 ديسمبر 2026</span>
+        </div>
+        
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">حالة التقييم</h3>
+        <div style="padding: 1rem; border: 1px dashed var(--color-gold); border-radius: var(--border-radius); text-align: center; color: var(--color-text-muted);">
+          في انتظار رفع البحث...
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Form Stub -->
+    <section class="card" style="max-width: 800px; margin: 0 auto;">
+      <h3 style="margin-bottom: 1.5rem; text-align: center;">رفع البحث (Mock UI)</h3>
+      <form class="flex flex-col gap-3" onsubmit="event.preventDefault();">
+        <div class="grid grid-2">
+          <div class="flex flex-col gap-1">
+            <label style="font-weight: bold; font-size: 0.9rem;">اسم الطالب</label>
+            <input type="text" placeholder="الاسم الكامل" style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text);" disabled>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label style="font-weight: bold; font-size: 0.9rem;">الصف</label>
+            <select style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text);" disabled>
+              <option>اختر الصف...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">عنوان البحث</label>
+          <input type="text" placeholder="أدخل عنوان بحثك..." style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text);" disabled>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">ملخص البحث</label>
+          <textarea rows="4" placeholder="اكتب نبذة مختصرة عن فكرة البحث..." style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text); font-family: inherit;" disabled></textarea>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">ملف البحث (PDF أو Word)</label>
+          <div style="border: 2px dashed var(--color-border); padding: 2rem; text-align: center; border-radius: var(--border-radius); background-color: var(--color-bg); color: var(--color-text-muted);">
+            اسحب وأفلت الملف هنا أو <span style="color: var(--color-accent); text-decoration: underline;">اختر ملف</span> (قريباً للمسجلين)
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%; cursor: not-allowed;" disabled>إرسال البحث</button>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="footer"><div class="container"><p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p></div></footer>
+  <script type="module" src="./src/scripts/main.js"></script>
+</body>
+</html>

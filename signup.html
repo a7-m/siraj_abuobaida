@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>إنشاء حساب | سراج – مدرسة أبو عبيدة</title>
+
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/favicon.svg">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  
+  <style>
+    .auth-container {
+      max-width: 600px; /* Wider for 2-column grid */
+      margin: 4rem auto;
+      padding: 2.5rem 2rem;
+      border-radius: var(--border-radius-lg);
+      background-color: var(--color-bg-secondary);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--color-border);
+    }
+    .auth-title {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: var(--color-accent);
+      font-size: 1.75rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .form-group label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .form-control {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(11, 83, 69, 0.1);
+    }
+    .password-container {
+      position: relative;
+    }
+    .password-toggle {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      font-size: 1.1rem;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      margin-top: 1.5rem;
+    }
+    .btn-submit:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .auth-links {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .auth-links a {
+      color: var(--color-accent);
+      font-weight: 600;
+      margin-right: 0.25rem;
+    }
+    .auth-links a:hover {
+      text-decoration: underline;
+    }
+    .strength-meter {
+      height: 4px;
+      width: 100%;
+      background: var(--color-border);
+      border-radius: 2px;
+      margin-top: 0.25rem;
+      overflow: hidden;
+    }
+    .strength-meter-fill {
+      height: 100%;
+      width: 0;
+      transition: width 0.3s, background-color 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" alt="شعار سراج"></a>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">نبذة</a>
+        <a href="develop.html" class="nav-link">طوّر نفسك</a>
+        <a href="competition.html" class="nav-link">مسابقة السراج</a>
+        <a href="research.html" class="nav-link">البحث العلمي</a>
+        <a href="identity.html" class="nav-link">الهوية الوطنية</a>
+        <a href="dashboard.html" class="nav-link auth-required hidden">لوحة التحكم</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="btn-icon theme-toggle-btn" aria-label="تبديل الثيم"></button>
+        <button id="hamburger-btn" class="hamburger">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="mobile-menu" class="mobile-menu-overlay">
+    <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
+      <a href="index.html" class="logo"><img src="./src/assets/images/logo.svg" style="height:35px;"></a>
+      <button onclick="document.getElementById('mobile-menu').classList.remove('active')" class="btn-icon" style="font-size: 2rem; margin-top: -10px;">&times;</button>
+    </div>
+    <a href="index.html" class="mobile-nav-link">نبذة</a>
+    <a href="develop.html" class="mobile-nav-link">طوّر نفسك</a>
+    <a href="competition.html" class="mobile-nav-link">مسابقة السراج</a>
+    <a href="research.html" class="mobile-nav-link">البحث العلمي</a>
+    <a href="identity.html" class="mobile-nav-link">الهوية الوطنية</a>
+  </div>
+
+  <main class="main-content container">
+    <div class="auth-container">
+      <h2 class="auth-title">إنشاء حساب كطالب</h2>
+      <form id="signup-form">
+        
+        <div class="form-group">
+          <label for="fullName">الاسم المعرّف (ثلاثي)</label>
+          <input type="text" id="fullName" class="form-control" placeholder="مثال: أحمد بن سعيد البلوشي" required minlength="5">
+        </div>
+
+        <div class="form-group">
+          <label for="email">البريد الإلكتروني للإشعارات</label>
+          <input type="email" id="email" class="form-control" placeholder="student@example.com" required dir="ltr" style="text-align: right;">
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="grade">الصف الدراسي</label>
+            <select id="grade" class="form-control" required>
+              <option value="" disabled selected>اختر الصف</option>
+              <option value="الخامس">الخامس</option>
+              <option value="السادس">السادس</option>
+              <option value="السابع">السابع</option>
+              <option value="الثامن">الثامن</option>
+              <option value="التاسع">التاسع</option>
+              <option value="العاشر">العاشر</option>
+              <option value="الحادي عشر">الحادي عشر</option>
+              <option value="الثاني عشر">الثاني عشر</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="section">الشعبة (المتوقع أو الحالية)</label>
+            <select id="section" class="form-control" required>
+              <option value="" disabled selected>اختر الشعبة</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="password">كلمة المرور</label>
+            <div class="password-container">
+              <input type="password" id="password" class="form-control" placeholder="••••••••" required dir="ltr" style="text-align: right; width: 100%;" minlength="6">
+              <button type="button" class="password-toggle" id="toggle-pw" tabindex="-1">👁️</button>
+            </div>
+            <div class="strength-meter"><div class="strength-meter-fill" id="strength-fill"></div></div>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">تأكيد كلمة المرور</label>
+            <div class="password-container">
+              <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" required dir="ltr" style="text-align: right; width: 100%;" minlength="6">
+              <button type="button" class="password-toggle" id="toggle-cpw" tabindex="-1">👁️</button>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-submit" id="submit-btn">
+          تسجيل حساب جديد
+        </button>
+
+        <div class="auth-links">
+          <span>لديك حساب بالفعل؟</span><a href="login.html">تسجيل الدخول هنا</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="container"><p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p></div></footer>
+
+  <script type="module">
+    import { authService } from './src/services/auth.js';
+    import './src/scripts/main.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Redirect if logged in already (User Requirement 9: prevent arbitrary viewing)
+      if (authService.isLoggedIn()) {
+        window.location.replace('dashboard.html');
+      }
+
+      const pwdInput = document.getElementById('password');
+      const cpwInput = document.getElementById('confirmPassword');
+      const togglePwdBtn = document.getElementById('toggle-pw');
+      const toggleCpwBtn = document.getElementById('toggle-cpw');
+      const strengthFill = document.getElementById('strength-fill');
+      const form = document.getElementById('signup-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      // Toggles
+      const setupToggle = (btn, input) => {
+        btn.addEventListener('click', () => {
+          const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+          input.setAttribute('type', type);
+          btn.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+      };
+      setupToggle(togglePwdBtn, pwdInput);
+      setupToggle(toggleCpwBtn, cpwInput);
+
+      // Simple password strength calculator
+      pwdInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        let score = 0;
+        if (val.length > 5) score += 33;
+        if (val.length >= 8) score += 33;
+        if (/[A-Z]/.test(val) || /[0-9]/.test(val)) score += 34;
+        
+        strengthFill.style.width = score + '%';
+        if (score < 40) strengthFill.style.backgroundColor = '#EF4444'; // Red
+        else if (score < 80) strengthFill.style.backgroundColor = '#F59E0B'; // Orange
+        else strengthFill.style.backgroundColor = '#10B981'; // Green
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const pwd = pwdInput.value;
+        const cpw = cpwInput.value;
+
+        if (pwd !== cpw) {
+          window.Toast.error('كلمتا المرور غير متطابقتين.');
+          return;
+        }
+
+        const payload = {
+          fullName: document.getElementById('fullName').value.trim(),
+          grade: document.getElementById('grade').value,
+          section: document.getElementById('section').value,
+        };
+
+        const email = document.getElementById('email').value.trim();
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الإنشاء...';
+
+        try {
+          // This calls the Supabase backend. If email confirmation is off, user is instantly logged in!
+          await authService.signup(email, pwd, payload);
+          window.Toast.success('تم إنشاء الحساب بنجاح! جاري الانطلاق...');
+          setTimeout(() => { window.location.replace('dashboard.html'); }, 1500);
+        } catch (error) {
+          let msg = 'حدث خطأ أثناء الاتصال بالخادم.';
+          if (error.message.includes('already registered')) msg = 'هذا البريد مستخدم مسبقاً.';
+          else if (error.message.includes('Weak password')) msg = 'كلمة المرور ضعيفة جداً.';
+          
+          window.Toast.error(msg);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'تسجيل حساب جديد';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
