@@ -158,10 +158,17 @@
         submitBtn.textContent = 'جاري الحفظ...';
 
         try {
+          const updateData = { grade, section };
+          const metaName = session.user?.user_metadata?.full_name || 
+                           session.user?.user_metadata?.name;
+          if (metaName) {
+            updateData.full_name = metaName;
+          }
+
           // Update the existing profile record strictly using RLS
           const { error } = await supabase
             .from('profiles')
-            .update({ grade, section })
+            .update(updateData)
             .eq('id', currentUserId);
 
           if (error) throw error;

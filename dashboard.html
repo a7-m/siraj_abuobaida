@@ -133,28 +133,29 @@
             .from('profiles')
             .select('full_name, grade, section, role')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
           if (error) throw error;
 
-          if (profile) {
-              // Redirect to onboarding if they haven't set their academic details.
-              // Useful for Google SSO or users upgrading from V1
-              if (!profile.grade || !profile.section) {
-                  window.location.replace('complete-profile.html');
-                  return;
-              }
+          if (!profile || !profile.grade || !profile.section) {
+            // Redirect to onboarding if they haven't set their academic details.
+            // Useful for Google SSO or first-time users
+            window.location.replace('complete-profile.html');
+            return;
+          }
 
-              document.getElementById('user-welcome').innerText = `مرحباً، ${profile.full_name.split(' ')[0]} 👋`;
-              document.getElementById('profile-name').innerText = profile.full_name;
-              document.getElementById('profile-grade').innerText = profile.role === 'teacher' ? 'إدارة المنصة' : `الصف ${profile.grade} - شعبة ${profile.section}`;
-              
-              if (profile.role === 'teacher') {
-                  document.getElementById('role-badge').innerText = 'لوحة المعلم';
-                  document.getElementById('role-badge').style.backgroundColor = '#4A90E2';
-              } else {
-                  document.getElementById('role-badge').innerText = 'طالب';
-              }
+          const displayName = profile.full_name || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'طالب سراج';
+          const firstName = displayName.split(' ')[0] || displayName;
+
+          document.getElementById('user-welcome').innerText = `مرحباً، ${firstName} 👋`;
+          document.getElementById('profile-name').innerText = displayName;
+          document.getElementById('profile-grade').innerText = profile.role === 'teacher' ? 'إدارة المنصة' : `الصف ${profile.grade} - شعبة ${profile.section}`;
+          
+          if (profile.role === 'teacher') {
+              document.getElementById('role-badge').innerText = 'لوحة المعلم';
+              document.getElementById('role-badge').style.backgroundColor = '#4A90E2';
+          } else {
+              document.getElementById('role-badge').innerText = 'طالب';
           }
         } catch(err) {
           console.error("Error fetching profile metrics:", err);

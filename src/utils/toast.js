@@ -5,12 +5,34 @@
 
 class ToastManager {
   constructor() {
-    this.container = document.createElement('div');
-    this.container.className = 'toast-container';
-    document.body.appendChild(this.container);
+    this.container = null;
+    if (document.body) {
+      this._getOrCreateContainer();
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        this._getOrCreateContainer();
+      });
+    }
+  }
+
+  _getOrCreateContainer() {
+    if (!this.container || !document.body.contains(this.container)) {
+      let existing = document.querySelector('.toast-container');
+      if (existing) {
+        this.container = existing;
+      } else if (document.body) {
+        this.container = document.createElement('div');
+        this.container.className = 'toast-container';
+        document.body.appendChild(this.container);
+      }
+    }
+    return this.container;
   }
 
   show(message, type = 'success', duration = 4000) {
+    const container = this._getOrCreateContainer();
+    if (!container) return;
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
@@ -18,11 +40,11 @@ class ToastManager {
     const icon = type === 'error' ? '⚠️' : '✅';
     
     toast.innerHTML = `
-      <div style="font-size: 1.25rem;">${icon}</div>
+      <div style="font-size: 1.25rem; flex-shrink: 0; line-height: 1;">${icon}</div>
       <div class="toast-message">${message}</div>
     `;
 
-    this.container.appendChild(toast);
+    container.appendChild(toast);
 
     // Trigger reflow to animate
     requestAnimationFrame(() => {
@@ -32,7 +54,7 @@ class ToastManager {
     // Remove after duration
     setTimeout(() => {
       toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300); // Wait for transition
+      setTimeout(() => toast.remove(), 350); // Wait for transition
     }, duration);
   }
 

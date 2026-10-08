@@ -73,12 +73,16 @@ class AuthService {
   }
 
   async loginWithGoogle() {
-    if (!supabase) throw new Error('Supabase Configuration is missing.');
-    // Initiates Google OAuth. Redirects natively.
+    if (!supabase) throw new Error('إعدادات Supabase غير متوفرة.');
+    if (window.location.protocol === 'file:') {
+      throw new Error('FILE_PROTOCOL');
+    }
+    // Calculate the exact URL of dashboard.html relative to the current location
+    const redirectUrl = new URL('dashboard.html', window.location.href).href;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard.html`
+        redirectTo: redirectUrl
       }
     });
     if (error) throw error;
