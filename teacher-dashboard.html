@@ -30,11 +30,14 @@
       </div>
       
       <nav class="td-nav">
-        <a class="td-nav-item active" data-target="home">
+        <a class="td-nav-item" data-target="home">
           <span>🏠</span> الصفحة الرئيسية
         </a>
         <a class="td-nav-item" data-target="content">
           <span>📝</span> إدارة المحتوى
+        </a>
+        <a class="td-nav-item" data-target="competitions">
+          <span>🏆</span> مسابقات السراج
         </a>
         <a class="td-nav-item" data-target="profile">
           <span>👤</span> الملف الشخصي
@@ -43,9 +46,6 @@
         <div class="td-nav-section">أقسام مستقبلية</div>
         <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
           <span>📚</span> تحديات القراءة
-        </a>
-        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
-          <span>🏆</span> مسابقات السراج
         </a>
         <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
           <span>🔬</span> البحث العلمي
@@ -198,6 +198,160 @@
           </div>
         </section>
         
+        <!-- Competitions Management Section -->
+        <section id="section-competitions" class="td-section">
+
+          <!-- List View -->
+          <div id="comp-list-view">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+              <h3>إدارة المسابقات</h3>
+              <button id="btn-add-comp" class="btn btn-primary">+ مسابقة جديدة</button>
+            </div>
+
+            <div class="td-table-wrapper">
+              <table class="td-table">
+                <thead>
+                  <tr>
+                    <th>المسابقة</th>
+                    <th>الحالة</th>
+                    <th>المدة</th>
+                    <th>تاريخ البداية</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="comp-table-body">
+                  <tr><td colspan="5" style="text-align:center">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Competition Editor (hidden by default) -->
+          <div id="comp-editor-view" style="display:none;">
+            <div class="flex justify-between items-center" style="margin-bottom:1.5rem;">
+              <h3 id="comp-editor-title">مسابقة جديدة</h3>
+              <button id="btn-comp-back-list" class="btn btn-outline">عودة للقائمة</button>
+            </div>
+
+            <div class="editor-layout">
+              <!-- Main form -->
+              <div class="editor-main card" style="padding:1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">اسم المسابقة *</label>
+                  <input type="text" id="comp-title" class="form-control" placeholder="أدخل اسم المسابقة">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">وصف مختصر</label>
+                  <textarea id="comp-description" class="form-control" rows="3" placeholder="وصف يظهر للطلاب في بطاقة المسابقة..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">ملاحظة نهائية (تظهر بعد الانتهاء)</label>
+                  <textarea id="comp-final-note" class="form-control" rows="2" placeholder="مثال: سيُعلَن عن الفائزين خلال أسبوع..."></textarea>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">تاريخ البداية</label>
+                    <input type="datetime-local" id="comp-start-date" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">تاريخ النهاية</label>
+                    <input type="datetime-local" id="comp-end-date" class="form-control">
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">مدة المسابقة (بالدقائق، اختياري)</label>
+                    <input type="number" id="comp-duration" class="form-control" placeholder="مثال: 30" min="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">الحد الأقصى للمحاولات (اختياري)</label>
+                    <input type="number" id="comp-max-attempts" class="form-control" placeholder="فارغ = غير محدود" min="1">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sidebar -->
+              <div class="editor-sidebar">
+                <div class="card" style="padding:1.5rem; margin-bottom:1rem;">
+                  <h4 style="margin-bottom:1rem;">الإعدادات</h4>
+                  <div class="form-group">
+                    <label class="form-label">حالة المسابقة</label>
+                    <select id="comp-status" class="form-control">
+                      <option value="draft">مسودة</option>
+                      <option value="active" selected>نشطة</option>
+                      <option value="ended">منتهية</option>
+                      <option value="archived">مؤرشفة</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                      <input type="checkbox" id="comp-result-visibility" checked style="width:auto;">
+                      <span>إظهار الدرجة للطالب بعد الانتهاء</span>
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                      <input type="checkbox" id="comp-shuffle" style="width:auto;">
+                      <span>خلط ترتيب الأسئلة عشوائياً</span>
+                    </label>
+                  </div>
+                  <div style="margin-top:1.5rem;">
+                    <button id="btn-save-comp" class="btn btn-primary" style="width:100%;">حفظ المسابقة</button>
+                  </div>
+                </div>
+
+                <div class="card" style="padding:1.5rem;">
+                  <h4 style="margin-bottom:1rem;">صورة الغلاف</h4>
+                  <div class="image-upload-area" id="comp-cover-upload-area">
+                    <span id="comp-cover-upload-text">اضغط لرفع صورة</span>
+                    <img id="comp-cover-preview" class="image-preview" src="" alt="غلاف المسابقة">
+                    <input type="file" id="comp-cover-input" accept="image/*" style="display:none;">
+                  </div>
+                  <button id="btn-remove-comp-cover" class="btn btn-outline" style="width:100%; margin-top:0.5rem; display:none;">إزالة الصورة</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Questions Sub-section (shown after saving) -->
+            <div id="comp-questions-panel" style="margin-top:2rem; display:none;">
+              <div class="flex justify-between items-center" style="margin-bottom:1rem;">
+                <h4>الأسئلة</h4>
+                <button id="btn-add-question" class="btn btn-primary">+ إضافة سؤال</button>
+              </div>
+              <div id="comp-questions-list"></div>
+
+              <!-- Question Editor (inline) -->
+              <div id="question-editor" class="card" style="padding:1.5rem; margin-top:1rem; display:none;">
+                <h5 id="q-editor-title" style="margin-bottom:1rem;">سؤال جديد</h5>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">نوع السؤال</label>
+                    <select id="q-type" class="form-control">
+                      <option value="mcq">اختيار من متعدد (MCQ)</option>
+                      <option value="tf">صح وخطأ</option>
+                      <option value="order">ترتيب</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">النقاط</label>
+                    <input type="number" id="q-points" class="form-control" value="1" min="1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">نص السؤال *</label>
+                  <textarea id="q-text" class="form-control" rows="2" placeholder="اكتب السؤال هنا..."></textarea>
+                </div>
+                <div id="q-options-area"></div>
+                <div class="flex gap-2" style="margin-top:1rem;">
+                  <button id="btn-save-question" class="btn btn-primary">حفظ السؤال</button>
+                  <button id="btn-cancel-question" class="btn btn-outline">إلغاء</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
         <!-- Profile Section -->
         <section id="section-profile" class="td-section">
           <h3>الملف الشخصي</h3>

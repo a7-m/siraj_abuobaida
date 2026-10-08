@@ -385,9 +385,11 @@ async function savePage() {
 
 // --- Delete Confirmation Modal ---
 let deleteTargetId = null;
+let deleteTargetType = 'page'; // 'page' | 'comp' | 'question'
 
-function confirmDelete(id) {
+function confirmDelete(id, type = 'page') {
     deleteTargetId = id;
+    deleteTargetType = type;
     document.getElementById('confirm-modal').style.display = 'flex';
 }
 
@@ -402,13 +404,25 @@ document.getElementById('btn-confirm-yes').addEventListener('click', async () =>
     document.getElementById('btn-confirm-yes').disabled = true;
     
     try {
-        const { error } = await supabase.from('content_pages').delete().eq('id', deleteTargetId);
-        if (error) throw error;
-        
-        window.Toast?.success("تم الحذف بنجاح");
-        await loadContentPages();
-        await loadDashboardStats();
-        
+        if (deleteTargetType === 'comp') {
+            const { error } = await supabase.from('competitions').delete().eq('id', deleteTargetId);
+            if (error) throw error;
+            window.Toast?.success("تم حذف المسابقة بنجاح");
+            await loadCompetitions();
+        } else if (deleteTargetType === 'question') {
+            // Remove from competition_questions first (cascade), then questions table
+            await supabase.from('competition_questions').delete().eq('question_id', deleteTargetId);
+            const { error } = await supabase.from('questions').delete().eq('id', deleteTargetId);
+            if (error) throw error;
+            window.Toast?.success("تم حذف السؤال بنجاح");
+            await loadCompQuestions(editingCompId);
+        } else {
+            const { error } = await supabase.from('content_pages').delete().eq('id', deleteTargetId);
+            if (error) throw error;
+            window.Toast?.success("تم الحذف بنجاح");
+            await loadContentPages();
+            await loadDashboardStats();
+        }
     } catch (err) {
         console.error("Delete Error:", err);
         window.Toast?.error("حدث خطأ أثناء الحذف");
@@ -417,4 +431,435 @@ document.getElementById('btn-confirm-yes').addEventListener('click', async () =>
         document.getElementById('btn-confirm-yes').disabled = false;
         deleteTargetId = null;
     }
+});
+
+// =============================================================
+// COMPETITIONS MANAGEMENT
+// =============================================================
+
+let currentComps = [];
+let editingCompId = null;
+let editingQuestionId = null;
+
+// --- Setup ---
+document.getElementById('btn-add-comp')?.addEventListener('click', () => openCompEditor(null));
+document.getElementById('btn-comp-back-list')?.addEventListener('click', () => {
+    document.getElementById('comp-editor-view').style.display = 'none';
+    document.getElementById('comp-list-view').style.display = 'block';
+    editingCompId = null;
+});
+document.getElementById('btn-save-comp')?.addEventListener('click', saveComp);
+
+// Cover image upload for competitions
+const compCoverArea = document.getElementById('comp-cover-upload-area');
+const compCoverInput = document.getElementById('comp-cover-input');
+compCoverArea?.addEventListener('click', () => compCoverInput.click());
+compCoverInput?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('comp-cover-upload-text').textContent = 'جاري الرفع...';
+    try {
+        const ext = file.name.split('.').pop();
+        const path = `competitions/${Math.random().toString(36).substring(2)}.${ext}`;
+        const { error: ue } = await supabase.storage.from('public_assets').upload(path, file);
+        if (ue) throw ue;
+        const { data } = supabase.storage.from('public_assets').getPublicUrl(path);
+        setCompCover(data.publicUrl);
+        window.Toast?.success('تم رفع الصورة بنجاح');
+    } catch (err) {
+        console.error(err);
+        window.Toast?.error('حدث خطأ أثناء رفع الصورة');
+        document.getElementById('comp-cover-upload-text').textContent = 'اضغط لرفع صورة';
+    }
+});
+document.getElementById('btn-remove-comp-cover')?.addEventListener('click', () => {
+    setCompCover(null);
+    compCoverInput.value = '';
+});
+
+function setCompCover(url) {
+    const preview = document.getElementById('comp-cover-preview');
+    const text = document.getElementById('comp-cover-upload-text');
+    const removeBtn = document.getElementById('btn-remove-comp-cover');
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        text.style.display = 'none';
+        removeBtn.style.display = 'block';
+        preview.dataset.url = url;
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+        text.style.display = 'block';
+        text.textContent = 'اضغط لرفع صورة';
+        removeBtn.style.display = 'none';
+        preview.dataset.url = '';
+    }
+}
+
+// --- Load & Render ---
+async function loadCompetitions() {
+    try {
+        const { data, error } = await supabase
+            .from('competitions')
+            .select('id, title, status, duration_seconds, start_date, created_at')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        currentComps = data || [];
+        renderCompetitionsTable();
+    } catch (err) {
+        console.error('loadCompetitions:', err);
+        window.Toast?.error('تعذّر تحميل المسابقات');
+    }
+}
+
+function renderCompetitionsTable() {
+    const tbody = document.getElementById('comp-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (currentComps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--color-text-muted);">لا توجد مسابقات بعد</td></tr>';
+        return;
+    }
+
+    const statusLabels = { draft: 'مسودة', active: 'نشطة', ended: 'منتهية', archived: 'مؤرشفة' };
+    const statusColors = { draft: '#6b7280', active: '#22c55e', ended: '#ef4444', archived: '#9ca3af' };
+
+    currentComps.forEach(comp => {
+        const tr = document.createElement('tr');
+        const statusLabel = statusLabels[comp.status] || comp.status;
+        const statusColor = statusColors[comp.status] || '#6b7280';
+        const duration = comp.duration_seconds ? `${Math.ceil(comp.duration_seconds / 60)} د` : '—';
+        const startDate = comp.start_date ? new Date(comp.start_date).toLocaleDateString('ar-EG') : '—';
+
+        tr.innerHTML = `
+            <td><strong>${comp.title}</strong></td>
+            <td><span class="badge" style="background:${statusColor}20; color:${statusColor}; border:1px solid ${statusColor}40;">${statusLabel}</span></td>
+            <td>${duration}</td>
+            <td>${startDate}</td>
+            <td>
+                <button class="btn-icon comp-btn-edit" data-id="${comp.id}" title="تعديل">✏️</button>
+                <button class="btn-icon comp-btn-delete" data-id="${comp.id}" title="حذف" style="color:#ef4444;">🗑️</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('.comp-btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openCompEditor(btn.dataset.id));
+    });
+    document.querySelectorAll('.comp-btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => confirmDelete(btn.dataset.id, 'comp'));
+    });
+}
+
+function openCompEditor(compId) {
+    editingCompId = compId;
+    const comp = compId ? currentComps.find(c => c.id === compId) : null;
+
+    document.getElementById('comp-editor-title').textContent = comp ? 'تعديل المسابقة' : 'مسابقة جديدة';
+    document.getElementById('comp-title').value = comp?.title || '';
+    document.getElementById('comp-description').value = comp?.description || '';
+    document.getElementById('comp-final-note').value = comp?.final_note || '';
+    document.getElementById('comp-status').value = comp?.status || 'active';
+    document.getElementById('comp-duration').value = comp?.duration_seconds ? Math.ceil(comp.duration_seconds / 60) : '';
+    document.getElementById('comp-max-attempts').value = comp?.max_attempts || '';
+    document.getElementById('comp-result-visibility').checked = comp ? (comp.result_visibility !== false) : true;
+    document.getElementById('comp-shuffle').checked = comp?.shuffle_questions || false;
+
+    // Dates — convert ISO to datetime-local
+    const toLocal = (iso) => iso ? iso.slice(0, 16) : '';
+    document.getElementById('comp-start-date').value = toLocal(comp?.start_date);
+    document.getElementById('comp-end-date').value = toLocal(comp?.end_date);
+
+    setCompCover(comp?.image_url || null);
+
+    // Show/hide questions panel
+    const qPanel = document.getElementById('comp-questions-panel');
+    if (compId) {
+        qPanel.style.display = 'block';
+        loadCompQuestions(compId);
+    } else {
+        qPanel.style.display = 'none';
+    }
+
+    document.getElementById('comp-list-view').style.display = 'none';
+    document.getElementById('comp-editor-view').style.display = 'block';
+}
+
+async function saveComp() {
+    const title = document.getElementById('comp-title').value.trim();
+    if (!title) { window.Toast?.error('يرجى إدخال اسم المسابقة'); return; }
+
+    const durationMins = parseInt(document.getElementById('comp-duration').value) || null;
+    const maxAttempts = parseInt(document.getElementById('comp-max-attempts').value) || null;
+    const startVal = document.getElementById('comp-start-date').value;
+    const endVal = document.getElementById('comp-end-date').value;
+
+    const payload = {
+        title,
+        description: document.getElementById('comp-description').value.trim() || null,
+        final_note: document.getElementById('comp-final-note').value.trim() || null,
+        status: document.getElementById('comp-status').value,
+        duration_seconds: durationMins ? durationMins * 60 : null,
+        max_attempts: maxAttempts,
+        result_visibility: document.getElementById('comp-result-visibility').checked,
+        shuffle_questions: document.getElementById('comp-shuffle').checked,
+        start_date: startVal ? new Date(startVal).toISOString() : null,
+        end_date: endVal ? new Date(endVal).toISOString() : null,
+        image_url: document.getElementById('comp-cover-preview').dataset.url || null,
+    };
+
+    const btn = document.getElementById('btn-save-comp');
+    btn.disabled = true;
+    btn.textContent = 'جاري الحفظ...';
+
+    try {
+        let savedId = editingCompId;
+        if (editingCompId) {
+            const { error } = await supabase.from('competitions').update(payload).eq('id', editingCompId);
+            if (error) throw error;
+        } else {
+            const { data, error } = await supabase.from('competitions').insert([payload]).select('id').single();
+            if (error) throw error;
+            savedId = data.id;
+            editingCompId = savedId;
+        }
+
+        window.Toast?.success('تم حفظ المسابقة بنجاح');
+        await loadCompetitions();
+
+        // Show questions panel after save
+        document.getElementById('comp-questions-panel').style.display = 'block';
+        await loadCompQuestions(savedId);
+        document.getElementById('comp-editor-title').textContent = 'تعديل المسابقة';
+
+    } catch (err) {
+        console.error('saveComp:', err);
+        window.Toast?.error(err.message || 'حدث خطأ أثناء الحفظ');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'حفظ المسابقة';
+    }
+}
+
+// =============================================================
+// QUESTIONS MANAGEMENT
+// =============================================================
+
+let currentQuestions = [];
+
+document.getElementById('btn-add-question')?.addEventListener('click', () => openQuestionEditor(null));
+document.getElementById('btn-cancel-question')?.addEventListener('click', () => {
+    document.getElementById('question-editor').style.display = 'none';
+    editingQuestionId = null;
+});
+document.getElementById('btn-save-question')?.addEventListener('click', saveQuestion);
+document.getElementById('q-type')?.addEventListener('change', () => renderQuestionOptions(null));
+
+async function loadCompQuestions(compId) {
+    if (!compId) return;
+    try {
+        const { data, error } = await supabase
+            .from('competition_questions')
+            .select('order_num, questions(id, type, text, points, metadata)')
+            .eq('competition_id', compId)
+            .order('order_num', { ascending: true });
+        if (error) throw error;
+        currentQuestions = (data || []).map(r => r.questions).filter(Boolean);
+        renderQuestionsPanel();
+    } catch (err) {
+        console.error('loadCompQuestions:', err);
+    }
+}
+
+function renderQuestionsPanel() {
+    const container = document.getElementById('comp-questions-list');
+    if (!container) return;
+
+    if (currentQuestions.length === 0) {
+        container.innerHTML = '<p style="color:var(--color-text-muted); font-size:0.9rem;">لا توجد أسئلة بعد. اضغط "+ إضافة سؤال".</p>';
+        return;
+    }
+
+    const typeLabels = { mcq: 'اختيار متعدد', tf: 'صح/خطأ', order: 'ترتيب' };
+
+    container.innerHTML = currentQuestions.map((q, i) => `
+        <div class="card" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+            <div>
+                <span style="color:var(--color-text-muted); font-size:0.8rem; margin-left:0.5rem;">${i + 1}. [${typeLabels[q.type] || q.type}] ${q.points} نقطة</span>
+                <div style="font-weight:500;">${q.text}</div>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+                <button class="btn-icon q-btn-edit" data-id="${q.id}" title="تعديل">✏️</button>
+                <button class="btn-icon q-btn-delete" data-id="${q.id}" title="حذف" style="color:#ef4444;">🗑️</button>
+            </div>
+        </div>`).join('');
+
+    container.querySelectorAll('.q-btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openQuestionEditor(btn.dataset.id));
+    });
+    container.querySelectorAll('.q-btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => confirmDelete(btn.dataset.id, 'question'));
+    });
+}
+
+function openQuestionEditor(questionId) {
+    editingQuestionId = questionId;
+    const q = questionId ? currentQuestions.find(x => x.id === questionId) : null;
+
+    document.getElementById('q-editor-title').textContent = q ? 'تعديل السؤال' : 'سؤال جديد';
+    document.getElementById('q-type').value = q?.type || 'mcq';
+    document.getElementById('q-points').value = q?.points || 1;
+    document.getElementById('q-text').value = q?.text || '';
+
+    renderQuestionOptions(q);
+    document.getElementById('question-editor').style.display = 'block';
+    document.getElementById('question-editor').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderQuestionOptions(q) {
+    const type = document.getElementById('q-type').value;
+    const area = document.getElementById('q-options-area');
+    const meta = q?.metadata || {};
+
+    if (type === 'mcq') {
+        const opts = meta.options || ['', '', '', ''];
+        const correct = meta.correct_answer || '';
+        area.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">الخيارات (خيار واحد في كل حقل)</label>
+                ${opts.map((o, i) => `
+                    <input type="text" class="form-control q-opt-input" style="margin-bottom:0.5rem;"
+                           placeholder="الخيار ${i + 1}" value="${o}" data-idx="${i}">`).join('')}
+                <button type="button" id="btn-add-opt" class="btn btn-outline" style="margin-top:0.25rem; font-size:0.85rem;">+ إضافة خيار</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">الإجابة الصحيحة (اكتب نص الإجابة كما هو)</label>
+                <input type="text" id="q-correct" class="form-control" value="${correct}" placeholder="انسخ نص الإجابة الصحيحة">
+            </div>`;
+        document.getElementById('btn-add-opt')?.addEventListener('click', () => {
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.className = 'form-control q-opt-input';
+            newInput.style.marginBottom = '0.5rem';
+            newInput.placeholder = 'خيار جديد';
+            document.getElementById('btn-add-opt').before(newInput);
+        });
+
+    } else if (type === 'tf') {
+        const correct = meta.correct_answer || 'صح';
+        area.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">الإجابة الصحيحة</label>
+                <select id="q-correct" class="form-control">
+                    <option value="صح" ${correct === 'صح' ? 'selected' : ''}>صح</option>
+                    <option value="خطأ" ${correct === 'خطأ' ? 'selected' : ''}>خطأ</option>
+                </select>
+            </div>`;
+
+    } else if (type === 'order') {
+        const items = meta.items || ['', '', ''];
+        const correctOrder = meta.correct_order || items;
+        const instruction = meta.instruction || 'رتّب العناصر بالترتيب الصحيح';
+        area.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">تعليمات الترتيب</label>
+                <input type="text" id="q-order-instruction" class="form-control" value="${instruction}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">العناصر (بالترتيب الصحيح — الأول هو الأول)</label>
+                <div id="q-order-items">
+                    ${correctOrder.map((item, i) => `
+                        <input type="text" class="form-control q-order-item" style="margin-bottom:0.5rem;"
+                               placeholder="العنصر ${i + 1}" value="${item}">`).join('')}
+                </div>
+                <button type="button" id="btn-add-order-item" class="btn btn-outline" style="margin-top:0.25rem; font-size:0.85rem;">+ إضافة عنصر</button>
+            </div>`;
+        document.getElementById('btn-add-order-item')?.addEventListener('click', () => {
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'form-control q-order-item';
+            inp.style.marginBottom = '0.5rem';
+            inp.placeholder = 'عنصر جديد';
+            document.getElementById('btn-add-order-item').before(inp);
+        });
+    } else {
+        area.innerHTML = '';
+    }
+}
+
+function buildMetadata(type) {
+    if (type === 'mcq') {
+        const opts = Array.from(document.querySelectorAll('.q-opt-input')).map(i => i.value.trim()).filter(Boolean);
+        const correct = document.getElementById('q-correct')?.value.trim() || '';
+        return { options: opts, correct_answer: correct };
+    }
+    if (type === 'tf') {
+        const correct = document.getElementById('q-correct')?.value || 'صح';
+        return { options: ['صح', 'خطأ'], correct_answer: correct };
+    }
+    if (type === 'order') {
+        const instruction = document.getElementById('q-order-instruction')?.value.trim() || 'رتّب العناصر بالترتيب الصحيح';
+        const items = Array.from(document.querySelectorAll('.q-order-item')).map(i => i.value.trim()).filter(Boolean);
+        return { instruction, items, correct_order: items };
+    }
+    return {};
+}
+
+async function saveQuestion() {
+    const type = document.getElementById('q-type').value;
+    const text = document.getElementById('q-text').value.trim();
+    const points = parseInt(document.getElementById('q-points').value) || 1;
+
+    if (!text) { window.Toast?.error('يرجى إدخال نص السؤال'); return; }
+    if (!editingCompId) { window.Toast?.error('يرجى حفظ المسابقة أولاً'); return; }
+
+    const metadata = buildMetadata(type);
+    const btn = document.getElementById('btn-save-question');
+    btn.disabled = true;
+    btn.textContent = 'جاري الحفظ...';
+
+    try {
+        let qId = editingQuestionId;
+
+        if (editingQuestionId) {
+            const { error } = await supabase.from('questions')
+                .update({ type, question_type: type, text, points, metadata })
+                .eq('id', editingQuestionId);
+            if (error) throw error;
+        } else {
+            const { data, error } = await supabase.from('questions')
+                .insert([{ type, question_type: type, text, points, metadata }])
+                .select('id').single();
+            if (error) throw error;
+            qId = data.id;
+
+            // Link to competition
+            const nextOrder = currentQuestions.length;
+            const { error: linkErr } = await supabase.from('competition_questions')
+                .insert([{ competition_id: editingCompId, question_id: qId, order_num: nextOrder }]);
+            if (linkErr) throw linkErr;
+        }
+
+        window.Toast?.success('تم حفظ السؤال بنجاح');
+        document.getElementById('question-editor').style.display = 'none';
+        editingQuestionId = null;
+        await loadCompQuestions(editingCompId);
+
+    } catch (err) {
+        console.error('saveQuestion:', err);
+        window.Toast?.error(err.message || 'حدث خطأ أثناء حفظ السؤال');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'حفظ السؤال';
+    }
+}
+
+// Hook into navigation to load competitions when section becomes active
+document.addEventListener('DOMContentLoaded', () => {
+    const compNavItem = document.querySelector('.td-nav-item[data-target="competitions"]');
+    compNavItem?.addEventListener('click', () => {
+        loadCompetitions();
+    });
 });

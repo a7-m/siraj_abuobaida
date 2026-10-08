@@ -522,3 +522,104 @@ select:focus {
     height: 32px;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   COMPETITION — NEW FEATURES (Migration 04)
+   ═══════════════════════════════════════════════ */
+
+/* ── Countdown Timer ── */
+.comp-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: border-color 0.3s, color 0.3s;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.comp-timer-icon {
+  font-size: 1.2rem;
+}
+
+.comp-timer-display {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  transition: color 0.3s;
+}
+
+.comp-timer-warn .comp-timer-display,
+.comp-timer-display.comp-timer-warn {
+  color: #ef4444;
+  animation: comp-timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes comp-timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Final Note ── */
+.comp-final-note {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin-top: 1rem;
+  line-height: 1.6;
+}
+
+.comp-final-note span {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* ── Max Attempts Warning ── */
+.comp-max-att-note {
+  padding: 0.75rem 1rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius-md);
+  color: #92400e;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+[data-theme="dark"] .comp-max-att-note {
+  background: #78350f20;
+  border-color: #f59e0b60;
+  color: #fbbf24;
+}
+
+/* ── Elapsed Time ── */
+.comp-res-elapsed {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+}
+
+/* ── Hidden Score (result_visibility=false) ── */
+.comp-res-hidden-score {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.comp-res-hidden-score p {
+  margin: 0.4rem 0;
+}
+

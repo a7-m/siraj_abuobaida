@@ -3,23 +3,26 @@
  * ─────────────────────────────────────────────────────────────
  * Architecture:
  *   CompetitionController  — main orchestrator (list / detail / quiz / result)
- *   QuizEngine             — question flow, progress bar, answer collection
+ *   QuizEngine             — question flow, progress bar, answer collection, countdown timer
  *   QuestionRenderer       — extensible per-type renderer (mcq | tf | order)
  *   AttemptService         — Supabase CRUD for attempts & answers
  *
- * DB Tables used (no schema changes):
- *   competitions           id, title, description, image_url, start_date, end_date
+ * DB Tables used (migration 04 applied):
+ *   competitions           id, title, description, image_url, start_date, end_date,
+ *                          status, duration_seconds, result_visibility, final_note,
+ *                          max_attempts, shuffle_questions, created_at
  *   competition_questions  competition_id, question_id, order_num
  *   questions              id, type, text, image_url, points, metadata
  *   competition_attempts   id, student_id, competition_id, status, total_score, started_at, submitted_at
  *   attempt_answers        attempt_id, question_id, answer_data, score
+ *   competition_leaderboard competition_id, student_id, rank, total_score, completion_time_seconds
  *
  * Question types supported:  mcq | tf | order
  * To add a new type later:   add one case to QuestionRenderer.render()
  *
- * Future dashboard notes:
- *   Teachers INSERT competitions/questions via Supabase — RLS already allows it.
- *   No changes needed here when the dashboard is built.
+ * Dashboard:
+ *   Teachers manage competitions via teacher-dashboard.html
+ *   RLS already allows full CRUD for teacher role.
  */
 
 import { authService } from '../services/auth.js';
@@ -30,15 +33,27 @@ import { Toast } from '../utils/toast.js';
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
-/** Derives competition status from start_date / end_date (no 'status' column in schema) */
+/** Returns competition status — prefers explicit DB 'status' column when available */
 function deriveStatus(comp) {
+  // If status column exists and is meaningful, use it directly
+  if (comp.status && comp.status !== 'active') return comp.status;
+  // For 'active' status or no status, cross-check dates to handle 'ended' from dates
   const now = Date.now();
   const start = comp.start_date ? new Date(comp.start_date).getTime() : null;
   const end   = comp.end_date   ? new Date(comp.end_date).getTime()   : null;
-  if (!start && !end) return 'open';
+  if (comp.status === 'draft')    return 'draft';
+  if (comp.status === 'archived') return 'archived';
+  if (!start && !end) return comp.status || 'open';
   if (start && now < start) return 'upcoming';
   if (end   && now > end)   return 'ended';
   return 'active';
+}
+
+/** Format seconds as MM:SS */
+function fmtTimer(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = (sec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
 }
 
 function fmtDate(iso) {
@@ -220,6 +235,24 @@ const AttemptService = {
       console.warn('AttemptService.getPrevious:', e);
       return null;
     }
+  },
+
+  /** Get ALL attempts for a student in a competition (for max_attempts check) */
+  async getAllAttempts(studentId, competitionId) {
+    if (!supabase || !studentId) return [];
+    try {
+      const { data, error } = await supabase
+        .from('competition_attempts')
+        .select('id, status, total_score, submitted_at')
+        .eq('student_id', studentId)
+        .eq('competition_id', competitionId)
+        .order('started_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.warn('AttemptService.getAllAttempts:', e);
+      return [];
+    }
   }
 };
 
@@ -228,21 +261,59 @@ const AttemptService = {
 // ─────────────────────────────────────────────────────────────
 class QuizEngine {
   constructor(competition, questions, user, container) {
-    this.competition = competition;
-    this.questions   = questions;
-    this.user        = user;
-    this.container   = container;
-    this.currentIdx  = 0;
-    this.answers     = {};   // { [questionId]: answer }
-    this.attemptId   = null;
-    this._onFinish   = null;
+    this.competition  = competition;
+    this.user         = user;
+    this.container    = container;
+    this.currentIdx   = 0;
+    this.answers      = {};   // { [questionId]: answer }
+    this.attemptId    = null;
+    this._onFinish    = null;
+    this._timerHandle = null;
+    this._startedAt   = null;
+
+    // Shuffle questions if competition requests it
+    this.questions = (competition.shuffle_questions)
+      ? [...questions].sort(() => Math.random() - 0.5)
+      : questions;
   }
 
   onFinish(cb) { this._onFinish = cb; return this; }
 
   async start() {
+    this._startedAt = Date.now();
     if (this.user) this.attemptId = await AttemptService.create(this.user.id, this.competition.id);
     this.renderQ(0);
+    // Start countdown timer if competition has a duration
+    if (this.competition.duration_seconds) {
+      this._startTimer(this.competition.duration_seconds);
+    }
+  }
+
+  _startTimer(totalSeconds) {
+    let remaining = totalSeconds;
+    const update = () => {
+      const el = document.getElementById('comp-timer-display');
+      if (el) {
+        el.textContent = fmtTimer(remaining);
+        el.classList.toggle('comp-timer-warn', remaining <= 30);
+      }
+      if (remaining <= 0) {
+        this._clearTimer();
+        Toast.error('انتهى الوقت! سيتم إرسال إجاباتك تلقائياً.');
+        this._finish();
+        return;
+      }
+      remaining--;
+      this._timerHandle = setTimeout(update, 1000);
+    };
+    update();
+  }
+
+  _clearTimer() {
+    if (this._timerHandle) {
+      clearTimeout(this._timerHandle);
+      this._timerHandle = null;
+    }
   }
 
   // Dynamic progress bar — milestone labels adapt to question count
@@ -279,6 +350,15 @@ class QuizEngine {
     return Array.from(pts).sort((a, b) => a - b);
   }
 
+  _timerHtml() {
+    if (!this.competition.duration_seconds) return '';
+    return `
+      <div class="comp-timer" aria-live="polite" aria-label="الوقت المتبقي">
+        <span class="comp-timer-icon">⏱</span>
+        <span id="comp-timer-display" class="comp-timer-display">${fmtTimer(this.competition.duration_seconds)}</span>
+      </div>`;
+  }
+
   renderQ(idx) {
     this.currentIdx = idx;
     const q = this.questions[idx];
@@ -286,6 +366,7 @@ class QuizEngine {
 
     this.container.innerHTML = `
       <div class="comp-quiz-view">
+        ${this._timerHtml()}
         ${this._progressBar(idx, this.questions.length)}
         ${QuestionRenderer.render(q, idx, this.questions.length)}
         <div class="comp-nav-row">
@@ -380,6 +461,7 @@ class QuizEngine {
   }
 
   async _finish() {
+    this._clearTimer();
     this.container.innerHTML = `
       <div class="comp-submitting">
         <div class="comp-sub-icon">⏳</div>
@@ -388,6 +470,7 @@ class QuizEngine {
 
     let totalScore = 0, totalPoints = 0, correctCount = 0;
     const graded = [];
+    const elapsedSeconds = this._startedAt ? Math.round((Date.now() - this._startedAt) / 1000) : null;
 
     this.questions.forEach(q => {
       const pts = q.points || 1;
@@ -402,7 +485,14 @@ class QuizEngine {
     let saved = false;
     if (this.user) saved = await AttemptService.submit(this.attemptId, graded, totalScore);
 
-    this._onFinish?.({ correctCount, totalQuestions: this.questions.length, totalScore, totalPoints, saved });
+    this._onFinish?.({
+      correctCount,
+      totalQuestions: this.questions.length,
+      totalScore,
+      totalPoints,
+      saved,
+      elapsedSeconds
+    });
   }
 }
 
@@ -432,7 +522,10 @@ class CompetitionController {
     try {
       const { data, error } = await supabase
         .from('competitions')
-        .select('id, title, description, image_url, start_date, end_date, created_at')
+        .select(
+          'id, title, description, image_url, start_date, end_date, created_at, ' +
+          'status, duration_seconds, result_visibility, final_note, max_attempts, shuffle_questions'
+        )
         .order('created_at', { ascending: false });
       if (error) throw error;
       this.competitions = (data || []).map(c => ({ ...c, _status: deriveStatus(c) }));
@@ -486,7 +579,8 @@ class CompetitionController {
 
     const active   = this.competitions.filter(c => c._status === 'active' || c._status === 'open');
     const upcoming = this.competitions.filter(c => c._status === 'upcoming');
-    const ended    = this.competitions.filter(c => c._status === 'ended');
+    const ended    = this.competitions.filter(c => c._status === 'ended' || c._status === 'archived');
+    // draft competitions are not shown to students
 
     let html = `
       <div class="comp-hero">
@@ -577,13 +671,16 @@ class CompetitionController {
   // ── Detail View ───────────────────────────────────────────
   async renderDetail(comp) {
     this._loading('جاري تحميل المسابقة...');
-    const [questions, prevAttempt] = await Promise.all([
+    const [questions, allAttempts] = await Promise.all([
       this._loadQuestions(comp.id),
-      this.user ? AttemptService.getPrevious(this.user.id, comp.id) : Promise.resolve(null)
+      this.user ? AttemptService.getAllAttempts(this.user.id, comp.id) : Promise.resolve([])
     ]);
 
-    const canJoin  = comp._status === 'active' || comp._status === 'open';
-    const hasEnded = comp._status === 'ended';
+    const prevAttempt   = allAttempts?.[0] || null;
+    const attemptCount  = allAttempts?.length || 0;
+    const maxReached    = comp.max_attempts && attemptCount >= comp.max_attempts;
+    const canJoin       = (comp._status === 'active' || comp._status === 'open') && !maxReached;
+    const hasEnded      = comp._status === 'ended' || comp._status === 'archived';
 
     const imgHtml = comp.image_url ? `
       <div class="comp-det-img-wrap">
@@ -602,12 +699,19 @@ class CompetitionController {
           <strong>محاولة سابقة</strong>
           <span>الدرجة: ${prevAttempt.total_score}</span>
           ${prevAttempt.submitted_at ? `<span>· ${fmtDate(prevAttempt.submitted_at)}</span>` : ''}
+          ${comp.max_attempts ? `<span>· المحاولة ${attemptCount} من ${comp.max_attempts}</span>` : ''}
         </div>
       </div>` : '';
+
+    const maxReachedHtml = maxReached
+      ? `<div class="comp-max-att-note">⚠️ لقد استنفذت الحد الأقصى لعدد المحاولات (${comp.max_attempts}).</div>`
+      : '';
 
     let actionBtn = '';
     if (!this.user) {
       actionBtn = `<a href="login.html" class="btn btn-primary">سجّل الدخول للمشاركة</a>`;
+    } else if (maxReached) {
+      actionBtn = `<span class="comp-state-label">وصلت للحد الأقصى من المحاولات</span>`;
     } else if (canJoin && questions.length > 0) {
       actionBtn = `<button id="btn-start" class="btn btn-primary">${prevAttempt ? '🔄 إعادة المحاولة' : '🚀 ابدأ المسابقة'}</button>`;
     } else if (canJoin && questions.length === 0) {
@@ -618,6 +722,10 @@ class CompetitionController {
       actionBtn = `<span class="comp-state-label">ستبدأ المسابقة قريبًا</span>`;
     }
 
+    const durationFact = comp.duration_seconds
+      ? `<div class="comp-fact">⏱ المدة: ${Math.ceil(comp.duration_seconds / 60)} دقيقة</div>`
+      : '';
+
     this.container.innerHTML = `
       <div class="comp-detail">
         <button id="btn-back" class="comp-back-btn"><span class="comp-back-arr">→</span> المسابقات</button>
@@ -627,10 +735,13 @@ class CompetitionController {
           ${comp.description ? `<p class="comp-det-desc">${comp.description}</p>` : ''}
           <div class="comp-det-facts">
             ${questions.length > 0 ? `<div class="comp-fact">📝 <strong>${questions.length}</strong> سؤال</div>` : ''}
+            ${durationFact}
             ${comp.start_date ? `<div class="comp-fact">📅 تبدأ ${fmtDate(comp.start_date)}</div>` : ''}
             ${comp.end_date   ? `<div class="comp-fact">⏳ تنتهي ${fmtDate(comp.end_date)}</div>`   : ''}
+            ${comp.max_attempts ? `<div class="comp-fact">🔁 الحد الأقصى للمحاولات: ${comp.max_attempts}</div>` : ''}
           </div>
           ${prevHtml}
+          ${maxReachedHtml}
           <div class="comp-det-actions">
             <button id="btn-back2" class="btn btn-outline">← المسابقات</button>
             ${actionBtn}
@@ -654,17 +765,16 @@ class CompetitionController {
   }
 
   // ── Result View ───────────────────────────────────────────
-  _renderResult(comp, { correctCount, totalQuestions, totalScore, totalPoints, saved }) {
+  _renderResult(comp, { correctCount, totalQuestions, totalScore, totalPoints, saved, elapsedSeconds }) {
     const pct = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
     const stars = pct >= 90 ? '⭐⭐⭐' : pct >= 60 ? '⭐⭐' : '⭐';
     const badge = pct >= 90
-      ? { e: '🏆', t: 'إنجاز ممتاز!',     s: 'أجبت على معظم الأسئلة بشكل صحيح.' }
+      ? { e: '🏆', t: 'إنجاز ممتاز!',  s: 'أجبت على معظم الأسئلة بشكل صحيح.' }
       : pct >= 60
-      ? { e: '🌟', t: 'أحسنت!',           s: 'نتيجة جيدة — واصل التدريب لتحقيق الأفضل.' }
-      : { e: '💪', t: 'لا بأس!',          s: 'كل محاولة تعلّمك شيئًا جديدًا.' };
+      ? { e: '🌟', t: 'أحسنت!',        s: 'نتيجة جيدة — واصل التدريب لتحقيق الأفضل.' }
+      : { e: '💪', t: 'لا بأس!',       s: 'كل محاولة تعلّمك شيئًا جديدًا.' };
 
     const C = 2 * Math.PI * 42;
-
     const confetti = Array.from({ length: 14 }, (_, i) =>
       `<div class="comp-conf-p" style="--ci:${i}"></div>`).join('');
 
@@ -674,32 +784,53 @@ class CompetitionController {
       ? `<p class="comp-res-warn">⚠️ لم يتم الحفظ بسبب خطأ في الاتصال</p>`
       : `<p class="comp-res-warn">💡 <a href="login.html">سجّل الدخول</a> لحفظ نتائجك</p>`;
 
+    // result_visibility: false → hide score, show only thanks message + final_note
+    const showScore = comp.result_visibility !== false;
+
+    const finalNoteHtml = comp.final_note
+      ? `<div class="comp-final-note"><span>💬</span> ${comp.final_note}</div>`
+      : '';
+
+    const elapsedHtml = elapsedSeconds
+      ? `<div class="comp-res-elapsed">⏱ الوقت المستغرق: ${fmtTimer(elapsedSeconds)}</div>`
+      : '';
+
+    const scoreHtml = showScore ? `
+      <div class="comp-ring-wrap">
+        <svg class="comp-ring-svg" viewBox="0 0 100 100" role="presentation">
+          <circle class="comp-ring-bg" cx="50" cy="50" r="42"/>
+          <circle class="comp-ring-fg" cx="50" cy="50" r="42"
+            stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"/>
+        </svg>
+        <div class="comp-ring-label">
+          <strong>${pct}%</strong><span>${totalScore}/${totalPoints}</span>
+        </div>
+      </div>
+      <div class="comp-res-stats">
+        <div class="comp-res-stat"><strong>${correctCount}</strong><span>صحيحة</span></div>
+        <div class="comp-res-div"></div>
+        <div class="comp-res-stat"><strong>${totalQuestions - correctCount}</strong><span>خاطئة</span></div>
+        <div class="comp-res-div"></div>
+        <div class="comp-res-stat"><strong>${totalQuestions}</strong><span>المجموع</span></div>
+      </div>
+      ${elapsedHtml}` : `
+      <div class="comp-res-hidden-score">
+        <div class="comp-res-emoji" style="font-size:3rem">🎉</div>
+        <p>شكراً على مشاركتك!</p>
+        <p style="color:var(--color-text-muted);font-size:0.9rem">ستُعلَن النتائج لاحقاً.</p>
+      </div>`;
+
     this.container.innerHTML = `
       <div class="comp-result">
         <div class="comp-conf-wrap" aria-hidden="true">${confetti}</div>
         <div class="comp-res-card">
           <div class="comp-res-comp-name">${comp.title}</div>
-          <div class="comp-res-stars">${stars}</div>
+          ${showScore ? `<div class="comp-res-stars">${stars}</div>` : ''}
           <div class="comp-res-emoji">${badge.e}</div>
           <h2 class="comp-res-title">${badge.t}</h2>
           <p class="comp-res-sub">${badge.s}</p>
-          <div class="comp-ring-wrap">
-            <svg class="comp-ring-svg" viewBox="0 0 100 100" role="presentation">
-              <circle class="comp-ring-bg" cx="50" cy="50" r="42"/>
-              <circle class="comp-ring-fg" cx="50" cy="50" r="42"
-                stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"/>
-            </svg>
-            <div class="comp-ring-label">
-              <strong>${pct}%</strong><span>${totalScore}/${totalPoints}</span>
-            </div>
-          </div>
-          <div class="comp-res-stats">
-            <div class="comp-res-stat"><strong>${correctCount}</strong><span>صحيحة</span></div>
-            <div class="comp-res-div"></div>
-            <div class="comp-res-stat"><strong>${totalQuestions - correctCount}</strong><span>خاطئة</span></div>
-            <div class="comp-res-div"></div>
-            <div class="comp-res-stat"><strong>${totalQuestions}</strong><span>المجموع</span></div>
-          </div>
+          ${scoreHtml}
+          ${finalNoteHtml}
           ${savedNote}
           <div class="comp-res-actions">
             <button id="btn-comps" class="btn btn-outline">المسابقات</button>
