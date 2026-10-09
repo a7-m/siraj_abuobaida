@@ -49,9 +49,8 @@
   transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="dark"] .logo img,
-[data-theme="dark"] img[src*="logo.svg"] {
-  filter: invert(0.88) hue-rotate(180deg) brightness(1.1);
+[data-theme="dark"] .logo img {
+  /* PNG logo doesn't need invert filter */
 }
 
 .logo:hover img {

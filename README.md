@@ -176,7 +176,7 @@ The current logo is a modern minimal identity inspired by:
 * `src/assets/images/logo.svg`: الشعار الكامل (الرمز + كلمة السراج + مدرسة أبو عبيدة).
 * `src/assets/images/logo-mark.svg`: الرمز فقط (أيقونة التطبيق والشاشات الصغيرة).
 * `src/assets/images/logo-monochrome.svg`: النسخة أحادية اللون (Monochrome) للطباعة والوثائق الرسمية.
-* `src/assets/images/favicon.svg`: أيقونة التبويب المتجاوبة للمتصفح.
+* `src/assets/images/siraj-logo.png`: أيقونة التبويب المتجاوبة للمتصفح.
 * `src/assets/images/logo-original.svg`: **النسخة الأصلية السابقة محفوظة بالكامل ويمكن التراجع إليها في أي وقت.**
 
 ---
