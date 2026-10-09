@@ -56,6 +56,9 @@
         <a class="td-nav-item" data-target="competitions">
           <span>🏆</span> مسابقات السراج
         </a>
+        <a class="td-nav-item" data-target="participants" id="td-nav-participants">
+          <span>👥</span> المشاركون
+        </a>
         <a class="td-nav-item" data-target="profile">
           <span>👤</span> الملف الشخصي
         </a>
@@ -65,10 +68,7 @@
           <span>📚</span> تحديات القراءة
         </a>
         <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
-          <span>🔬</span> البحث العلمي
-        </a>
-        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
-          <span>👥</span> المشاركون
+          <span>🔬</span> تحكيم الأبحاث
         </a>
       </nav>
       
@@ -369,6 +369,231 @@
 
         </section>
 
+        <!-- Participants Management Section -->
+        <section id="section-participants" class="td-section">
+          <!-- Header and Actions -->
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0; font-size: 1.4rem;">سجل المشاركين في المنصة</h3>
+              <p style="margin: 0.25rem 0 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                متابعة شاملة لجميع الطلاب والزوار المشاركين في تحديات القراءة ومسابقات السراج والبحث العلمي.
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-refresh-participants" class="btn btn-outline" title="تحديث البيانات">
+                🔄 تحديث
+              </button>
+              <button id="btn-export-participants" class="btn btn-primary" title="تصدير النتائج المفلترة إلى ملف CSV">
+                📥 تصدير CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- 6 Stat Cards -->
+          <div class="part-stats-grid">
+            <div class="part-stat-card" style="--card-accent: #6366f1;">
+              <div class="part-stat-top">
+                <span class="part-stat-title">إجمالي المشاركين</span>
+                <span class="part-stat-icon" style="--icon-bg: rgba(99, 102, 241, 0.12); color: #6366f1;">👥</span>
+              </div>
+              <div id="stat-part-total" class="part-stat-value">--</div>
+              <span class="part-stat-sub">طالب وزائر فريد</span>
+            </div>
+
+            <div class="part-stat-card" style="--card-accent: #22c55e;">
+              <div class="part-stat-top">
+                <span class="part-stat-title">الطلاب المسجلون</span>
+                <span class="part-stat-icon" style="--icon-bg: rgba(34, 197, 94, 0.12); color: #22c55e;">🎓</span>
+              </div>
+              <div id="stat-part-registered" class="part-stat-value">--</div>
+              <span class="part-stat-sub">بحسابات مفعلة</span>
+            </div>
+
+            <div class="part-stat-card" style="--card-accent: #f59e0b;">
+              <div class="part-stat-top">
+                <span class="part-stat-title">المشاركون الزوار</span>
+                <span class="part-stat-icon" style="--icon-bg: rgba(245, 158, 11, 0.12); color: #f59e0b;">🌐</span>
+              </div>
+              <div id="stat-part-guests" class="part-stat-value">--</div>
+              <span class="part-stat-sub">مشاركون دون حساب</span>
+            </div>
+
+            <div class="part-stat-card" style="--card-accent: #10b981;">
+              <div class="part-stat-top">
+                <span class="part-stat-title">تحديات القراءة</span>
+                <span class="part-stat-icon" style="--icon-bg: rgba(16, 185, 129, 0.12); color: #10b981;">📚</span>
+              </div>
+              <div id="stat-part-reading" class="part-stat-value">--</div>
+              <span class="part-stat-sub">مرحلة قراءة منجزة</span>
+            </div>
+
+            <div class="part-stat-card" style="--card-accent: #eab308;">
+              <div class="part-stat-top">
+                <span class="part-stat-title">مسابقات السراج</span>
+                <span class="part-stat-icon" style="--icon-bg: rgba(234, 179, 8, 0.12); color: #eab308;">🏆</span>
+              </div>
+              <div id="stat-part-competitions" class="part-stat-value">--</div>
+              <span class="part-stat-sub">محاولة مسابقة مكتملة</span>
+            </div>
+
+            <div class="part-stat-card" style="--card-accent: #8b5cf6;">
+              <div class="part-stat-top">
+                <span class="part-stat-title">البحث العلمي</span>
+                <span class="part-stat-icon" style="--icon-bg: rgba(139, 92, 246, 0.12); color: #8b5cf6;">🔬</span>
+              </div>
+              <div id="stat-part-research" class="part-stat-value">--</div>
+              <span class="part-stat-sub">بحث علمي مستلم</span>
+            </div>
+          </div>
+
+          <!-- Comprehensive Search & Filter Panel -->
+          <div class="part-filters-card">
+            <div class="part-filters-grid">
+              <div class="part-filter-group">
+                <label class="part-filter-label">البحث بالاسم</label>
+                <input type="text" id="part-filter-name" class="form-control" placeholder="اسم المشارك...">
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">البحث بالبريد</label>
+                <input type="text" id="part-filter-email" class="form-control" placeholder="example@school.om">
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">نوع النشاط</label>
+                <select id="part-filter-activity" class="form-control">
+                  <option value="all">كل الأنشطة</option>
+                  <option value="competition">مسابقة السراج 🏆</option>
+                  <option value="reading">تحديات القراءة 📚</option>
+                  <option value="research">البحث العلمي 🔬</option>
+                </select>
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">نوع الحساب</label>
+                <select id="part-filter-user-type" class="form-control">
+                  <option value="all">الكل (مسجل وزائر)</option>
+                  <option value="registered">طالب مسجل الدخول</option>
+                  <option value="guest">مشارك دون حساب (زائر)</option>
+                </select>
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">الصف</label>
+                <select id="part-filter-grade" class="form-control">
+                  <option value="all">كل الصفوف</option>
+                  <option value="الخامس">الخامس</option>
+                  <option value="السادس">السادس</option>
+                  <option value="السابع">السابع</option>
+                  <option value="الثامن">الثامن</option>
+                  <option value="التاسع">التاسع</option>
+                  <option value="العاشر">العاشر</option>
+                  <option value="الحادي عشر">الحادي عشر</option>
+                  <option value="الثاني عشر">الثاني عشر</option>
+                </select>
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">الشعبة</label>
+                <input type="text" id="part-filter-section" class="form-control" placeholder="مثال: 5">
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">حالة المشاركة</label>
+                <select id="part-filter-status" class="form-control">
+                  <option value="all">كل الحالات</option>
+                  <option value="completed">مكتمل / ناجح</option>
+                  <option value="submitted">تم التسليم</option>
+                  <option value="evaluated">مقيّم / محكّم</option>
+                  <option value="under_review">قيد المراجعة</option>
+                  <option value="in_progress">قيد التقدم</option>
+                  <option value="started">بدأ المحاولة</option>
+                </select>
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">من تاريخ</label>
+                <input type="date" id="part-filter-date-from" class="form-control">
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">إلى تاريخ</label>
+                <input type="date" id="part-filter-date-to" class="form-control">
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">الترتيب حسب</label>
+                <select id="part-filter-sort" class="form-control">
+                  <option value="date-desc">الأحدث مشاركة</option>
+                  <option value="date-asc">الأقدم مشاركة</option>
+                  <option value="name-asc">الاسم (أ - ي)</option>
+                  <option value="name-desc">الاسم (ي - أ)</option>
+                  <option value="score-desc">الدرجة (من الأعلى للأقل)</option>
+                  <option value="score-asc">الدرجة (من الأقل للأعلى)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="part-filters-actions">
+              <span id="part-results-count" style="font-size: 0.88rem; color: var(--color-text-muted); font-weight: 600;">
+                جاري تحميل النتائج...
+              </span>
+              <button id="btn-reset-part-filters" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">
+                إعادة ضبط الفلاتر
+              </button>
+            </div>
+          </div>
+
+          <!-- Data Table -->
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">نوع الحساب</th>
+                  <th>اسم المشارك</th>
+                  <th>البريد الإلكتروني</th>
+                  <th>الصف والشعبة</th>
+                  <th>نوع النشاط</th>
+                  <th>اسم الفعالية / الموضوع</th>
+                  <th>تاريخ المشاركة</th>
+                  <th>الدرجة / النتيجة</th>
+                  <th>الحالة</th>
+                  <th style="text-align: center; width: 110px;">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="participants-table-body">
+                <tr>
+                  <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--color-text-muted);">
+                    جاري تحميل بيانات المشاركين...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="part-pagination">
+            <div class="flex items-center gap-2">
+              <span style="font-size: 0.85rem; color: var(--color-text-muted);">عدد العناصر بالصفحة:</span>
+              <select id="part-page-size" class="form-control" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.85rem;">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span id="part-page-info" style="font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600;">
+                الصفحة 1 من 1
+              </span>
+              <div class="part-page-btns" id="part-page-buttons">
+                <!-- Dynamically generated buttons -->
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Profile Section -->
         <section id="section-profile" class="td-section">
           <h3>الملف الشخصي</h3>
@@ -410,6 +635,76 @@
       <div class="flex gap-2 justify-center">
         <button id="btn-confirm-yes" class="btn btn-primary" style="background-color: #ef4444; border-color: #ef4444;">نعم، متأكد</button>
         <button id="btn-confirm-no" class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Participant Details Modal -->
+  <div id="part-detail-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="flex items-center gap-2">
+          <span style="font-size: 1.35rem;">👤</span>
+          <div>
+            <h3 id="modal-part-name" style="margin: 0; font-size: 1.15rem;">تفاصيل المشارك</h3>
+            <span id="modal-part-badge" class="badge badge-reg" style="margin-top: 0.25rem;">طالب مسجل</span>
+          </div>
+        </div>
+        <button id="btn-close-part-modal" class="btn-icon" style="font-size: 1.5rem; line-height: 1; cursor: pointer;">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Participant Identity Card -->
+        <div style="background: var(--color-bg-alt); padding: 1.25rem; border-radius: var(--border-radius-md, 12px); border: 1px solid var(--color-border-light); margin-bottom: 1.5rem;">
+          <h4 style="margin: 0 0 0.85rem; font-size: 0.95rem; color: var(--color-primary);">البيانات الشخصية والأكاديمية</h4>
+          <div class="grid grid-2" style="gap: 0.75rem;">
+            <div>
+              <span class="part-detail-box-label">البريد الإلكتروني:</span>
+              <div id="modal-part-email" class="part-detail-box-value">--</div>
+            </div>
+            <div>
+              <span class="part-detail-box-label">الصف والشعبة:</span>
+              <div id="modal-part-class" class="part-detail-box-value">--</div>
+            </div>
+            <div>
+              <span class="part-detail-box-label">نوع المشاركة:</span>
+              <div id="modal-part-usertype" class="part-detail-box-value">--</div>
+            </div>
+            <div>
+              <span class="part-detail-box-label">معرّف الجلسة / الطالب:</span>
+              <div id="modal-part-id" class="part-detail-box-value" style="font-family: monospace; font-size: 0.8rem;">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Selected Details -->
+        <div style="border: 1px solid var(--color-border); border-radius: var(--border-radius-md, 12px); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+            <h4 style="margin: 0; font-size: 0.95rem; color: var(--color-primary);">تفاصيل النشاط المحدد</h4>
+            <span id="modal-part-act-badge" class="badge">--</span>
+          </div>
+
+          <div class="part-modal-details-grid" id="modal-act-details-grid">
+            <!-- Dynamic Activity Info -->
+          </div>
+
+          <!-- Extended Detail block (Questions, Research summary, etc.) -->
+          <div id="modal-act-extra-info" style="margin-top: 1rem;"></div>
+        </div>
+
+        <!-- Related Activities for same user/guest -->
+        <div>
+          <h4 style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--color-text);">
+            سجل مشاركات أخرى لنفس المشارك (<span id="modal-other-count">0</span>)
+          </h4>
+          <div id="modal-other-activities-list" style="max-height: 220px; overflow-y: auto;">
+            <p style="color: var(--color-text-muted); font-size: 0.85rem;">لا توجد مشاركات أخرى مسجلة.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-modal-close" class="btn btn-outline">إغلاق</button>
       </div>
     </div>
   </div>

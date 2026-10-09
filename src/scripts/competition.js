@@ -28,6 +28,7 @@
 import { authService } from '../services/auth.js';
 import { supabase } from '../services/supabase.js';
 import { Toast } from '../utils/toast.js';
+import { guestService } from '../utils/guest.js';
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -179,12 +180,26 @@ const QuestionRenderer = {
 // ─────────────────────────────────────────────────────────────
 const AttemptService = {
 
-  async create(studentId, competitionId) {
+  async create(studentId, competitionId, guestInfo = null) {
     if (!supabase) return null;
     try {
+      const payload = {
+        competition_id: competitionId,
+        status: 'started',
+        total_score: 0
+      };
+      if (studentId) {
+        payload.student_id = studentId;
+      } else if (guestInfo) {
+        payload.student_id = null;
+        payload.guest_name = guestInfo.name || 'مشارك زائر';
+        payload.guest_grade = guestInfo.grade || null;
+        payload.guest_section = guestInfo.section || null;
+        payload.guest_session_id = guestInfo.sessionId || null;
+      }
       const { data, error } = await supabase
         .from('competition_attempts')
-        .insert({ student_id: studentId, competition_id: competitionId, status: 'started', total_score: 0 })
+        .insert(payload)
         .select('id').single();
       if (error) throw error;
       return data.id;
@@ -260,10 +275,11 @@ const AttemptService = {
 // QuizEngine — question-by-question flow
 // ─────────────────────────────────────────────────────────────
 class QuizEngine {
-  constructor(competition, questions, user, container) {
+  constructor(competition, questions, user, container, guestInfo = null) {
     this.competition  = competition;
     this.user         = user;
     this.container    = container;
+    this.guestInfo    = guestInfo || guestService.getGuestInfo();
     this.currentIdx   = 0;
     this.answers      = {};   // { [questionId]: answer }
     this.attemptId    = null;
@@ -281,7 +297,11 @@ class QuizEngine {
 
   async start() {
     this._startedAt = Date.now();
-    if (this.user) this.attemptId = await AttemptService.create(this.user.id, this.competition.id);
+    if (this.user) {
+      this.attemptId = await AttemptService.create(this.user.id, this.competition.id, null);
+    } else {
+      this.attemptId = await AttemptService.create(null, this.competition.id, this.guestInfo);
+    }
     this.renderQ(0);
     // Start countdown timer if competition has a duration
     if (this.competition.duration_seconds) {
@@ -483,7 +503,7 @@ class QuizEngine {
     });
 
     let saved = false;
-    if (this.user) saved = await AttemptService.submit(this.attemptId, graded, totalScore);
+    if (this.attemptId) saved = await AttemptService.submit(this.attemptId, graded, totalScore);
 
     this._onFinish?.({
       correctCount,
@@ -709,7 +729,17 @@ class CompetitionController {
 
     let actionBtn = '';
     if (!this.user) {
-      actionBtn = `<a href="login.html" class="btn btn-primary">سجّل الدخول للمشاركة</a>`;
+      if (canJoin && questions.length > 0) {
+        actionBtn = `
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button id="btn-start-guest" class="btn btn-primary">🚀 ابدأ كزائر</button>
+            <a href="login.html" class="btn btn-outline">سجّل الدخول للمشاركة بحسابك</a>
+          </div>`;
+      } else if (hasEnded) {
+        actionBtn = `<span class="comp-state-label">انتهت المسابقة</span>`;
+      } else {
+        actionBtn = `<span class="comp-state-label">ستبدأ المسابقة قريبًا</span>`;
+      }
     } else if (maxReached) {
       actionBtn = `<span class="comp-state-label">وصلت للحد الأقصى من المحاولات</span>`;
     } else if (canJoin && questions.length > 0) {
@@ -753,13 +783,25 @@ class CompetitionController {
     document.getElementById('btn-back')?.addEventListener('click', back);
     document.getElementById('btn-back2')?.addEventListener('click', back);
     document.getElementById('btn-start')?.addEventListener('click', () => this._startQuiz(comp, questions));
+    document.getElementById('btn-start-guest')?.addEventListener('click', async () => {
+      let guestInfo = guestService.getGuestInfo();
+      if (!guestService.hasIdentified()) {
+        guestInfo = await guestService.promptModal({
+          title: 'المشاركة كزائر في المسابقة',
+          subtitle: 'أدخل اسمك وبياناتك لتوثيق مشاركتك وحفظ نتيجتك لدى المعلم:',
+          actionText: 'بدء المسابقة ←'
+        });
+        if (!guestInfo) return; // user cancelled
+      }
+      this._startQuiz(comp, questions, guestInfo);
+    });
   }
 
   // ── Quiz ──────────────────────────────────────────────────
-  _startQuiz(comp, questions) {
+  _startQuiz(comp, questions, guestInfo = null) {
     this.container.innerHTML = '<div id="cqinner"></div>';
     const inner = document.getElementById('cqinner');
-    new QuizEngine(comp, questions, this.user, inner)
+    new QuizEngine(comp, questions, this.user, inner, guestInfo)
       .onFinish(result => this._renderResult(comp, result))
       .start();
   }

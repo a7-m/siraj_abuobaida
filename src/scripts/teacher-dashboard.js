@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAccess();
     setupNavigation();
     setupEditor();
+    setupParticipants();
     
     // Load initial data
     loadDashboardStats();
@@ -101,6 +102,16 @@ async function loadDashboardStats() {
         
         document.getElementById('stat-published').textContent = publishedCount;
         document.getElementById('stat-drafts').textContent = draftCount;
+
+        // Total registered students
+        const { count: studentsCount, error: sErr } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'student');
+        if (!sErr && studentsCount !== null) {
+            const el = document.getElementById('stat-students-count');
+            if (el) el.textContent = studentsCount;
+        }
         
     } catch(err) {
         console.error("Error loading stats:", err);
@@ -863,3 +874,731 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCompetitions();
     });
 });
+
+// =============================================================
+// PARTICIPANTS SYSTEM (المشاركون)
+// =============================================================
+
+let allParticipantsData = [];
+let filteredParticipants = [];
+let currentPartPage = 1;
+let partPageSize = 25;
+let isLoadingParticipants = false;
+
+function setupParticipants() {
+    // Navigation hook
+    const partNavItem = document.querySelector('.td-nav-item[data-target="participants"]');
+    partNavItem?.addEventListener('click', () => {
+        loadParticipantsData();
+    });
+
+    // Refresh & Export
+    document.getElementById('btn-refresh-participants')?.addEventListener('click', () => {
+        loadParticipantsData();
+    });
+
+    document.getElementById('btn-export-participants')?.addEventListener('click', () => {
+        exportParticipantsToCSV();
+    });
+
+    // Filters
+    const filterInputs = [
+        'part-filter-name',
+        'part-filter-email',
+        'part-filter-section',
+        'part-filter-date-from',
+        'part-filter-date-to'
+    ];
+    filterInputs.forEach(id => {
+        const el = document.getElementById(id);
+        el?.addEventListener('input', () => {
+            applyParticipantsFilters();
+        });
+    });
+
+    const filterSelects = [
+        'part-filter-activity',
+        'part-filter-user-type',
+        'part-filter-grade',
+        'part-filter-status',
+        'part-filter-sort'
+    ];
+    filterSelects.forEach(id => {
+        const el = document.getElementById(id);
+        el?.addEventListener('change', () => {
+            applyParticipantsFilters();
+        });
+    });
+
+    // Reset Filters
+    document.getElementById('btn-reset-part-filters')?.addEventListener('click', () => {
+        resetParticipantsFilters();
+    });
+
+    // Page size
+    document.getElementById('part-page-size')?.addEventListener('change', (e) => {
+        partPageSize = parseInt(e.target.value, 10) || 25;
+        currentPartPage = 1;
+        renderParticipantsTable();
+    });
+
+    // Modal Close
+    const closeModal = () => {
+        const modal = document.getElementById('part-detail-modal');
+        if (modal) modal.style.display = 'none';
+    };
+    document.getElementById('btn-close-part-modal')?.addEventListener('click', closeModal);
+    document.getElementById('btn-modal-close')?.addEventListener('click', closeModal);
+    document.getElementById('part-detail-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'part-detail-modal') closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+}
+
+async function loadParticipantsData() {
+    if (isLoadingParticipants) return;
+    isLoadingParticipants = true;
+
+    const tbody = document.getElementById('participants-table-body');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                        <div style="font-size: 2rem;">⏳</div>
+                        <span>جاري تحميل بيانات المشاركين من قاعدة البيانات...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('all_participants_view')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        allParticipantsData = data || [];
+        updateParticipantsStatCards(allParticipantsData);
+        applyParticipantsFilters();
+
+    } catch (err) {
+        console.error('loadParticipantsData error:', err);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 2.5rem; color: #ef4444;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 2rem;">⚠️</span>
+                            <strong>تعذر تحميل بيانات المشاركين</strong>
+                            <p style="margin: 0; color: var(--color-text-muted); font-size: 0.85rem;">
+                                ${escapeHtml(err.message || 'حدث خطأ في الاتصال بقاعدة البيانات')}
+                            </p>
+                            <button id="btn-retry-participants" class="btn btn-outline" style="margin-top: 0.5rem;">
+                                إعادة المحاولة
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('btn-retry-participants')?.addEventListener('click', () => {
+                loadParticipantsData();
+            });
+        }
+        window.Toast?.error('تعذر تحميل بيانات المشاركين');
+    } finally {
+        isLoadingParticipants = false;
+    }
+}
+
+function updateParticipantsStatCards(data) {
+    // Unique participants calculation:
+    // Distinct students (by student_id) + distinct guests (by guest_session_id or name)
+    const uniqueParticipants = new Set();
+    const registeredStudents = new Set();
+    const guestParticipants = new Set();
+
+    let readingCount = 0;
+    let competitionCount = 0;
+    let researchCount = 0;
+
+    data.forEach(p => {
+        if (p.participant_type === 'registered' && p.student_id) {
+            const id = 'reg_' + p.student_id;
+            uniqueParticipants.add(id);
+            registeredStudents.add(p.student_id);
+        } else {
+            const guestId = 'guest_' + (p.guest_session_id || p.full_name || 'unknown');
+            uniqueParticipants.add(guestId);
+            guestParticipants.add(guestId);
+        }
+
+        if (p.activity_type === 'reading') readingCount++;
+        else if (p.activity_type === 'competition') competitionCount++;
+        else if (p.activity_type === 'research') researchCount++;
+    });
+
+    const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    setEl('stat-part-total', uniqueParticipants.size);
+    setEl('stat-part-registered', registeredStudents.size);
+    setEl('stat-part-guests', guestParticipants.size);
+    setEl('stat-part-reading', readingCount);
+    setEl('stat-part-competitions', competitionCount);
+    setEl('stat-part-research', researchCount);
+}
+
+function applyParticipantsFilters() {
+    const nameQuery = (document.getElementById('part-filter-name')?.value || '').trim().toLowerCase();
+    const emailQuery = (document.getElementById('part-filter-email')?.value || '').trim().toLowerCase();
+    const activityFilter = document.getElementById('part-filter-activity')?.value || 'all';
+    const userTypeFilter = document.getElementById('part-filter-user-type')?.value || 'all';
+    const gradeFilter = document.getElementById('part-filter-grade')?.value || 'all';
+    const sectionQuery = (document.getElementById('part-filter-section')?.value || '').trim();
+    const statusFilter = document.getElementById('part-filter-status')?.value || 'all';
+    const dateFromVal = document.getElementById('part-filter-date-from')?.value;
+    const dateToVal = document.getElementById('part-filter-date-to')?.value;
+    const sortVal = document.getElementById('part-filter-sort')?.value || 'date-desc';
+
+    filteredParticipants = allParticipantsData.filter(p => {
+        // Name
+        if (nameQuery && !(p.full_name || '').toLowerCase().includes(nameQuery)) {
+            return false;
+        }
+
+        // Email
+        if (emailQuery && !(p.email || '').toLowerCase().includes(emailQuery)) {
+            return false;
+        }
+
+        // Activity type
+        if (activityFilter !== 'all' && p.activity_type !== activityFilter) {
+            return false;
+        }
+
+        // User type
+        if (userTypeFilter !== 'all' && p.participant_type !== userTypeFilter) {
+            return false;
+        }
+
+        // Grade
+        if (gradeFilter !== 'all' && p.grade !== gradeFilter) {
+            return false;
+        }
+
+        // Section
+        if (sectionQuery && !(p.section || '').includes(sectionQuery)) {
+            return false;
+        }
+
+        // Status
+        if (statusFilter !== 'all') {
+            if (p.status !== statusFilter) return false;
+        }
+
+        // Date range
+        if (dateFromVal) {
+            const pDate = new Date(p.created_at);
+            const fromDate = new Date(dateFromVal);
+            if (pDate < fromDate) return false;
+        }
+        if (dateToVal) {
+            const pDate = new Date(p.created_at);
+            const toDate = new Date(dateToVal);
+            toDate.setHours(23, 59, 59, 999);
+            if (pDate > toDate) return false;
+        }
+
+        return true;
+    });
+
+    // Sorting
+    filteredParticipants.sort((a, b) => {
+        switch (sortVal) {
+            case 'date-asc':
+                return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+            case 'name-asc':
+                return (a.full_name || '').localeCompare(b.full_name || '', 'ar');
+            case 'name-desc':
+                return (b.full_name || '').localeCompare(a.full_name || '', 'ar');
+            case 'score-desc':
+                return (b.score ?? -999999) - (a.score ?? -999999);
+            case 'score-asc':
+                return (a.score ?? 999999) - (b.score ?? 999999);
+            case 'date-desc':
+            default:
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        }
+    });
+
+    // Update count display
+    const countEl = document.getElementById('part-results-count');
+    if (countEl) {
+        countEl.textContent = `عرض ${filteredParticipants.length} من إجمالي ${allParticipantsData.length} مشاركة`;
+    }
+
+    currentPartPage = 1;
+    renderParticipantsTable();
+}
+
+function resetParticipantsFilters() {
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
+
+    setVal('part-filter-name', '');
+    setVal('part-filter-email', '');
+    setVal('part-filter-section', '');
+    setVal('part-filter-date-from', '');
+    setVal('part-filter-date-to', '');
+    setVal('part-filter-activity', 'all');
+    setVal('part-filter-user-type', 'all');
+    setVal('part-filter-grade', 'all');
+    setVal('part-filter-status', 'all');
+    setVal('part-filter-sort', 'date-desc');
+
+    applyParticipantsFilters();
+}
+
+function renderParticipantsTable() {
+    const tbody = document.getElementById('participants-table-body');
+    if (!tbody) return;
+
+    if (filteredParticipants.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 2.5rem;">🔍</span>
+                        <strong style="font-size: 1.1rem; color: var(--color-text);">لا توجد مشاركات مطابقة لمعايير البحث</strong>
+                        <p style="margin: 0; font-size: 0.85rem;">جرّب تعديل كلمات البحث أو مسح الفلاتر المحددة.</p>
+                        <button id="btn-empty-reset-filters" class="btn btn-outline" style="margin-top: 0.5rem;">
+                            إعادة ضبط الفلاتر
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.querySelector('#btn-empty-reset-filters')?.addEventListener('click', () => {
+            resetParticipantsFilters();
+        });
+        renderPaginationControls(0);
+        return;
+    }
+
+    const totalPages = Math.ceil(filteredParticipants.length / partPageSize);
+    if (currentPartPage > totalPages) currentPartPage = totalPages;
+    if (currentPartPage < 1) currentPartPage = 1;
+
+    const startIndex = (currentPartPage - 1) * partPageSize;
+    const endIndex = Math.min(startIndex + partPageSize, filteredParticipants.length);
+    const pageRows = filteredParticipants.slice(startIndex, endIndex);
+
+    const rowsHtml = pageRows.map(p => {
+        // Account badge
+        const isReg = p.participant_type === 'registered';
+        const accountBadge = isReg
+            ? '<span class="badge badge-reg">🎓 طالب مسجل</span>'
+            : '<span class="badge badge-guest">🌐 زائر دون حساب</span>';
+
+        // Activity badge
+        let actBadge = '';
+        if (p.activity_type === 'competition') {
+            actBadge = '<span class="badge badge-act-comp">🏆 مسابقة السراج</span>';
+        } else if (p.activity_type === 'reading') {
+            actBadge = '<span class="badge badge-act-reading">📚 تحدي القراءة</span>';
+        } else {
+            actBadge = '<span class="badge badge-act-research">🔬 البحث العلمي</span>';
+        }
+
+        // Status badge
+        const statusMap = {
+            'completed': { label: 'مكتمل ✓', cls: 'badge-status-completed' },
+            'submitted': { label: 'تم التسليم', cls: 'badge-status-submitted' },
+            'evaluated': { label: 'مقيّم', cls: 'badge-status-evaluated' },
+            'under_review': { label: 'قيد التحكيم', cls: 'badge-status-review' },
+            'in_progress': { label: 'قيد الإنجاز', cls: 'badge-status-in_progress' },
+            'started': { label: 'بدأ المحاولة', cls: 'badge-status-started' }
+        };
+        const st = statusMap[p.status] || { label: p.status || '-', cls: '' };
+        const statusBadge = `<span class="badge ${st.cls}">${st.label}</span>`;
+
+        // Score
+        const scoreDisplay = p.score !== null && p.score !== undefined
+            ? `<strong style="color: var(--color-primary);">${p.score}</strong>`
+            : `<span style="color: var(--color-text-muted);">-</span>`;
+
+        // Class & Section
+        const classDisplay = (p.grade || p.section)
+            ? `${escapeHtml(p.grade || '-')}${p.section ? ' / ' + escapeHtml(p.section) : ''}`
+            : '<span style="color: var(--color-text-muted);">-</span>';
+
+        const emailDisplay = p.email
+            ? `<span style="font-size: 0.82rem; font-family: monospace;">${escapeHtml(p.email)}</span>`
+            : '<span style="color: var(--color-text-muted);">-</span>';
+
+        return `
+            <tr>
+                <td>${accountBadge}</td>
+                <td>
+                    <strong>${escapeHtml(p.full_name)}</strong>
+                </td>
+                <td>${emailDisplay}</td>
+                <td>${classDisplay}</td>
+                <td>${actBadge}</td>
+                <td>
+                    <span style="font-weight: 500;">${escapeHtml(p.activity_name || '-')}</span>
+                </td>
+                <td style="font-size: 0.82rem; color: var(--color-text-muted);">
+                    ${formatArabicDate(p.created_at)}
+                </td>
+                <td>${scoreDisplay}</td>
+                <td>${statusBadge}</td>
+                <td style="text-align: center;">
+                    <button class="btn btn-outline btn-sm btn-view-part" data-id="${p.id}" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; white-space: nowrap;">
+                        عرض التفاصيل 🔍
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    tbody.innerHTML = rowsHtml;
+
+    // Attach row view detail listeners
+    tbody.querySelectorAll('.btn-view-part').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            openParticipantDetailModal(id);
+        });
+    });
+
+    renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+    const pageInfo = document.getElementById('part-page-info');
+    const container = document.getElementById('part-page-buttons');
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        if (pageInfo) pageInfo.textContent = `الصفحة 1 من 1`;
+        container.innerHTML = '';
+        return;
+    }
+
+    if (pageInfo) {
+        pageInfo.textContent = `الصفحة ${currentPartPage} من ${totalPages}`;
+    }
+
+    let buttonsHtml = '';
+
+    // Prev
+    buttonsHtml += `
+        <button class="btn-page" ${currentPartPage <= 1 ? 'disabled' : ''} id="btn-part-prev">
+            السابق
+        </button>
+    `;
+
+    // Numeric pages
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPartPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage + 1 < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+        buttonsHtml += `<button class="btn-page" data-page="1">1</button>`;
+        if (startPage > 2) buttonsHtml += `<span style="padding: 0 0.25rem;">...</span>`;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        buttonsHtml += `
+            <button class="btn-page ${i === currentPartPage ? 'active' : ''}" data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) buttonsHtml += `<span style="padding: 0 0.25rem;">...</span>`;
+        buttonsHtml += `<button class="btn-page" data-page="${totalPages}">${totalPages}</button>`;
+    }
+
+    // Next
+    buttonsHtml += `
+        <button class="btn-page" ${currentPartPage >= totalPages ? 'disabled' : ''} id="btn-part-next">
+            التالي
+        </button>
+    `;
+
+    container.innerHTML = buttonsHtml;
+
+    container.querySelector('#btn-part-prev')?.addEventListener('click', () => {
+        if (currentPartPage > 1) {
+            currentPartPage--;
+            renderParticipantsTable();
+        }
+    });
+
+    container.querySelector('#btn-part-next')?.addEventListener('click', () => {
+        if (currentPartPage < totalPages) {
+            currentPartPage++;
+            renderParticipantsTable();
+        }
+    });
+
+    container.querySelectorAll('.btn-page[data-page]').forEach(b => {
+        b.addEventListener('click', () => {
+            currentPartPage = parseInt(b.getAttribute('data-page'), 10);
+            renderParticipantsTable();
+        });
+    });
+}
+
+function openParticipantDetailModal(recordId) {
+    const record = allParticipantsData.find(p => p.id === recordId);
+    if (!record) return;
+
+    const modal = document.getElementById('part-detail-modal');
+    if (!modal) return;
+
+    // Header & identity
+    document.getElementById('modal-part-name').textContent = record.full_name || 'مشارك زائر';
+    const isReg = record.participant_type === 'registered';
+    const badgeEl = document.getElementById('modal-part-badge');
+    if (badgeEl) {
+        badgeEl.textContent = isReg ? '🎓 طالب مسجل الدخول' : '🌐 مشارك دون حساب (زائر)';
+        badgeEl.className = isReg ? 'badge badge-reg' : 'badge badge-guest';
+    }
+
+    document.getElementById('modal-part-email').textContent = record.email || 'غير متوفر';
+    document.getElementById('modal-part-class').textContent =
+        (record.grade || record.section)
+            ? `${record.grade || '-'} ${record.section ? '(شعبة ' + record.section + ')' : ''}`
+            : 'غير محدد';
+    document.getElementById('modal-part-usertype').textContent = isReg ? 'حساب نظامي موثق' : 'مشاركة عامة عبر المتصفح';
+    document.getElementById('modal-part-id').textContent =
+        record.student_id ? `ID: ${record.student_id}` : `Session: ${record.guest_session_id || record.id}`;
+
+    // Activity Badge
+    const actBadgeEl = document.getElementById('modal-part-act-badge');
+    if (actBadgeEl) {
+        if (record.activity_type === 'competition') {
+            actBadgeEl.textContent = '🏆 مسابقة السراج';
+            actBadgeEl.className = 'badge badge-act-comp';
+        } else if (record.activity_type === 'reading') {
+            actBadgeEl.textContent = '📚 تحدي القراءة';
+            actBadgeEl.className = 'badge badge-act-reading';
+        } else {
+            actBadgeEl.textContent = '🔬 البحث العلمي';
+            actBadgeEl.className = 'badge badge-act-research';
+        }
+    }
+
+    // Dynamic Activity Details Grid
+    const detailsGrid = document.getElementById('modal-act-details-grid');
+    const extraInfo = document.getElementById('modal-act-extra-info');
+    const d = record.details || {};
+
+    let gridHtml = `
+        <div class="part-detail-box">
+            <div class="part-detail-box-label">اسم الفعالية / النشاط</div>
+            <div class="part-detail-box-value">${escapeHtml(record.activity_name || '-')}</div>
+        </div>
+        <div class="part-detail-box">
+            <div class="part-detail-box-label">تاريخ وتوقيت المشاركة</div>
+            <div class="part-detail-box-value">${formatArabicDate(record.created_at)}</div>
+        </div>
+        <div class="part-detail-box">
+            <div class="part-detail-box-label">الحالة</div>
+            <div class="part-detail-box-value">${escapeHtml(record.status || '-')}</div>
+        </div>
+        <div class="part-detail-box">
+            <div class="part-detail-box-label">الدرجة المحققة</div>
+            <div class="part-detail-box-value" style="color: var(--color-primary); font-size: 1.15rem;">
+                ${record.score !== null && record.score !== undefined ? record.score : 'غير متوفر'}
+            </div>
+        </div>
+    `;
+
+    detailsGrid.innerHTML = gridHtml;
+
+    // Extra specific activity info
+    let extraHtml = '';
+    if (record.activity_type === 'reading') {
+        extraHtml = `
+            <div style="background: var(--color-bg-alt); padding: 1rem; border-radius: var(--border-radius-sm, 8px); border: 1px solid var(--color-border-light);">
+                <h5 style="margin: 0 0 0.5rem; color: var(--color-text);">معلومات مرحلة القراءة:</h5>
+                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>البرنامج:</strong> ${escapeHtml(d.challenge_title || 'برنامج القراءة المتدرج')}</p>
+                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>المرحلة:</strong> رقم ${escapeHtml(d.level_number || 1)} — ${escapeHtml(d.level_title || '')}</p>
+            </div>
+        `;
+    } else if (record.activity_type === 'competition') {
+        extraHtml = `
+            <div style="background: var(--color-bg-alt); padding: 1rem; border-radius: var(--border-radius-sm, 8px); border: 1px solid var(--color-border-light);">
+                <h5 style="margin: 0 0 0.5rem; color: var(--color-text);">معلومات محاولة المسابقة:</h5>
+                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>المسابقة:</strong> ${escapeHtml(d.competition_title || record.activity_name)}</p>
+                ${d.duration_seconds ? `<p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>المدة المقررة:</strong> ${Math.ceil(d.duration_seconds / 60)} دقيقة</p>` : ''}
+                ${d.started_at ? `<p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>وقت البدء:</strong> ${formatArabicDate(d.started_at)}</p>` : ''}
+                ${d.submitted_at ? `<p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>وقت التسليم:</strong> ${formatArabicDate(d.submitted_at)}</p>` : ''}
+            </div>
+        `;
+    } else if (record.activity_type === 'research') {
+        extraHtml = `
+            <div style="background: var(--color-bg-alt); padding: 1rem; border-radius: var(--border-radius-sm, 8px); border: 1px solid var(--color-border-light);">
+                <h5 style="margin: 0 0 0.5rem; color: var(--color-text);">معلومات البحث العلمي:</h5>
+                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>مجال البحث:</strong> ${escapeHtml(d.field || 'غير محدد')}</p>
+                ${d.summary ? `<p style="margin: 0.5rem 0; font-size: 0.88rem; line-height: 1.5;"><strong>ملخص الفكرة:</strong><br>${escapeHtml(d.summary)}</p>` : ''}
+                ${d.file_url ? `
+                    <div style="margin-top: 0.75rem;">
+                        <a href="${escapeHtml(d.file_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                            📄 فتح / تحميل ملف البحث ↗
+                        </a>
+                    </div>
+                ` : ''}
+                ${d.evaluation_notes ? `
+                    <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(34, 197, 94, 0.08); border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.2);">
+                        <strong>ملاحظات التحكيم:</strong> ${escapeHtml(d.evaluation_notes)}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    extraInfo.innerHTML = extraHtml;
+
+    // Find other activities by same student/guest
+    const otherActivities = allParticipantsData.filter(item => {
+        if (item.id === record.id) return false;
+        if (isReg && item.student_id && item.student_id === record.student_id) return true;
+        if (!isReg && record.guest_session_id && item.guest_session_id === record.guest_session_id) return true;
+        return false;
+    });
+
+    document.getElementById('modal-other-count').textContent = otherActivities.length;
+    const otherListEl = document.getElementById('modal-other-activities-list');
+    if (otherActivities.length === 0) {
+        otherListEl.innerHTML = `<p style="color: var(--color-text-muted); font-size: 0.85rem;">لا توجد مشاركات أخرى مسجلة لهذا المشارك.</p>`;
+    } else {
+        otherListEl.innerHTML = otherActivities.map(o => `
+            <div class="part-history-item">
+                <div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">
+                        ${o.activity_type === 'competition' ? '🏆 ' : o.activity_type === 'reading' ? '📚 ' : '🔬 '}
+                        ${escapeHtml(o.activity_name)}
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--color-text-muted);">
+                        ${formatArabicDate(o.created_at)} — الحالة: ${escapeHtml(o.status || '-')}
+                    </div>
+                </div>
+                <div style="text-align: left;">
+                    <span style="font-weight: 700; color: var(--color-primary); font-size: 0.95rem;">
+                        ${o.score !== null && o.score !== undefined ? o.score : '-'}
+                    </span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    modal.style.display = 'flex';
+}
+
+function exportParticipantsToCSV() {
+    if (filteredParticipants.length === 0) {
+        window.Toast?.error('لا توجد بيانات مشاركين لتصديرها وفق الفلاتر الحالية.');
+        return;
+    }
+
+    // CSV Headers
+    const headers = [
+        'الاسم الكامل',
+        'نوع الحساب',
+        'البريد الإلكتروني',
+        'الصف',
+        'الشعبة',
+        'نوع النشاط',
+        'اسم النشاط / الفعالية',
+        'تاريخ المشاركة',
+        'الدرجة',
+        'الحالة'
+    ];
+
+    const actTypeMap = {
+        'competition': 'مسابقة السراج',
+        'reading': 'تحديات القراءة',
+        'research': 'البحث العلمي'
+    };
+
+    const userTypeMap = {
+        'registered': 'طالب مسجل',
+        'guest': 'مشارك زائر'
+    };
+
+    const rows = filteredParticipants.map(p => {
+        return [
+            `"${(p.full_name || '').replace(/"/g, '""')}"`,
+            `"${userTypeMap[p.participant_type] || p.participant_type}"`,
+            `"${(p.email || '').replace(/"/g, '""')}"`,
+            `"${(p.grade || '').replace(/"/g, '""')}"`,
+            `"${(p.section || '').replace(/"/g, '""')}"`,
+            `"${actTypeMap[p.activity_type] || p.activity_type}"`,
+            `"${(p.activity_name || '').replace(/"/g, '""')}"`,
+            `"${formatArabicDate(p.created_at)}"`,
+            `"${p.score !== null && p.score !== undefined ? p.score : ''}"`,
+            `"${(p.status || '').replace(/"/g, '""')}"`
+        ];
+    });
+
+    // UTF-8 BOM (\uFEFF) ensures Arabic renders accurately in Microsoft Excel
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `siraj_participants_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    window.Toast?.success(`تم تصدير ${filteredParticipants.length} سجل مشاركة بنجاح إلى ملف CSV.`);
+}
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatArabicDate(isoStr) {
+    if (!isoStr) return '-';
+    try {
+        const d = new Date(isoStr);
+        return d.toLocaleDateString('ar-OM', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return isoStr;
+    }
+}
+

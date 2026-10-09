@@ -106,47 +106,79 @@
         </div>
         
         <h3 style="margin-top: 2rem; margin-bottom: 1rem;">حالة التقييم</h3>
-        <div style="padding: 1rem; border: 1px dashed var(--color-gold); border-radius: var(--border-radius); text-align: center; color: var(--color-text-muted);">
+        <div id="res-status-display" style="padding: 1rem; border: 1px dashed var(--color-gold); border-radius: var(--border-radius); text-align: center; color: var(--color-text-muted);">
           في انتظار رفع البحث...
         </div>
       </div>
     </div>
 
-    <!-- Upload Form Stub -->
-    <section class="card" style="max-width: 800px; margin: 0 auto;">
-      <h3 style="margin-bottom: 1.5rem; text-align: center;">رفع البحث (Mock UI)</h3>
-      <form class="flex flex-col gap-3" onsubmit="event.preventDefault();">
+    <!-- Active Research Submission Form -->
+    <section class="card" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h3 style="margin: 0;">نموذج المشاركة ورفع البحث</h3>
+        <span id="res-user-badge" class="badge">جاري التحقق...</span>
+      </div>
+
+      <form id="research-form" class="flex flex-col gap-3">
         <div class="grid grid-2">
           <div class="flex flex-col gap-1">
-            <label style="font-weight: bold; font-size: 0.9rem;">اسم الطالب</label>
-            <input type="text" placeholder="الاسم الكامل" style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text);" disabled>
+            <label style="font-weight: bold; font-size: 0.9rem;">اسم الطالب <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="res-student-name" class="form-control" placeholder="الاسم الكامل للطالب" required>
           </div>
           <div class="flex flex-col gap-1">
+            <label style="font-weight: bold; font-size: 0.9rem;">البريد الإلكتروني (اختياري)</label>
+            <input type="email" id="res-student-email" class="form-control" placeholder="example@school.om">
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="flex flex-col gap-1">
             <label style="font-weight: bold; font-size: 0.9rem;">الصف</label>
-            <select style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text);" disabled>
-              <option>اختر الصف...</option>
+            <select id="res-student-grade" class="form-control">
+              <option value="">اختر الصف...</option>
+              <option value="الخامس">الخامس</option>
+              <option value="السادس">السادس</option>
+              <option value="السابع">السابع</option>
+              <option value="الثامن">الثامن</option>
+              <option value="التاسع">التاسع</option>
+              <option value="العاشر">العاشر</option>
+              <option value="الحادي عشر">الحادي عشر</option>
+              <option value="الثاني عشر">الثاني عشر</option>
             </select>
           </div>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label style="font-weight: bold; font-size: 0.9rem;">عنوان البحث</label>
-          <input type="text" placeholder="أدخل عنوان بحثك..." style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text);" disabled>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label style="font-weight: bold; font-size: 0.9rem;">ملخص البحث</label>
-          <textarea rows="4" placeholder="اكتب نبذة مختصرة عن فكرة البحث..." style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text); font-family: inherit;" disabled></textarea>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label style="font-weight: bold; font-size: 0.9rem;">ملف البحث (PDF أو Word)</label>
-          <div style="border: 2px dashed var(--color-border); padding: 2rem; text-align: center; border-radius: var(--border-radius); background-color: var(--color-bg); color: var(--color-text-muted);">
-            اسحب وأفلت الملف هنا أو <span style="color: var(--color-accent); text-decoration: underline;">اختر ملف</span> (قريباً للمسجلين)
+          <div class="flex flex-col gap-1">
+            <label style="font-weight: bold; font-size: 0.9rem;">الشعبة</label>
+            <input type="text" id="res-student-section" class="form-control" placeholder="مثال: 5">
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%; cursor: not-allowed;" disabled>إرسال البحث</button>
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">مجال البحث <span style="color:#ef4444;">*</span></label>
+          <select id="res-field" class="form-control" required>
+            <option value="العلوم والتكنولوجيا">العلوم والتكنولوجيا</option>
+            <option value="التاريخ العماني">التاريخ العماني</option>
+            <option value="الاستدامة البيئية">الاستدامة البيئية</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">عنوان البحث <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="res-title" class="form-control" placeholder="أدخل عنوان بحثك المبتكر..." required>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">ملخص البحث <span style="color:#ef4444;">*</span></label>
+          <textarea id="res-summary" class="form-control" rows="4" placeholder="اكتب نبذة مختصرة عن فكرة البحث وأهم النتائج..." required></textarea>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label style="font-weight: bold; font-size: 0.9rem;">رابط ملف البحث أو المرجع (Google Drive / OneDrive / رابط مستند)</label>
+          <input type="url" id="res-file-url" class="form-control" placeholder="https://drive.google.com/...">
+          <small style="color: var(--color-text-muted); font-size: 0.8rem;">يمكنك مشاركة رابط البحث عبر Google Drive أو السحابة، أو إرفاقه ورقياً للمعلم المسؤول.</small>
+        </div>
+
+        <button type="submit" id="res-submit-btn" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">إرسال البحث والمشاركة</button>
       </form>
     </section>
 
@@ -154,5 +186,6 @@
 
   <footer class="footer"><div class="container"><p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p></div></footer>
   <script type="module" src="./src/scripts/main.js"></script>
+  <script type="module" src="./src/scripts/research.js"></script>
 </body>
 </html>
