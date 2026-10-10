@@ -56,19 +56,17 @@
         <a class="td-nav-item" data-target="competitions">
           <span>🏆</span> مسابقات السراج
         </a>
+        <a class="td-nav-item" data-target="challenges">
+          <span>📚</span> طوّر نفسك
+        </a>
+        <a class="td-nav-item" data-target="sections">
+          <span>🏫</span> شُعب أبو عبيدة
+        </a>
         <a class="td-nav-item" data-target="participants" id="td-nav-participants">
           <span>👥</span> المشاركون
         </a>
         <a class="td-nav-item" data-target="profile">
           <span>👤</span> الملف الشخصي
-        </a>
-        
-        <div class="td-nav-section">أقسام مستقبلية</div>
-        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
-          <span>📚</span> تحديات القراءة
-        </a>
-        <a class="td-nav-item" style="opacity: 0.6; cursor: not-allowed;">
-          <span>🔬</span> تحكيم الأبحاث
         </a>
       </nav>
       
@@ -312,6 +310,46 @@
                       <span>خلط ترتيب الأسئلة عشوائياً</span>
                     </label>
                   </div>
+
+                  <!-- Track configuration -->
+                  <div style="border-top:1px solid var(--color-border); margin-top:1rem; padding-top:1rem;">
+                    <div class="form-group">
+                      <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                        <input type="checkbox" id="comp-track-enabled" style="width:auto;">
+                        <span style="font-weight:600;">تفعيل شريط مسار التحدي (Track Bar)</span>
+                      </label>
+                    </div>
+                    <div id="comp-track-fields" style="display:none; margin-top:0.75rem;">
+                      <div class="form-group">
+                        <label class="form-label" style="font-size:0.85rem;">نوع المسار</label>
+                        <select id="comp-track-type" class="form-control" style="font-size:0.85rem;">
+                          <option value="numeric">أرقام ومحطات متتالية (Numeric)</option>
+                          <option value="timeline">جدول زمني / تواريخ (Timeline)</option>
+                        </select>
+                      </div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                        <div class="form-group">
+                          <label class="form-label" style="font-size:0.85rem;">بداية المسار</label>
+                          <input type="number" id="comp-track-start" class="form-control" value="1" style="font-size:0.85rem;">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label" style="font-size:0.85rem;">نهاية المسار</label>
+                          <input type="number" id="comp-track-end" class="form-control" value="10" style="font-size:0.85rem;">
+                        </div>
+                      </div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                        <div class="form-group">
+                          <label class="form-label" style="font-size:0.85rem;">الخطوة</label>
+                          <input type="number" id="comp-track-step" class="form-control" value="1" min="1" style="font-size:0.85rem;">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label" style="font-size:0.85rem;">الوحدة</label>
+                          <input type="text" id="comp-track-unit" class="form-control" value="سؤال" style="font-size:0.85rem;">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div style="margin-top:1.5rem;">
                     <button id="btn-save-comp" class="btn btn-primary" style="width:100%;">حفظ المسابقة</button>
                   </div>
@@ -367,6 +405,231 @@
             </div>
           </div>
 
+        </section>
+
+        <!-- Challenges Management Section (طوّر نفسك) -->
+        <section id="section-challenges" class="td-section">
+          <!-- Challenges List View -->
+          <div id="chal-list-view">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h3 style="margin: 0; font-size: 1.4rem;">إدارة برنامج «طوّر نفسك»</h3>
+                <p style="margin: 0.25rem 0 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                  إدارة برامج التحدي المعرفي المتدرجة، الفئات، المراحل القرائية، وشروط الاجتياز.
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <select id="chal-filter-category" class="form-control" style="width: auto;">
+                  <option value="all">جميع الفئات</option>
+                </select>
+                <button id="btn-add-chal" class="btn btn-primary">+ برنامج جديد</button>
+              </div>
+            </div>
+
+            <div class="td-table-wrapper">
+              <table class="td-table">
+                <thead>
+                  <tr>
+                    <th>اسم البرنامج</th>
+                    <th>الفئة</th>
+                    <th>عدد المراحل</th>
+                    <th>الحالة</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="chal-table-body">
+                  <tr><td colspan="5" style="text-align:center">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Challenge Editor View (Hidden by default) -->
+          <div id="chal-editor-view" style="display:none;">
+            <div class="flex justify-between items-center" style="margin-bottom:1.5rem;">
+              <h3 id="chal-editor-title">برنامج جديد</h3>
+              <button id="btn-chal-back-list" class="btn btn-outline">عودة للقائمة</button>
+            </div>
+
+            <div class="editor-layout">
+              <div class="editor-main card" style="padding:1.5rem;">
+                <div class="form-group">
+                  <label class="form-label">عنوان البرنامج *</label>
+                  <input type="text" id="chal-title" class="form-control" placeholder="مثال: برنامج القراءة المتدرج – إشراقات عُمانية">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">وصف البرنامج</label>
+                  <textarea id="chal-description" class="form-control" rows="3" placeholder="وصف البرنامج المعرفي وأهدافه..."></textarea>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">الفئة / التصنيف *</label>
+                    <select id="chal-category-select" class="form-control">
+                      <!-- Filled dynamically -->
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">ترتيب العرض</label>
+                    <input type="number" id="chal-order-num" class="form-control" value="1" min="1">
+                  </div>
+                </div>
+              </div>
+
+              <div class="editor-sidebar">
+                <div class="card" style="padding:1.5rem; margin-bottom:1rem;">
+                  <h4 style="margin-bottom:1rem;">الحالة والإجراءات</h4>
+                  <div class="form-group">
+                    <label class="form-label">حالة البرنامج</label>
+                    <select id="chal-status" class="form-control">
+                      <option value="draft">مسودة قيد الإعداد</option>
+                      <option value="active">نشط ومتاح للطلاب</option>
+                      <option value="archived">مؤرشف</option>
+                      <option value="inactive">غير نشط (قديم)</option>
+                    </select>
+                  </div>
+                  <button id="btn-save-chal" class="btn btn-primary" style="width:100%; margin-top:1rem;">حفظ البرنامج</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Challenge Levels Panel -->
+            <div id="chal-levels-panel" style="margin-top:2rem; display:none;">
+              <div class="flex justify-between items-center" style="margin-bottom:1rem;">
+                <h4>مراحل البرنامج القرائي</h4>
+                <button id="btn-add-level" class="btn btn-primary">+ إضافة مرحلة</button>
+              </div>
+              <div id="chal-levels-list"></div>
+
+              <!-- Level Editor (Inline modal/card) -->
+              <div id="level-editor-card" class="card" style="padding:1.5rem; margin-top:1rem; display:none; border:2px solid var(--color-primary);">
+                <h5 id="level-editor-title" style="margin-bottom:1rem;">إضافة مرحلة جديدة</h5>
+                <div style="display:grid; grid-template-columns:120px 1fr 150px; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">رقم المرحلة</label>
+                    <input type="number" id="level-num" class="form-control" value="1" min="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">عنوان المرحلة *</label>
+                    <input type="text" id="level-title-input" class="form-control" placeholder="مثال: القلاع والحصون في سلطنة عمان">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">درجة الاجتياز *</label>
+                    <input type="number" id="level-passing-score" class="form-control" value="2" min="1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">النص القرائي للمرحلة (اتركه فارغاً إذا كانت أسئلة مباشرة)</label>
+                  <textarea id="level-paragraph" class="form-control" rows="5" placeholder="أدخل النص القرائي الذي سيقرأه الطالب قبل الإجابة..."></textarea>
+                </div>
+                <div class="flex gap-2">
+                  <button id="btn-save-level" class="btn btn-primary">حفظ المرحلة</button>
+                  <button id="btn-cancel-level" class="btn btn-outline">إلغاء</button>
+                </div>
+
+                <!-- Level Questions Panel -->
+                <div id="level-questions-panel" style="margin-top:1.5rem; border-top:1px solid var(--color-border); padding-top:1rem; display:none;">
+                  <div class="flex justify-between items-center" style="margin-bottom:0.75rem;">
+                    <h6>أسئلة التحدي لهذه المرحلة</h6>
+                    <button id="btn-add-level-question" class="btn btn-outline btn-sm">+ إضافة سؤال للمرحلة</button>
+                  </div>
+                  <div id="level-questions-list"></div>
+                  
+                  <!-- Level Question Editor -->
+                  <div id="level-question-editor" class="card" style="padding:1.25rem; margin-top:1rem; background:var(--color-bg-alt); display:none;">
+                    <h6 id="lq-editor-title" style="margin-bottom:0.75rem;">سؤال جديد للمرحلة</h6>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                      <div class="form-group">
+                        <label class="form-label">نوع السؤال</label>
+                        <select id="lq-type" class="form-control">
+                          <option value="mcq">اختيار من متعدد (MCQ)</option>
+                          <option value="tf">صح وخطأ</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">النقاط</label>
+                        <input type="number" id="lq-points" class="form-control" value="1" min="1">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">نص السؤال *</label>
+                      <textarea id="lq-text" class="form-control" rows="2" placeholder="اكتب السؤال هنا..."></textarea>
+                    </div>
+                    <div id="lq-options-area"></div>
+                    <div class="flex gap-2" style="margin-top:1rem;">
+                      <button id="btn-save-lq" class="btn btn-primary">حفظ السؤال</button>
+                      <button id="btn-cancel-lq" class="btn btn-outline">إلغاء</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Abu Obaida School Sections Management -->
+        <section id="section-sections" class="td-section">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0; font-size: 1.4rem;">إدارة شُعب مدرسة أبو عبيدة بن الجراح</h3>
+              <p style="margin: 0.25rem 0 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                التحكم في الشُعب الدراسية للصفوف (10، 11، 12) وتفعيلها لتظهر فوراً في قوائم تسجيل وتحقق الطلاب.
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <select id="sec-filter-grade" class="form-control" style="width: auto;">
+                <option value="all">كل الصفوف</option>
+                <option value="10">الصف العاشر</option>
+                <option value="11">الصف الحادي عشر</option>
+                <option value="12">الصف الثاني عشر</option>
+              </select>
+              <button id="btn-add-section-modal" class="btn btn-primary">+ إضافة شعبة جديدة</button>
+            </div>
+          </div>
+
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>الصف</th>
+                  <th>رقم الشعبة</th>
+                  <th>مسمى الشعبة</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الإضافة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="sections-table-body">
+                <tr><td colspan="6" style="text-align:center">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Add Section Inline Form / Card -->
+          <div id="add-section-card" class="card" style="padding:1.5rem; margin-top:1.5rem; display:none; max-width:600px;">
+            <h4 style="margin-bottom:1rem;">إضافة شعبة جديدة</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="form-group">
+                <label class="form-label">الصف الدراسي *</label>
+                <select id="new-sec-grade" class="form-control">
+                  <option value="10">العاشر (10)</option>
+                  <option value="11">الحادي عشر (11)</option>
+                  <option value="12">الثاني عشر (12)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">رقم الشعبة *</label>
+                <input type="number" id="new-sec-num" class="form-control" min="1" max="25" placeholder="مثال: 7">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">مسمى الشعبة (اختياري)</label>
+              <input type="text" id="new-sec-name" class="form-control" placeholder="يُترك فارغاً للإنشاء التلقائي: 10/7">
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-submit-new-sec" class="btn btn-primary">إضافة الشعبة</button>
+              <button id="btn-cancel-new-sec" class="btn btn-outline">إلغاء</button>
+            </div>
+          </div>
         </section>
 
         <!-- Participants Management Section -->
@@ -496,6 +759,15 @@
               <div class="part-filter-group">
                 <label class="part-filter-label">الشعبة</label>
                 <input type="text" id="part-filter-section" class="form-control" placeholder="مثال: 5">
+              </div>
+
+              <div class="part-filter-group">
+                <label class="part-filter-label">المدرسة</label>
+                <select id="part-filter-school" class="form-control">
+                  <option value="all">كل المدارس</option>
+                  <option value="abu_obaida">مدرسة أبو عبيدة بن الجراح</option>
+                  <option value="other">مدارس أخرى</option>
+                </select>
               </div>
 
               <div class="part-filter-group">

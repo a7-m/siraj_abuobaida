@@ -28,7 +28,7 @@
 import { authService } from '../services/auth.js';
 import { supabase } from '../services/supabase.js';
 import { Toast } from '../utils/toast.js';
-import { guestService } from '../utils/guest.js';
+import { studentIdentity } from '../utils/student-identity.js';
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -165,9 +165,9 @@ const QuestionRenderer = {
         return { isCorrect: ok, earnedPoints: ok ? pts : 0 };
       }
       case 'order': {
-        const correctOrder = q.metadata?.correct_order || [];
+        const correctOrder = q.metadata?.correct_order || q.metadata?.items || [];
         if (!Array.isArray(answer) || answer.length !== correctOrder.length) return { isCorrect: false, earnedPoints: 0 };
-        const ok = answer.every((v, i) => v === correctOrder[i]);
+        const ok = answer.every((v, i) => String(v).trim() === String(correctOrder[i]).trim());
         return { isCorrect: ok, earnedPoints: ok ? pts : 0 };
       }
       default: return { isCorrect: false, earnedPoints: 0 };
@@ -180,7 +180,7 @@ const QuestionRenderer = {
 // ─────────────────────────────────────────────────────────────
 const AttemptService = {
 
-  async create(studentId, competitionId, guestInfo = null) {
+  async create(studentId, competitionId, studentInfo = null) {
     if (!supabase) return null;
     try {
       const payload = {
@@ -190,12 +190,14 @@ const AttemptService = {
       };
       if (studentId) {
         payload.student_id = studentId;
-      } else if (guestInfo) {
-        payload.student_id = null;
-        payload.guest_name = guestInfo.name || 'مشارك زائر';
-        payload.guest_grade = guestInfo.grade || null;
-        payload.guest_section = guestInfo.section || null;
-        payload.guest_session_id = guestInfo.sessionId || null;
+      }
+      if (studentInfo) {
+        payload.guest_name = studentInfo.name || 'مشارك';
+        payload.guest_grade = studentInfo.grade || null;
+        payload.guest_section = studentInfo.section || null;
+        payload.guest_school_type = studentInfo.schoolType || 'abu_obaida';
+        payload.guest_school_name = studentInfo.schoolName || 'مدرسة أبو عبيدة';
+        payload.guest_session_id = studentInfo.sessionId || null;
       }
       const { data, error } = await supabase
         .from('competition_attempts')
@@ -275,11 +277,11 @@ const AttemptService = {
 // QuizEngine — question-by-question flow
 // ─────────────────────────────────────────────────────────────
 class QuizEngine {
-  constructor(competition, questions, user, container, guestInfo = null) {
+  constructor(competition, questions, user, container, studentInfo = null) {
     this.competition  = competition;
     this.user         = user;
     this.container    = container;
-    this.guestInfo    = guestInfo || guestService.getGuestInfo();
+    this.studentInfo  = studentInfo || studentIdentity.getStoredIdentity();
     this.currentIdx   = 0;
     this.answers      = {};   // { [questionId]: answer }
     this.attemptId    = null;
@@ -297,11 +299,7 @@ class QuizEngine {
 
   async start() {
     this._startedAt = Date.now();
-    if (this.user) {
-      this.attemptId = await AttemptService.create(this.user.id, this.competition.id, null);
-    } else {
-      this.attemptId = await AttemptService.create(null, this.competition.id, this.guestInfo);
-    }
+    this.attemptId = await AttemptService.create(this.user ? this.user.id : null, this.competition.id, this.studentInfo);
     this.renderQ(0);
     // Start countdown timer if competition has a duration
     if (this.competition.duration_seconds) {
@@ -361,6 +359,58 @@ class QuizEngine {
       </div>`;
   }
 
+  // Visual numeric / timeline track based on competition track_config
+  _renderTrackBar(current, total) {
+    const cfg = this.competition.track_config;
+    if (!cfg || !cfg.enabled) return '';
+
+    const start = Number(cfg.start_value) || 0;
+    const end = Number(cfg.end_value) || 100;
+    let step = Number(cfg.step_interval) || 10;
+    if (step <= 0) step = 10;
+    if (end <= start) return '';
+
+    const pct = total > 0 ? Math.min(1, Math.max(0, current / total)) : 0;
+    const currentVal = Math.round(start + pct * (end - start));
+    const unit = cfg.unit_label || (cfg.type === 'time' ? 'دقيقة' : 'نقطة');
+
+    const marks = [];
+    const span = end - start;
+    const count = Math.min(15, Math.max(2, Math.floor(span / step)));
+    const calculatedStep = Math.max(1, Math.round(span / count));
+    for (let i = 0; i <= count; i++) {
+      const val = Math.min(end, start + i * calculatedStep);
+      const markPct = ((val - start) / span) * 100;
+      marks.push({ val, pct: markPct });
+      if (val >= end) break;
+    }
+
+    return `
+      <div class="comp-numeric-track" aria-label="المسار التنافسي">
+        <div class="cnt-header">
+          <span class="cnt-title">${cfg.type === 'time' ? '⏱ المسار الزمني للمسابقة' : '📈 المسار الرقمي للتقدم'}</span>
+          <span class="cnt-current-badge">${currentVal} ${unit}</span>
+        </div>
+        <div class="cnt-bar-wrap">
+          <div class="cnt-bar-rail">
+            <div class="cnt-bar-fill" style="width: ${pct * 100}%;"></div>
+            <div class="cnt-pin" style="right: ${pct * 100}%;">
+              <span class="cnt-pin-dot"></span>
+            </div>
+          </div>
+          <div class="cnt-marks">
+            ${marks.map(m => `
+              <div class="cnt-mark" style="right: ${m.pct}%;">
+                <span class="cnt-mark-tick"></span>
+                <span class="cnt-mark-val">${m.val}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   static _milestones(total) {
     if (total <= 1) return [1];
     if (total <= 6) return Array.from({ length: total }, (_, i) => i + 1);
@@ -387,6 +437,7 @@ class QuizEngine {
     this.container.innerHTML = `
       <div class="comp-quiz-view">
         ${this._timerHtml()}
+        ${this._renderTrackBar(idx, this.questions.length)}
         ${this._progressBar(idx, this.questions.length)}
         ${QuestionRenderer.render(q, idx, this.questions.length)}
         <div class="comp-nav-row">
@@ -534,6 +585,9 @@ class CompetitionController {
     this.user = session?.user || null;
     await this._loadAll();
     this.renderList();
+
+    // Mandatorily prompt student identity review on page entry
+    studentIdentity.requireVerification({ activityName: 'مسابقة السراج' });
   }
 
   // ── Data ─────────────────────────────────────────────────
@@ -544,7 +598,7 @@ class CompetitionController {
         .from('competitions')
         .select(
           'id, title, description, image_url, start_date, end_date, created_at, ' +
-          'status, duration_seconds, result_visibility, final_note, max_attempts, shuffle_questions'
+          'status, duration_seconds, result_visibility, final_note, max_attempts, shuffle_questions, track_config'
         )
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -782,26 +836,21 @@ class CompetitionController {
     const back = () => this.renderList();
     document.getElementById('btn-back')?.addEventListener('click', back);
     document.getElementById('btn-back2')?.addEventListener('click', back);
-    document.getElementById('btn-start')?.addEventListener('click', () => this._startQuiz(comp, questions));
+    document.getElementById('btn-start')?.addEventListener('click', async () => {
+      const studentInfo = await studentIdentity.requireVerification({ activityName: comp.title });
+      this._startQuiz(comp, questions, studentInfo);
+    });
     document.getElementById('btn-start-guest')?.addEventListener('click', async () => {
-      let guestInfo = guestService.getGuestInfo();
-      if (!guestService.hasIdentified()) {
-        guestInfo = await guestService.promptModal({
-          title: 'المشاركة كزائر في المسابقة',
-          subtitle: 'أدخل اسمك وبياناتك لتوثيق مشاركتك وحفظ نتيجتك لدى المعلم:',
-          actionText: 'بدء المسابقة ←'
-        });
-        if (!guestInfo) return; // user cancelled
-      }
-      this._startQuiz(comp, questions, guestInfo);
+      const studentInfo = await studentIdentity.requireVerification({ activityName: comp.title });
+      this._startQuiz(comp, questions, studentInfo);
     });
   }
 
   // ── Quiz ──────────────────────────────────────────────────
-  _startQuiz(comp, questions, guestInfo = null) {
+  _startQuiz(comp, questions, studentInfo = null) {
     this.container.innerHTML = '<div id="cqinner"></div>';
     const inner = document.getElementById('cqinner');
-    new QuizEngine(comp, questions, this.user, inner, guestInfo)
+    new QuizEngine(comp, questions, this.user, inner, studentInfo)
       .onFinish(result => this._renderResult(comp, result))
       .start();
   }

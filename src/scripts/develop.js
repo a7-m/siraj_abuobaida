@@ -18,13 +18,14 @@
 import { authService } from '../services/auth.js';
 import { supabase } from '../services/supabase.js';
 import { Toast } from '../utils/toast.js';
-import { guestService } from '../utils/guest.js';
+import { studentIdentity } from '../utils/student-identity.js';
 
 // ─── Fallback data matching Supabase schema exactly ───────────
 const DEFAULT_CHALLENGE = {
   id: 'c1000000-0000-0000-0000-000000000001',
   title: 'برنامج القراءة المتدرج – إشراقات عُمانية',
   description: 'رحلة معرفية متدرجة عبر تاريخ عُمان وحضارتها؛ اقرأ، استوعب، وأثبت فهمك.',
+  category_name: 'التاريخ والتراث العماني',
   challenge_levels: [
     {
       id: 'b1000000-0000-0000-0000-000000000001',
@@ -202,6 +203,8 @@ class DevelopController {
   constructor() {
     this.user = null;
     this.challenge = null;
+    this.allChallenges = [];
+    this.categories = [];
     this.levels = [];
     this.progressMap = {};
     this.currentOpenLevelId = null;
@@ -223,18 +226,29 @@ class DevelopController {
     await this.loadProgressData();
 
     this.renderLevelsList();
+
+    // Mandatorily prompt student identity review on page entry
+    studentIdentity.requireVerification({ activityName: 'برنامج طوّر نفسك' });
   }
 
   // ── Data Loading ───────────────────────────────────────────
   async loadChallengesData() {
     try {
       if (supabase) {
+        // Load active categories
+        const { data: catData } = await supabase
+          .from('challenge_categories')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        this.categories = catData || [];
+
+        // Load all active challenges
         const { data, error } = await supabase
           .from('challenges')
           .select(`
-            id, title, description, image_url, status, created_at,
+            id, title, description, image_url, status, order_num, category_id, category_name, created_at,
             challenge_levels (
-              id, level_number, title, paragraph, created_at,
+              id, level_number, title, paragraph, passing_score, created_at,
               challenge_questions (
                 order_num,
                 questions ( id, type, text, image_url, points, metadata )
@@ -242,9 +256,10 @@ class DevelopController {
             )
           `)
           .eq('status', 'active')
-          .order('created_at', { ascending: true });
+          .order('order_num', { ascending: true });
 
         if (!error && data && data.length > 0) {
+          this.allChallenges = data;
           this.challenge = data[0];
           this.levels = (this.challenge.challenge_levels || []).sort(
             (a, b) => (a.level_number || 0) - (b.level_number || 0)
@@ -257,7 +272,18 @@ class DevelopController {
     }
 
     this.challenge = DEFAULT_CHALLENGE;
+    this.allChallenges = [DEFAULT_CHALLENGE];
     this.levels = DEFAULT_CHALLENGE.challenge_levels;
+  }
+
+  switchChallenge(challengeId) {
+    const ch = this.allChallenges.find(c => c.id === challengeId);
+    if (!ch) return;
+    this.challenge = ch;
+    this.levels = (ch.challenge_levels || []).sort(
+      (a, b) => (a.level_number || 0) - (b.level_number || 0)
+    );
+    this.renderLevelsList();
   }
 
   async loadProgressData() {
@@ -296,50 +322,70 @@ class DevelopController {
    * Best-score logic: only update if the new score is >= stored score.
    * This rewards improvement without punishing retries.
    */
-  async saveLevelProgress(levelId, score) {
+  /**
+   * Best-score logic: only update if the new score is >= stored score.
+   * Checks passing score before marking as 'completed'.
+   */
+  async saveLevelProgress(level, score, totalScore) {
+    const levelId = level.id;
+    const passingScore = level.passing_score || Math.ceil(totalScore * 0.6);
+    const passed = score >= passingScore;
     const existing = this.progressMap[levelId];
     const bestScore = existing ? Math.max(existing.score || 0, score) : score;
+    const status = (passed || (existing && existing.status === 'completed')) ? 'completed' : 'in_progress';
+    let persistedToSupabase = false;
 
-    this.progressMap[levelId] = { status: 'completed', score: bestScore };
+    this.progressMap[levelId] = { status, score: bestScore };
 
     if (this.user && supabase) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('student_progress')
           .upsert({
             student_id: this.user.id,
             challenge_level_id: levelId,
-            status: 'completed',
+            status,
             score: bestScore,
             completed_at: new Date().toISOString()
           }, { onConflict: 'student_id, challenge_level_id' });
+        if (error) throw error;
+        persistedToSupabase = true;
       } catch (err) {
         console.error('Failed to save progress to Supabase:', err);
       }
     } else if (supabase) {
       try {
-        const guest = guestService.getGuestInfo();
-        await supabase
+        const iden = studentIdentity.getStoredIdentity() || {};
+        const { error } = await supabase
           .from('student_progress')
           .insert({
             student_id: null,
-            guest_name: guest.name || 'مشارك زائر',
-            guest_grade: guest.grade || null,
-            guest_section: guest.section || null,
-            guest_session_id: guest.sessionId,
+            guest_name: iden.name || 'مشارك زائر',
+            guest_grade: iden.grade || null,
+            guest_section: iden.section || null,
+            guest_school_type: iden.school_type || 'abu_obaida',
+            guest_school_name: iden.school_name || (iden.school_type === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+            guest_session_id: iden.sessionId || ('guest_' + Math.random().toString(36).substring(2, 9)),
             challenge_level_id: levelId,
-            status: 'completed',
+            status,
             score: bestScore,
             completed_at: new Date().toISOString()
           });
+        if (error) throw error;
+        persistedToSupabase = true;
       } catch (err) {
-        console.warn('Failed to save guest reading progress:', err);
+        console.error('Failed to save guest reading progress:', err);
       }
     }
 
     try {
       localStorage.setItem('siraj_student_progress', JSON.stringify(this.progressMap));
     } catch (e) {}
+
+    if (supabase && !persistedToSupabase) {
+      Toast.error('تم تصحيح إجاباتك، لكن تعذر حفظ التقدم على الخادم. حُفظ على هذا الجهاز مؤقتًا.');
+    }
+    return passed;
   }
 
   // ── Level State Logic ──────────────────────────────────────
@@ -397,14 +443,31 @@ class DevelopController {
       return `<span class="${cls}" title="المستوى ${idx + 1}"></span>`;
     }).join('<span class="journey-connector"></span>');
 
+    // Challenge switcher pills
+    const pillsHtml = (this.allChallenges && this.allChallenges.length > 1) ? `
+      <div class="dev-challenge-pills-wrap" style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-bottom:1.5rem;">
+        ${this.allChallenges.map(c => `
+          <button type="button" class="btn btn-sm ${c.id === this.challenge.id ? 'btn-primary' : 'btn-outline'} dev-challenge-pill" data-challenge-id="${c.id}" style="border-radius:999px; padding:0.4rem 1rem;">
+            ${c.title}
+            ${c.category_name ? `<span style="opacity:0.8; font-size:0.75rem; margin-right:0.35rem;">(${c.category_name})</span>` : ''}
+          </button>
+        `).join('')}
+      </div>
+    ` : '';
+
     let html = `
       <!-- ── Hero / Intro ── -->
       <div class="dev-hero">
         <div class="dev-hero-text">
-          <div class="dev-hero-label">برنامج التطوير المعرفي</div>
-          <h1 class="dev-hero-title">طوّر نفسك</h1>
+          <div class="dev-hero-label">
+            ${this.challenge.category_name ? `<span>${this.challenge.category_name} · </span>` : ''}
+            <span>برنامج التطوير المعرفي</span>
+          </div>
+          <h1 class="dev-hero-title">${this.challenge.title || 'طوّر نفسك'}</h1>
           <p class="dev-hero-desc">${this.challenge.description || 'رحلة قراءة متدرجة تبني معرفتك خطوة بخطوة'}</p>
         </div>
+
+        ${pillsHtml}
 
         <!-- Journey Tracker -->
         <div class="dev-journey-card">
@@ -434,7 +497,7 @@ class DevelopController {
         ${!this.user ? `
           <div class="dev-guest-notice">
             <span class="dev-guest-icon">💡</span>
-            <span>تتصفح كضيف — <a href="login.html">سجّل الدخول</a> لحفظ تقدمك في سجلك المدرسي الدائم.</span>
+            <span>تتصفح كضيف — سيتم حفظ نتائجك باسمك المسجل في هويتك الحالية. <a href="login.html">سجّل الدخول</a> لحفظ تقدمك الدائم.</span>
           </div>
         ` : ''}
       </div>
@@ -449,6 +512,7 @@ class DevelopController {
       const questionsCount = (level.challenge_questions || []).length;
       const icon = LEVEL_ICONS[index % LEVEL_ICONS.length];
       const levelScore = progress?.score ?? null;
+      const passReq = level.passing_score || Math.ceil(questionsCount * 0.6);
 
       if (status === 'completed') {
         html += `
@@ -460,6 +524,7 @@ class DevelopController {
             <div class="dev-level-meta">
               ${level.paragraph ? '<span>📖 نص قرائي</span>' : '<span>💬 أسئلة مباشرة</span>'}
               <span>📝 ${questionsCount} أسئلة</span>
+              <span>🎯 شرط الاجتياز: ${passReq}</span>
             </div>
             ${levelScore !== null ? `
               <div class="dev-level-score">
@@ -483,6 +548,7 @@ class DevelopController {
             <div class="dev-level-meta">
               ${level.paragraph ? '<span>📖 نص قرائي</span>' : '<span>💬 أسئلة مباشرة</span>'}
               <span>📝 ${questionsCount} أسئلة</span>
+              <span>🎯 شرط الاجتياز: ${passReq}</span>
             </div>
             <button class="btn btn-primary dev-btn-start btn-level-action" data-level-id="${level.id}">
               ابدأ المرحلة ←
@@ -497,7 +563,7 @@ class DevelopController {
             <div class="dev-level-locked-badge">🔒</div>
             <div class="dev-level-number">المستوى ${level.level_number}</div>
             <h3 class="dev-level-title dev-level-title-blurred">${level.title}</h3>
-            <div class="dev-level-lock-hint">أكمل المرحلة السابقة لتفتح هذه المرحلة</div>
+            <div class="dev-level-lock-hint">اجتز المرحلة السابقة بدرجة لا تقل عن شرط الاجتياز لفتح هذه المرحلة</div>
             <button class="btn dev-btn-locked btn-level-action" data-level-id="${level.id}" disabled>
               في انتظارك...
             </button>
@@ -517,8 +583,16 @@ class DevelopController {
       });
     });
 
+    // Challenge pills listener
+    this.container.querySelectorAll('.dev-challenge-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cId = btn.getAttribute('data-challenge-id');
+        this.switchChallenge(cId);
+      });
+    });
+
     // Event listeners
-    this.container.querySelectorAll('.btn-level-action').forEach(btn => {
+    this.container.querySelectorAll('.btn-level-action:not([disabled])').forEach(btn => {
       btn.addEventListener('click', () => {
         const levelId = btn.getAttribute('data-level-id');
         this.handleOpenLevel(levelId);
@@ -527,12 +601,15 @@ class DevelopController {
   }
 
   // ── Security Gate ──────────────────────────────────────────
-  handleOpenLevel(levelId) {
+  async handleOpenLevel(levelId) {
+    const verified = await studentIdentity.requireVerification({ activityName: 'برنامج طوّر نفسك' });
+    if (!verified) return;
+
     const levelIndex = this.levels.findIndex(l => l.id === levelId);
     if (levelIndex === -1) return;
 
     if (this.getLevelStatus(levelIndex) === 'locked') {
-      Toast.error('🔒 أكمل المرحلة السابقة أولاً لفتح هذه المرحلة.');
+      Toast.error('🔒 أكمل المرحلة السابقة وحقق درجة الاجتياز أولاً لفتح هذه المرحلة.');
       return;
     }
 
@@ -619,7 +696,7 @@ class DevelopController {
         <div class="dev-question-card" id="q-card-${q.id}">
           <div class="dev-question-header">
             <span class="dev-question-num">${qIdx + 1}</span>
-            <p class="dev-question-text">${q.text}</p>
+            <p class="dev-question-text">${escapeHtml(q.text)}</p>
           </div>
           <div class="dev-options-list" role="radiogroup" aria-label="خيارات السؤال ${qIdx + 1}">
       `;
@@ -628,9 +705,9 @@ class DevelopController {
         const inputId = `q_${q.id}_opt_${optIdx}`;
         html += `
           <label class="dev-option" for="${inputId}" id="opt-label-${q.id}-${optIdx}">
-            <input type="radio" id="${inputId}" name="q_${q.id}" value="${optText}" data-q-id="${q.id}">
+            <input type="radio" id="${inputId}" name="q_${q.id}" value="${escapeHtml(optText)}" data-q-id="${q.id}">
             <span class="dev-option-indicator"></span>
-            <span class="dev-option-text">${optText}</span>
+            <span class="dev-option-text">${escapeHtml(optText)}</span>
           </label>
         `;
       });
@@ -682,9 +759,15 @@ class DevelopController {
     });
 
     // Form submit
-    document.getElementById('quiz-form').addEventListener('submit', e => {
+    document.getElementById('quiz-form').addEventListener('submit', async e => {
       e.preventDefault();
-      this.handleQuizSubmit(level, questions);
+      const submitButton = document.getElementById('btn-submit-quiz');
+      if (submitButton) submitButton.disabled = true;
+      try {
+        await this.handleQuizSubmit(level, questions);
+      } finally {
+        if (submitButton?.isConnected) submitButton.disabled = false;
+      }
     });
   }
 
@@ -704,7 +787,7 @@ class DevelopController {
   }
 
   // ── Quiz Grading ───────────────────────────────────────────
-  handleQuizSubmit(level, questions) {
+  async handleQuizSubmit(level, questions) {
     const unanswered = questions.filter(q => !this.selectedAnswers[q.id]);
 
     if (unanswered.length > 0) {
@@ -749,15 +832,18 @@ class DevelopController {
 
     this._quizResults = results;
 
-    // Save best score
-    this.saveLevelProgress(level.id, earnedScore);
+    const passingScore = level.passing_score || Math.ceil(totalScore * 0.6);
+    const passed = earnedScore >= passingScore;
+
+    // Save best score and get status
+    await this.saveLevelProgress(level, earnedScore, totalScore);
 
     // Show feedback inline first, then result screen
-    this.renderQuizFeedback(level, results, earnedScore, totalScore, questions.length);
+    this.renderQuizFeedback(level, results, earnedScore, totalScore, questions.length, passed, passingScore);
   }
 
   // ── Render: Per-Question Feedback ─────────────────────────
-  renderQuizFeedback(level, results, earnedScore, totalScore, totalQuestions) {
+  renderQuizFeedback(level, results, earnedScore, totalScore, totalQuestions, passed, passingScore) {
     const correctCount = results.filter(r => r.isCorrect).length;
     const pct = Math.round((earnedScore / totalScore) * 100);
 
@@ -790,7 +876,7 @@ class DevelopController {
       feedbackChip.className = r.isCorrect ? 'dev-q-feedback-chip dev-chip-correct' : 'dev-q-feedback-chip dev-chip-wrong';
       feedbackChip.innerHTML = r.isCorrect
         ? `<span>✓</span> إجابة صحيحة`
-        : `<span>✕</span> الإجابة الصحيحة: <strong>${r.correctAnswer}</strong>`;
+        : `<span>✕</span> الإجابة الصحيحة: <strong>${escapeHtml(r.correctAnswer)}</strong>`;
       card.appendChild(feedbackChip);
     });
 
@@ -798,21 +884,21 @@ class DevelopController {
     const submitRow = this.container.querySelector('.dev-submit-row');
     if (submitRow) {
       submitRow.innerHTML = `
-        <div class="dev-result-bar ${pct >= 60 ? 'dev-result-bar-pass' : 'dev-result-bar-low'}">
+        <div class="dev-result-bar ${passed ? 'dev-result-bar-pass' : 'dev-result-bar-low'}">
           <div class="dev-result-bar-left">
             <span class="dev-result-bar-score">${earnedScore} / ${totalScore}</span>
             <span class="dev-result-bar-label">
-              ${pct >= 100 ? 'درجة مثالية 🏆' : pct >= 60 ? 'أحسنت ✅' : 'يمكنك المحاولة مجدداً'}
+              ${passed ? (pct >= 100 ? 'درجة كاملة متميزة! 🏆 اجتزت المرحلة' : 'أحسنت! ✅ حققت شرط الاجتياز') : `تحتاج إلى ${passingScore} من ${totalScore} لاجتياز المرحلة ⚠️`}
             </span>
           </div>
           <button id="btn-see-result" class="btn btn-primary">
-            ${pct >= 60 ? 'عرض صفحة الإنجاز' : 'إعادة المحاولة'}
+            ${passed ? 'عرض بطاقة الإنجاز ←' : 'إعادة محاولة المرحلة ↺'}
           </button>
         </div>
       `;
 
       document.getElementById('btn-see-result').addEventListener('click', () => {
-        if (pct >= 60) {
+        if (passed) {
           this.renderResultView(level, correctCount, totalQuestions, earnedScore, totalScore);
         } else {
           // Re-render the level for retry
@@ -939,6 +1025,15 @@ class DevelopController {
 }
 
 // ── Export & Init ──────────────────────────────────────────────
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export const developController = new DevelopController();
 
 document.addEventListener('DOMContentLoaded', () => {

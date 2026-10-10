@@ -1044,52 +1044,6 @@
     <div id="develop-container">
       <!-- Rendered dynamically by src/scripts/develop.js -->
     </div>
-<<<<<<< HEAD
-=======
-
-    <!-- Empty State for Challenge -->
-    <section class="empty-state dotgrid-hero">
-      <div class="empty-state-icon" style="font-size: 3rem;">📖</div>
-      <h3>لا يوجد تحدٍ نشط حالياً</h3>
-      <p style="max-width: 500px; color: var(--color-text-muted);">
-        نعمل حالياً على إعداد "تحدي القراءة الدائم" لنضع بين أيديكم نصوصاً وكتباً مثرية مع مهام تفاعلية وأسئلة متنوعة. ابقوا بالقرب!
-      </p>
-    </section>
-
-    <!-- Mock Structure for Future Real Challenge (Visually Hidden or Placeholder) -->
-    <section style="margin-top: 4rem; pointer-events: none;">
-      <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; color: var(--color-text-muted);">هيكل التحدي المستقبلي (للعرض فقط)</h3>
-      
-      <div class="grid grid-2">
-        <div class="card">
-          <div style="background-color: var(--color-border); height: 200px; border-radius: var(--border-radius); margin-bottom: 1rem; display:flex; align-items:center; justify-content:center;">صورة التحدي/الكتاب</div>
-          <h4 style="margin-bottom: 0.5rem; color: var(--color-accent);">عنوان التحدي (Placeholder)</h4>
-          <p style="font-size: 0.9rem; margin-bottom: 1.5rem;">وصف قصير للتحدي المستقبلي والمادة التي سيتم قراءتها واستيعابها.</p>
-          
-          <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
-            <span>نسبة الإنجاز</span>
-            <span style="font-weight: 700;">0%</span>
-          </div>
-          <div style="width: 100%; background-color: var(--color-border); height: 8px; border-radius: 4px; overflow: hidden;">
-            <div style="width: 0%; background-color: var(--color-accent); height: 100%;"></div>
-          </div>
-        </div>
-
-        <div class="card flex flex-col gap-2">
-          <div style="padding: 1rem; border: 1px solid var(--color-border); border-radius: var(--border-radius);">
-            <h5 style="margin-bottom: 0.5rem; color: var(--color-gold);">المهام المطلوبة (Placeholder)</h5>
-            <ul style="list-style: circle; padding-right: 1.5rem; font-size: 0.9rem;">
-              <li>قراءة الفصل الأول</li>
-              <li>تلخيص الأفكار الرئيسية</li>
-              <li>الإجابة على اختبار الفهم</li>
-            </ul>
-          </div>
-          <button class="btn btn-primary" style="margin-top: auto;">ابدأ التحدي (مغلق)</button>
-        </div>
-      </div>
-    </section>
-
->>>>>>> b68632998d4727cf194179d3f74056e28bd7e063
   </main>
 
   <footer class="footer">
@@ -1100,5 +1054,267 @@
 
   <script type="module" src="./src/scripts/main.js"></script>
   <script type="module" src="./src/scripts/develop.js"></script>
+
+  <!-- ══════════════════════════════════════════
+       FLOATING POINTS EFFECT — Develop Yourself
+       ══════════════════════════════════════════ -->
+  <canvas id="pts-canvas-dev" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+  <style>
+    /* ── Floating Score Labels ── */
+    .dev-pts-label {
+      position: fixed;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1.7rem;
+      pointer-events: none;
+      z-index: 10000;
+      text-shadow: 0 2px 10px rgba(0,0,0,.3);
+      user-select: none;
+      display: flex; align-items: center; gap: .2rem;
+      animation: devPtsRise 1.6s cubic-bezier(.15,.85,.3,1) forwards;
+    }
+    @keyframes devPtsRise {
+      0%   { opacity: 0; transform: translateY(0) scale(.4) rotate(-8deg); }
+      10%  { opacity: 1; transform: translateY(-8px) scale(1.2) rotate(4deg); }
+      65%  { opacity: 1; transform: translateY(-60px) scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(-100px) scale(.85) rotate(-3deg); }
+    }
+    .dev-pts-ripple {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform-origin: center center;
+      animation: devPtsRipple .8s ease-out forwards;
+    }
+    @keyframes devPtsRipple {
+      0%   { transform: scale(0); opacity: .6; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+    /* Star burst emoji animation */
+    .dev-star-burst {
+      position: fixed;
+      font-size: 1.4rem;
+      pointer-events: none;
+      z-index: 10000;
+      animation: devStarBurst 1s ease-out forwards;
+    }
+    @keyframes devStarBurst {
+      0%   { opacity: 0; transform: scale(0) rotate(0deg); }
+      30%  { opacity: 1; transform: scale(1.4) rotate(180deg); }
+      100% { opacity: 0; transform: scale(.5) rotate(360deg) translateY(-50px); }
+    }
+  </style>
+
+  <script>
+  (function() {
+    'use strict';
+
+    const canvas = document.getElementById('pts-canvas-dev');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const PALETTE = ['#127547','#10b981','#2563eb','#8b5cf6','#f59e0b','#e11d48','#0ea5e9'];
+    const particles = [];
+
+    class Particle {
+      constructor(x, y, color, vx, vy, size, shape) {
+        this.x = x; this.y = y;
+        this.color = color;
+        this.vx = vx; this.vy = vy;
+        this.size = size;
+        this.shape = shape || 'circle'; // circle | star | rect
+        this.alpha = 1;
+        this.decay = 0.012 + Math.random() * 0.01;
+        this.gravity = 0.07;
+        this.rot = Math.random() * Math.PI * 2;
+        this.rotSpeed = (Math.random() - .5) * .2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.vx *= 0.98;
+        this.alpha -= this.decay;
+        this.size *= 0.975;
+        this.rot += this.rotSpeed;
+      }
+      draw() {
+        if (this.alpha <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 8;
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rot);
+        if (this.shape === 'rect') {
+          ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size * .5);
+        } else if (this.shape === 'star') {
+          const s = this.size, rays = 5;
+          ctx.beginPath();
+          for (let i = 0; i < rays * 2; i++) {
+            const r = i % 2 === 0 ? s : s * .4;
+            const a = (Math.PI * i) / rays;
+            i === 0 ? ctx.moveTo(r * Math.cos(a), r * Math.sin(a)) : ctx.lineTo(r * Math.cos(a), r * Math.sin(a));
+          }
+          ctx.closePath(); ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    /* Ambient glowing orbs */
+    const orbs = Array.from({ length: 22 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 1.5 + Math.random() * 3.5,
+      color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+      vx: (Math.random() - .5) * .45,
+      vy: -.18 - Math.random() * .45,
+      alpha: .05 + Math.random() * .1,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    let t = 0;
+    function animFrame() {
+      ctx.clearRect(0, 0, W, H);
+      t += .015;
+
+      for (const o of orbs) {
+        const pulse = 0.7 + 0.3 * Math.sin(t + o.phase);
+        ctx.save();
+        ctx.globalAlpha = o.alpha * pulse;
+        ctx.fillStyle = o.color;
+        ctx.shadowBlur = 14 * pulse;
+        ctx.shadowColor = o.color;
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, o.r * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        o.x += o.vx; o.y += o.vy;
+        if (o.y < -20) { o.y = H + 10; o.x = Math.random() * W; }
+        if (o.x < -20) o.x = W + 10;
+        if (o.x > W + 20) o.x = -10;
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].alpha <= 0) particles.splice(i, 1);
+      }
+      requestAnimationFrame(animFrame);
+    }
+    animFrame();
+
+    const SHAPES = ['circle','circle','circle','star','rect'];
+    window.spawnDevPointsBurst = function(x, y, points, color, label) {
+      color = color || '#127547';
+      const count = 22 + Math.floor(points * 5);
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - .5) * .5;
+        const speed = 2.5 + Math.random() * 5;
+        const c = i % 3 === 0 ? PALETTE[Math.floor(Math.random() * PALETTE.length)] : color;
+        particles.push(new Particle(
+          x, y, c,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed - 2.5,
+          2 + Math.random() * 5,
+          SHAPES[Math.floor(Math.random() * SHAPES.length)]
+        ));
+      }
+
+      // Floating label
+      const el = document.createElement('div');
+      el.className = 'dev-pts-label';
+      el.innerHTML = `<span style="filter:drop-shadow(0 2px 4px ${color})">✦</span> +${points} نقطة`;
+      el.style.color = color;
+      el.style.left = (x - 30) + 'px';
+      el.style.top = (y - 30) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1700);
+
+      // Stars
+      ['⭐','✨','🌟'].forEach((emoji, i) => {
+        const star = document.createElement('div');
+        star.className = 'dev-star-burst';
+        star.textContent = emoji;
+        star.style.left = (x + (Math.random() - .5) * 80) + 'px';
+        star.style.top = (y + (Math.random() - .5) * 60) + 'px';
+        star.style.animationDelay = (i * 120) + 'ms';
+        document.body.appendChild(star);
+        setTimeout(() => star.remove(), 1200 + i * 120);
+      });
+
+      // Ripple
+      const rp = document.createElement('div');
+      rp.className = 'dev-pts-ripple';
+      const rs = 60;
+      rp.style.cssText = `width:${rs}px;height:${rs}px;background:${color};left:${x-rs/2}px;top:${y-rs/2}px;`;
+      document.body.appendChild(rp);
+      setTimeout(() => rp.remove(), 900);
+    };
+
+    /* Level card click → burst */
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.dev-level-btn, .dev-start-btn, .dev-cat-card, [data-dev-pts]');
+      if (!btn) return;
+      const pts = parseInt(btn.dataset.devPts || '3', 10);
+      const rect = btn.getBoundingClientRect();
+      spawnDevPointsBurst(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        pts,
+        '#127547'
+      );
+    }, true);
+
+    /* Question answered correctly */
+    document.addEventListener('dev:correct', function(e) {
+      const { x, y, points } = e.detail || {};
+      spawnDevPointsBurst(x || W/2, y || H/2, points || 2, '#10b981');
+    });
+
+    /* Level completed */
+    document.addEventListener('dev:level_complete', function(e) {
+      const { score } = e.detail || {};
+      const cx = W / 2, cy = H / 2;
+      const bursts = Math.min(6, 3 + Math.floor((score || 0) / 3));
+      for (let b = 0; b < bursts; b++) {
+        setTimeout(() => {
+          spawnDevPointsBurst(
+            cx + (Math.random() - .5) * 350,
+            cy + (Math.random() - .5) * 250,
+            5 + Math.floor(Math.random() * 10),
+            PALETTE[Math.floor(Math.random() * PALETTE.length)]
+          );
+        }, b * 150);
+      }
+    });
+
+    /* Challenge fully completed */
+    document.addEventListener('dev:challenge_complete', function() {
+      const cx = W / 2, cy = H / 2;
+      for (let b = 0; b < 12; b++) {
+        setTimeout(() => {
+          spawnDevPointsBurst(
+            cx + (Math.random() - .5) * 500,
+            cy + (Math.random() - .5) * 400,
+            10 + Math.floor(Math.random() * 15),
+            PALETTE[b % PALETTE.length]
+          );
+        }, b * 100);
+      }
+    });
+  })();
+  </script>
 </body>
 </html>

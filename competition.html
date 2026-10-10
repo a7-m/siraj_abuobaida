@@ -27,11 +27,7 @@
   <link rel="stylesheet" href="./src/styles/layout.css">
   <link rel="stylesheet" href="./src/styles/components.css">
   <link rel="stylesheet" href="./src/styles/dotgrid.css">
-<<<<<<< HEAD
-
   <!-- Anti-flicker theme init -->
-=======
->>>>>>> b68632998d4727cf194179d3f74056e28bd7e063
   <script>
     (function () {
       const t = localStorage.getItem('siraj-theme');
@@ -587,73 +583,6 @@
     <div id="competition-container">
       <!-- Rendered dynamically by src/scripts/competition.js -->
     </div>
-<<<<<<< HEAD
-=======
-
-    <!-- Active Competition (جارية) -->
-    <section style="margin-bottom: 4rem;">
-      <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <span style="width: 12px; height: 12px; background-color: #28a745; border-radius: 50%; display: inline-block;"></span>
-        مسابقات جارية
-      </h3>
-      <div class="grid grid-2">
-        <!-- Placeholder Card -->
-        <div class="card flex flex-col">
-          <div style="background-color: var(--color-border); height: 150px; border-radius: var(--border-radius); margin-bottom: 1rem; display:flex; align-items:center; justify-content:center;">صورة المسابقة (Placeholder)</div>
-          <h4 style="margin-bottom: 0.5rem;">أسئلة الذكاء العام</h4>
-          <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem; flex-grow: 1;">مسابقة تختبر المعرفة العامة والربط السريع بين المعلومات.</p>
-          
-          <div style="background-color: var(--color-bg); padding: 1rem; border-radius: var(--border-radius); font-size: 0.85rem; margin-bottom: 1rem;">
-            <div class="flex justify-between" style="margin-bottom: 0.5rem;"><span>البداية:</span> <span>10 أكتوبر 2026</span></div>
-            <div class="flex justify-between" style="margin-bottom: 0.5rem;"><span>النهاية:</span> <span>20 أكتوبر 2026</span></div>
-            <div class="flex justify-between" style="margin-bottom: 0.5rem;"><span>الوقت المتاح:</span> <span>30 دقيقة</span></div>
-            <div class="flex justify-between"><span>الأسئلة:</span> <span>20 سؤال</span></div>
-          </div>
-          
-          <button class="btn btn-primary" style="width: 100%;">شارك الآن</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Upcoming Competition (قادمة) -->
-    <section style="margin-bottom: 4rem;">
-      <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <span style="width: 12px; height: 12px; background-color: var(--color-gold); border-radius: 50%; display: inline-block;"></span>
-        مسابقات قادمة
-      </h3>
-      <div class="grid grid-2">
-        <div class="card flex flex-col">
-          <h4 style="margin-bottom: 0.5rem;">أعلام من عمان</h4>
-          <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem; flex-grow: 1;">المسابقة الشهرية الخاصة بالتعريف بالشخصيات التاريخية العمانية.</p>
-          <div style="background-color: var(--color-bg); padding: 1rem; border-radius: var(--border-radius); font-size: 0.85rem; margin-bottom: 1rem;">
-            <div class="flex justify-between" style="margin-bottom: 0.5rem;"><span>تاريخ الانطلاق:</span> <span>1 نوفمبر 2026</span></div>
-          </div>
-          <button class="btn btn-outline" style="width: 100%; pointer-events: none;">قادمة قريباً</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Finished Competition (منتهية) -->
-    <section>
-      <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <span style="width: 12px; height: 12px; background-color: var(--color-text-muted); border-radius: 50%; display: inline-block;"></span>
-        مسابقات منتهية
-      </h3>
-      <div class="grid grid-2">
-        <div class="card flex flex-col">
-          <h4 style="margin-bottom: 0.5rem; color: var(--color-text-muted);">مسابقة اليوم الوطني</h4>
-          <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem; flex-grow: 1;">مسابقة الاحتفال باليوم الوطني العماني.</p>
-          <div style="border: 1px dashed var(--color-border); padding: 1rem; border-radius: var(--border-radius); font-size: 0.85rem; margin-bottom: 1rem;">
-            <div class="flex justify-between" style="margin-bottom: 0.5rem;"><span>حالة المسابقة:</span> <span style="font-weight:bold;">منتهية</span></div>
-            <div class="flex justify-between" style="margin-bottom: 0.5rem;"><span>الدرجة النهائية:</span> <span>- / 100</span></div>
-            <div class="flex justify-between"><span>النتائج:</span> <span>غير متوفرة</span></div>
-          </div>
-          <button class="btn" style="width: 100%; background-color: var(--color-border); color: var(--color-text-muted); cursor: not-allowed;">عرض التفاصيل</button>
-        </div>
-      </div>
-    </section>
-
->>>>>>> b68632998d4727cf194179d3f74056e28bd7e063
   </main>
 
   <footer class="footer">
@@ -664,5 +593,201 @@
 
   <script type="module" src="./src/scripts/main.js"></script>
   <script type="module" src="./src/scripts/competition.js"></script>
+
+  <!-- ══════════════════════════════════════════
+       FLOATING POINTS EFFECT — Competition Page
+       ══════════════════════════════════════════ -->
+  <canvas id="pts-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+  <style>
+    /* ── Floating Score Labels ── */
+    .pts-label {
+      position: fixed;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1.6rem;
+      pointer-events: none;
+      z-index: 10000;
+      text-shadow: 0 2px 8px rgba(0,0,0,.25);
+      user-select: none;
+      animation: ptsRise 1.4s cubic-bezier(.2,.8,.3,1) forwards;
+    }
+    @keyframes ptsRise {
+      0%   { opacity: 0; transform: translateY(0) scale(.5); }
+      15%  { opacity: 1; transform: translateY(-10px) scale(1.15); }
+      70%  { opacity: 1; transform: translateY(-55px) scale(1); }
+      100% { opacity: 0; transform: translateY(-90px) scale(.8); }
+    }
+    /* ── Ripple on card interact ── */
+    .pts-ripple {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      animation: ptsRipple .7s ease-out forwards;
+    }
+    @keyframes ptsRipple {
+      0%   { transform: scale(0); opacity: .55; }
+      100% { transform: scale(3.5); opacity: 0; }
+    }
+  </style>
+
+  <script>
+  (function() {
+    'use strict';
+
+    /* ── Canvas Particle System ── */
+    const canvas = document.getElementById('pts-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COLORS = ['#127547','#2563eb','#d97706','#7c3aed','#e11d48','#0ea5e9','#10b981'];
+    const particles = [];
+
+    class Particle {
+      constructor(x, y, color, vx, vy, size) {
+        this.x = x; this.y = y;
+        this.color = color;
+        this.vx = vx; this.vy = vy;
+        this.size = size;
+        this.alpha = 1;
+        this.decay = 0.013 + Math.random() * 0.012;
+        this.gravity = 0.08;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.vx *= 0.98;
+        this.alpha -= this.decay;
+        this.size *= 0.97;
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    /* Ambient floating orbs (background) */
+    const orbs = Array.from({ length: 18 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 2 + Math.random() * 4,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      vx: (Math.random() - .5) * .5,
+      vy: -.2 - Math.random() * .5,
+      alpha: .06 + Math.random() * .12,
+    }));
+
+    function animFrame() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Ambient orbs
+      for (const o of orbs) {
+        ctx.save();
+        ctx.globalAlpha = o.alpha;
+        ctx.fillStyle = o.color;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = o.color;
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        o.x += o.vx; o.y += o.vy;
+        if (o.y < -20) { o.y = H + 10; o.x = Math.random() * W; }
+        if (o.x < -20) o.x = W + 10;
+        if (o.x > W + 20) o.x = -10;
+      }
+
+      // Burst particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].alpha <= 0) particles.splice(i, 1);
+      }
+      requestAnimationFrame(animFrame);
+    }
+    animFrame();
+
+    /* ── Public API: spawn a point burst ── */
+    window.spawnPointsBurst = function(x, y, points, color) {
+      color = color || COLORS[Math.floor(Math.random() * COLORS.length)];
+      const count = 18 + Math.floor(points * 4);
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - .5) * .6;
+        const speed = 2 + Math.random() * 4;
+        particles.push(new Particle(
+          x, y, color,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed - 2,
+          3 + Math.random() * 4
+        ));
+      }
+      // Score label
+      const label = document.createElement('div');
+      label.className = 'pts-label';
+      label.textContent = '+' + points;
+      label.style.color = color;
+      label.style.left = (x - 20) + 'px';
+      label.style.top = (y - 20) + 'px';
+      document.body.appendChild(label);
+      setTimeout(() => label.remove(), 1500);
+    };
+
+    /* ── Auto-trigger on card CTA click ── */
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.comp-card-cta, .comp-btn-started, [data-pts]');
+      if (!btn) return;
+      const pts = parseInt(btn.dataset.pts || '5', 10);
+      const rect = btn.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      spawnPointsBurst(cx, cy, pts, color);
+
+      // Ripple
+      const ripple = document.createElement('div');
+      ripple.className = 'pts-ripple';
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.cssText = `width:${size}px;height:${size}px;
+        background:${color};
+        left:${rect.left + rect.width/2 - size/2}px;
+        top:${rect.top + rect.height/2 - size/2}px;`;
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 800);
+    }, true);
+
+    /* ── Hook into score submission (competition quiz answers) ── */
+    document.addEventListener('comp:points', function(e) {
+      const { x, y, points, color } = e.detail || {};
+      if (x && y) spawnPointsBurst(x, y, points || 1, color);
+    });
+
+    /* ── Confetti on competition submit ── */
+    document.addEventListener('comp:completed', function(e) {
+      const cx = W / 2, cy = H / 2;
+      for (let b = 0; b < 8; b++) {
+        setTimeout(() => {
+          spawnPointsBurst(
+            cx + (Math.random() - .5) * 400,
+            cy + (Math.random() - .5) * 300,
+            10 + Math.floor(Math.random() * 20),
+            COLORS[Math.floor(Math.random() * COLORS.length)]
+          );
+        }, b * 120);
+      }
+    });
+  })();
+  </script>
 </body>
 </html>

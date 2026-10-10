@@ -1,5 +1,8 @@
 import { authService } from '../services/auth.js';
 import { supabase } from '../services/supabase.js';
+import { setupCompetitions } from './teacher-competitions.js';
+import { setupChallenges } from './teacher-challenges.js';
+import { setupSections } from './teacher-sections.js';
 import './main.js'; // to get Toast, etc.
 
 let currentUserProfile = null;
@@ -11,6 +14,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAccess();
     setupNavigation();
     setupEditor();
+    setupCompetitions();
+    setupChallenges();
+    setupSections();
     setupParticipants();
     
     // Load initial data
@@ -940,6 +946,7 @@ function setupParticipants() {
         'part-filter-activity',
         'part-filter-user-type',
         'part-filter-grade',
+        'part-filter-school',
         'part-filter-status',
         'part-filter-sort'
     ];
@@ -1082,6 +1089,7 @@ function applyParticipantsFilters() {
     const activityFilter = document.getElementById('part-filter-activity')?.value || 'all';
     const userTypeFilter = document.getElementById('part-filter-user-type')?.value || 'all';
     const gradeFilter = document.getElementById('part-filter-grade')?.value || 'all';
+    const schoolFilter = document.getElementById('part-filter-school')?.value || 'all';
     const sectionQuery = (document.getElementById('part-filter-section')?.value || '').trim();
     const statusFilter = document.getElementById('part-filter-status')?.value || 'all';
     const dateFromVal = document.getElementById('part-filter-date-from')?.value;
@@ -1107,6 +1115,13 @@ function applyParticipantsFilters() {
         // User type
         if (userTypeFilter !== 'all' && p.participant_type !== userTypeFilter) {
             return false;
+        }
+
+        // School
+        if (schoolFilter === 'abu_obaida') {
+            if (p.school_type && p.school_type !== 'abu_obaida') return false;
+        } else if (schoolFilter === 'other') {
+            if (p.school_type !== 'other') return false;
         }
 
         // Grade
@@ -1184,6 +1199,7 @@ function resetParticipantsFilters() {
     setVal('part-filter-activity', 'all');
     setVal('part-filter-user-type', 'all');
     setVal('part-filter-grade', 'all');
+    setVal('part-filter-school', 'all');
     setVal('part-filter-status', 'all');
     setVal('part-filter-sort', 'date-desc');
 
@@ -1246,6 +1262,8 @@ function groupParticipantsByStudent(participants) {
                 email: p.email,
                 grade: p.grade,
                 section: p.section,
+                school_type: p.school_type,
+                school_name: p.school_name,
                 participant_type: p.participant_type,
                 student_id: p.student_id,
                 guest_session_id: p.guest_session_id,
@@ -1278,11 +1296,16 @@ function getReadingLevel(activities) {
 }
 
 function buildStudentCard(student) {
-    const { key, full_name, email, grade, section, participant_type, activities } = student;
+    const { key, full_name, email, grade, section, school_type, school_name, participant_type, activities } = student;
     const isReg = participant_type === 'registered';
 
     const initials = (full_name || 'ز').split(' ').map(w => w[0]).slice(0, 2).join('');
     const classText = grade ? `${grade}${section ? ' / ' + section : ''}` : null;
+
+    const isAbuObaida = !school_type || school_type === 'abu_obaida';
+    const schoolBadge = isAbuObaida
+        ? '<span class="badge" style="background:rgba(18,117,71,0.12); color:#127547; font-size:0.7rem; border:1px solid rgba(18,117,71,0.3);">🏫 أبو عبيدة</span>'
+        : `<span class="badge" style="background:rgba(217,119,6,0.12); color:#d97706; font-size:0.7rem; border:1px solid rgba(217,119,6,0.3);">🏫 ${escapeHtml(school_name || 'مدرسة أخرى')}</span>`;
 
     // Activity badges
     const actTypes = [...new Set(activities.map(a => a.activity_type))];
@@ -1310,7 +1333,10 @@ function buildStudentCard(student) {
                 <div class="part-card-avatar">${escapeHtml(initials)}</div>
                 <div class="part-card-info">
                     <div class="part-card-name">${escapeHtml(full_name || 'مشارك زائر')}</div>
-                    ${classText ? `<div class="part-card-class">📚 ${escapeHtml(classText)}</div>` : ''}
+                    <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin:0.25rem 0;">
+                        ${schoolBadge}
+                        ${classText ? `<div class="part-card-class">📚 ${escapeHtml(classText)}</div>` : ''}
+                    </div>
                     <div class="part-card-type">${isReg ? '<span class="badge badge-reg" style="font-size:0.7rem;">🎓 مسجل</span>' : '<span class="badge badge-guest" style="font-size:0.7rem;">🌐 زائر</span>'}</div>
                 </div>
                 <div class="part-card-actions">
@@ -1561,6 +1587,7 @@ function exportParticipantsToCSV() {
     const headers = [
         'الاسم الكامل',
         'نوع الحساب',
+        'المدرسة',
         'البريد الإلكتروني',
         'الصف',
         'الشعبة',
@@ -1583,9 +1610,12 @@ function exportParticipantsToCSV() {
     };
 
     const rows = filteredParticipants.map(p => {
+        const isAbuObaida = !p.school_type || p.school_type === 'abu_obaida';
+        const schoolName = isAbuObaida ? 'مدرسة أبو عبيدة بن الجراح' : (p.school_name || 'مدرسة أخرى');
         return [
             `"${(p.full_name || '').replace(/"/g, '""')}"`,
             `"${userTypeMap[p.participant_type] || p.participant_type}"`,
+            `"${schoolName.replace(/"/g, '""')}"`,
             `"${(p.email || '').replace(/"/g, '""')}"`,
             `"${(p.grade || '').replace(/"/g, '""')}"`,
             `"${(p.section || '').replace(/"/g, '""')}"`,
