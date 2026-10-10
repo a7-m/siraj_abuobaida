@@ -427,6 +427,26 @@ document.getElementById('btn-confirm-yes').addEventListener('click', async () =>
             if (error) throw error;
             window.Toast?.success("تم حذف السؤال بنجاح");
             await loadCompQuestions(editingCompId);
+        } else if (deleteTargetType === 'participant') {
+            // Delete all activity records for this student/guest key
+            const student = getStudentByKey(deleteTargetId);
+            if (student && student.activities.length > 0) {
+                const ids = student.activities.map(a => a.id);
+                // Try to delete from all possible tables based on activity type
+                for (const act of student.activities) {
+                    if (act.activity_type === 'reading') {
+                        await supabase.from('reading_participations').delete().eq('id', act.id);
+                    } else if (act.activity_type === 'competition') {
+                        await supabase.from('competition_attempts').delete().eq('id', act.id);
+                    } else if (act.activity_type === 'research') {
+                        await supabase.from('research_submissions').delete().eq('id', act.id);
+                    }
+                }
+                // Remove from local cache
+                allParticipantsData = allParticipantsData.filter(p => !ids.includes(p.id));
+                applyParticipantsFilters();
+            }
+            window.Toast?.success("تم حذف بيانات المشارك بنجاح");
         } else {
             const { error } = await supabase.from('content_pages').delete().eq('id', deleteTargetId);
             if (error) throw error;
@@ -1141,8 +1161,9 @@ function applyParticipantsFilters() {
 
     // Update count display
     const countEl = document.getElementById('part-results-count');
+    const grouped = groupParticipantsByStudent(filteredParticipants);
     if (countEl) {
-        countEl.textContent = `عرض ${filteredParticipants.length} من إجمالي ${allParticipantsData.length} مشاركة`;
+        countEl.textContent = `عرض ${grouped.size} طالب فريد (${filteredParticipants.length} مشاركة) من إجمالي ${allParticipantsData.length} مشاركة`;
     }
 
     currentPartPage = 1;
@@ -1170,119 +1191,163 @@ function resetParticipantsFilters() {
 }
 
 function renderParticipantsTable() {
-    const tbody = document.getElementById('participants-table-body');
-    if (!tbody) return;
+    const container = document.getElementById('participants-cards-grid');
+    if (!container) return;
 
     if (filteredParticipants.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10" style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 2.5rem;">🔍</span>
-                        <strong style="font-size: 1.1rem; color: var(--color-text);">لا توجد مشاركات مطابقة لمعايير البحث</strong>
-                        <p style="margin: 0; font-size: 0.85rem;">جرّب تعديل كلمات البحث أو مسح الفلاتر المحددة.</p>
-                        <button id="btn-empty-reset-filters" class="btn btn-outline" style="margin-top: 0.5rem;">
-                            إعادة ضبط الفلاتر
-                        </button>
-                    </div>
-                </td>
-            </tr>
+        container.innerHTML = `
+            <div class="part-empty-state">
+                <span style="font-size: 3rem;">🔍</span>
+                <strong>لا توجد مشاركات مطابقة لمعايير البحث</strong>
+                <p>جرّب تعديل كلمات البحث أو مسح الفلاتر المحددة.</p>
+                <button id="btn-empty-reset-filters" class="btn btn-outline">إعادة ضبط الفلاتر</button>
+            </div>
         `;
-        tbody.querySelector('#btn-empty-reset-filters')?.addEventListener('click', () => {
-            resetParticipantsFilters();
-        });
+        container.querySelector('#btn-empty-reset-filters')?.addEventListener('click', resetParticipantsFilters);
         renderPaginationControls(0);
         return;
     }
 
-    const totalPages = Math.ceil(filteredParticipants.length / partPageSize);
+    // Group by unique student (student_id for registered, guest_session_id or name for guests)
+    const grouped = groupParticipantsByStudent(filteredParticipants);
+    const groupedArr = Array.from(grouped.values());
+
+    const totalPages = Math.ceil(groupedArr.length / partPageSize);
     if (currentPartPage > totalPages) currentPartPage = totalPages;
     if (currentPartPage < 1) currentPartPage = 1;
 
     const startIndex = (currentPartPage - 1) * partPageSize;
-    const endIndex = Math.min(startIndex + partPageSize, filteredParticipants.length);
-    const pageRows = filteredParticipants.slice(startIndex, endIndex);
+    const pageItems = groupedArr.slice(startIndex, startIndex + partPageSize);
 
-    const rowsHtml = pageRows.map(p => {
-        // Account badge
-        const isReg = p.participant_type === 'registered';
-        const accountBadge = isReg
-            ? '<span class="badge badge-reg">🎓 طالب مسجل</span>'
-            : '<span class="badge badge-guest">🌐 زائر دون حساب</span>';
+    container.innerHTML = pageItems.map(student => buildStudentCard(student)).join('');
 
-        // Activity badge
-        let actBadge = '';
-        if (p.activity_type === 'competition') {
-            actBadge = '<span class="badge badge-act-comp">🏆 مسابقة السراج</span>';
-        } else if (p.activity_type === 'reading') {
-            actBadge = '<span class="badge badge-act-reading">📚 تحدي القراءة</span>';
-        } else {
-            actBadge = '<span class="badge badge-act-research">🔬 البحث العلمي</span>';
-        }
-
-        // Status badge
-        const statusMap = {
-            'completed': { label: 'مكتمل ✓', cls: 'badge-status-completed' },
-            'submitted': { label: 'تم التسليم', cls: 'badge-status-submitted' },
-            'evaluated': { label: 'مقيّم', cls: 'badge-status-evaluated' },
-            'under_review': { label: 'قيد التحكيم', cls: 'badge-status-review' },
-            'in_progress': { label: 'قيد الإنجاز', cls: 'badge-status-in_progress' },
-            'started': { label: 'بدأ المحاولة', cls: 'badge-status-started' }
-        };
-        const st = statusMap[p.status] || { label: p.status || '-', cls: '' };
-        const statusBadge = `<span class="badge ${st.cls}">${st.label}</span>`;
-
-        // Score
-        const scoreDisplay = p.score !== null && p.score !== undefined
-            ? `<strong style="color: var(--color-primary);">${p.score}</strong>`
-            : `<span style="color: var(--color-text-muted);">-</span>`;
-
-        // Class & Section
-        const classDisplay = (p.grade || p.section)
-            ? `${escapeHtml(p.grade || '-')}${p.section ? ' / ' + escapeHtml(p.section) : ''}`
-            : '<span style="color: var(--color-text-muted);">-</span>';
-
-        const emailDisplay = p.email
-            ? `<span style="font-size: 0.82rem; font-family: monospace;">${escapeHtml(p.email)}</span>`
-            : '<span style="color: var(--color-text-muted);">-</span>';
-
-        return `
-            <tr>
-                <td>${accountBadge}</td>
-                <td>
-                    <strong>${escapeHtml(p.full_name)}</strong>
-                </td>
-                <td>${emailDisplay}</td>
-                <td>${classDisplay}</td>
-                <td>${actBadge}</td>
-                <td>
-                    <span style="font-weight: 500;">${escapeHtml(p.activity_name || '-')}</span>
-                </td>
-                <td style="font-size: 0.82rem; color: var(--color-text-muted);">
-                    ${formatArabicDate(p.created_at)}
-                </td>
-                <td>${scoreDisplay}</td>
-                <td>${statusBadge}</td>
-                <td style="text-align: center;">
-                    <button class="btn btn-outline btn-sm btn-view-part" data-id="${p.id}" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; white-space: nowrap;">
-                        عرض التفاصيل 🔍
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    tbody.innerHTML = rowsHtml;
-
-    // Attach row view detail listeners
-    tbody.querySelectorAll('.btn-view-part').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.getAttribute('data-id');
-            openParticipantDetailModal(id);
-        });
+    // Attach events
+    container.querySelectorAll('.btn-student-details').forEach(btn => {
+        btn.addEventListener('click', () => openStudentDetailModal(btn.dataset.key));
+    });
+    container.querySelectorAll('.btn-student-delete').forEach(btn => {
+        btn.addEventListener('click', () => confirmDeleteStudent(btn.dataset.key));
     });
 
     renderPaginationControls(totalPages);
+}
+
+function groupParticipantsByStudent(participants) {
+    const map = new Map();
+    participants.forEach(p => {
+        const key = p.participant_type === 'registered' && p.student_id
+            ? 'reg_' + p.student_id
+            : 'guest_' + (p.guest_session_id || p.full_name || p.id);
+
+        if (!map.has(key)) {
+            map.set(key, {
+                key,
+                full_name: p.full_name,
+                email: p.email,
+                grade: p.grade,
+                section: p.section,
+                participant_type: p.participant_type,
+                student_id: p.student_id,
+                guest_session_id: p.guest_session_id,
+                activities: []
+            });
+        }
+        map.get(key).activities.push(p);
+    });
+    return map;
+}
+
+function getReadingLevel(activities) {
+    const readingActivities = activities.filter(a => a.activity_type === 'reading');
+    if (readingActivities.length === 0) return null;
+    // Get the highest level number
+    let maxLevel = 0;
+    let levelTitle = '';
+    readingActivities.forEach(a => {
+        const d = a.details || {};
+        const lvl = parseInt(d.level_number || 0);
+        if (lvl > maxLevel) {
+            maxLevel = lvl;
+            levelTitle = d.level_title || '';
+        }
+        if (!maxLevel && a.score !== null && a.score !== undefined) {
+            maxLevel = a.score;
+        }
+    });
+    return maxLevel ? { level: maxLevel, title: levelTitle } : { level: readingActivities.length, title: 'مشارك' };
+}
+
+function buildStudentCard(student) {
+    const { key, full_name, email, grade, section, participant_type, activities } = student;
+    const isReg = participant_type === 'registered';
+
+    const initials = (full_name || 'ز').split(' ').map(w => w[0]).slice(0, 2).join('');
+    const classText = grade ? `${grade}${section ? ' / ' + section : ''}` : null;
+
+    // Activity badges
+    const actTypes = [...new Set(activities.map(a => a.activity_type))];
+    const actBadges = actTypes.map(type => {
+        if (type === 'competition') return '<span class="badge badge-act-comp">🏆 مسابقة</span>';
+        if (type === 'reading') return '<span class="badge badge-act-reading">📚 قراءة</span>';
+        return '<span class="badge badge-act-research">🔬 بحث</span>';
+    }).join('');
+
+    // Reading level
+    const reading = getReadingLevel(activities);
+    const readingBadge = reading
+        ? `<div class="part-card-reading"><span class="part-card-reading-label">مستوى القراءة:</span><span class="part-card-reading-val">المستوى ${reading.level}${reading.title ? ' — ' + reading.title : ''}</span></div>`
+        : '';
+
+    // Latest activity date
+    const latestDate = activities.reduce((latest, a) => {
+        const d = new Date(a.created_at || 0);
+        return d > latest ? d : latest;
+    }, new Date(0));
+
+    return `
+        <div class="part-student-card">
+            <div class="part-card-header">
+                <div class="part-card-avatar">${escapeHtml(initials)}</div>
+                <div class="part-card-info">
+                    <div class="part-card-name">${escapeHtml(full_name || 'مشارك زائر')}</div>
+                    ${classText ? `<div class="part-card-class">📚 ${escapeHtml(classText)}</div>` : ''}
+                    <div class="part-card-type">${isReg ? '<span class="badge badge-reg" style="font-size:0.7rem;">🎓 مسجل</span>' : '<span class="badge badge-guest" style="font-size:0.7rem;">🌐 زائر</span>'}</div>
+                </div>
+                <div class="part-card-actions">
+                    <button class="btn-student-details btn btn-outline btn-sm" data-key="${escapeHtml(key)}" title="عرض التفاصيل">🔍 التفاصيل</button>
+                    <button class="btn-student-delete btn-icon-danger" data-key="${escapeHtml(key)}" title="حذف المشارك">🗑️</button>
+                </div>
+            </div>
+
+            ${readingBadge}
+
+            <div class="part-card-body">
+                ${email ? `<div class="part-card-meta"><span>📧</span><span style="font-size:0.8rem; word-break:break-all;">${escapeHtml(email)}</span></div>` : ''}
+                <div class="part-card-meta"><span>📋</span><span style="font-size:0.82rem;">${activities.length} نشاط مسجل</span></div>
+                <div class="part-card-meta"><span>📅</span><span style="font-size:0.8rem;">${formatArabicDate(latestDate.toISOString())}</span></div>
+            </div>
+
+            <div class="part-card-footer">
+                ${actBadges}
+            </div>
+        </div>
+    `;
+}
+
+function confirmDeleteStudent(key) {
+    const student = getStudentByKey(key);
+    if (!student) return;
+    const name = student.full_name || 'هذا المشارك';
+    document.getElementById('confirm-title').textContent = 'تأكيد حذف المشارك';
+    document.getElementById('confirm-message').textContent = `هل أنت متأكد من حذف جميع بيانات مشاركات "${name}"؟ لا يمكن التراجع عن هذا الإجراء.`;
+    deleteTargetId = key;
+    deleteTargetType = 'participant';
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function getStudentByKey(key) {
+    const grouped = groupParticipantsByStudent(allParticipantsData);
+    return grouped.get(key) || null;
 }
 
 function renderPaginationControls(totalPages) {
@@ -1366,151 +1431,124 @@ function renderPaginationControls(totalPages) {
     });
 }
 
-function openParticipantDetailModal(recordId) {
-    const record = allParticipantsData.find(p => p.id === recordId);
-    if (!record) return;
+function openStudentDetailModal(key) {
+    const student = getStudentByKey(key);
+    if (!student) return;
 
+    const { full_name, email, grade, section, participant_type, student_id, guest_session_id, activities } = student;
     const modal = document.getElementById('part-detail-modal');
     if (!modal) return;
 
-    // Header & identity
-    document.getElementById('modal-part-name').textContent = record.full_name || 'مشارك زائر';
-    const isReg = record.participant_type === 'registered';
+    const isReg = participant_type === 'registered';
+    const initials = (full_name || 'ز').split(' ').map(w => w[0]).slice(0, 2).join('');
+    const classText = grade ? `${grade}${section ? ' / ' + section : ''}` : 'غير محدد';
+
+    // Avatar
+    const avatarEl = document.getElementById('modal-avatar-initials');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    // Header
+    document.getElementById('modal-part-name').textContent = full_name || 'مشارك زائر';
     const badgeEl = document.getElementById('modal-part-badge');
     if (badgeEl) {
         badgeEl.textContent = isReg ? '🎓 طالب مسجل الدخول' : '🌐 مشارك دون حساب (زائر)';
         badgeEl.className = isReg ? 'badge badge-reg' : 'badge badge-guest';
     }
+    const classBadge = document.getElementById('modal-class-badge');
+    if (classBadge) classBadge.textContent = classText !== 'غير محدد' ? `📚 ${classText}` : '';
 
-    document.getElementById('modal-part-email').textContent = record.email || 'غير متوفر';
-    document.getElementById('modal-part-class').textContent =
-        (record.grade || record.section)
-            ? `${record.grade || '-'} ${record.section ? '(شعبة ' + record.section + ')' : ''}`
-            : 'غير محدد';
+    // Info fields
+    document.getElementById('modal-part-email').textContent = email || 'غير متوفر';
+    document.getElementById('modal-part-class').textContent = classText;
     document.getElementById('modal-part-usertype').textContent = isReg ? 'حساب نظامي موثق' : 'مشاركة عامة عبر المتصفح';
     document.getElementById('modal-part-id').textContent =
-        record.student_id ? `ID: ${record.student_id}` : `Session: ${record.guest_session_id || record.id}`;
+        student_id ? `ID: ${student_id}` : `Session: ${guest_session_id || 'غير متوفر'}`;
 
-    // Activity Badge
-    const actBadgeEl = document.getElementById('modal-part-act-badge');
-    if (actBadgeEl) {
-        if (record.activity_type === 'competition') {
-            actBadgeEl.textContent = '🏆 مسابقة السراج';
-            actBadgeEl.className = 'badge badge-act-comp';
-        } else if (record.activity_type === 'reading') {
-            actBadgeEl.textContent = '📚 تحدي القراءة';
-            actBadgeEl.className = 'badge badge-act-reading';
+    // Reading level
+    const reading = getReadingLevel(activities);
+    const readingEl = document.getElementById('modal-reading-level');
+    if (readingEl) {
+        if (reading) {
+            readingEl.textContent = `المستوى ${reading.level}${reading.title ? ' — ' + reading.title : ''}`;
+            readingEl.style.color = 'var(--color-primary)';
         } else {
-            actBadgeEl.textContent = '🔬 البحث العلمي';
-            actBadgeEl.className = 'badge badge-act-research';
+            readingEl.textContent = 'لم يشارك في تحدي القراءة';
+            readingEl.style.color = 'var(--color-text-muted)';
         }
     }
 
-    // Dynamic Activity Details Grid
-    const detailsGrid = document.getElementById('modal-act-details-grid');
-    const extraInfo = document.getElementById('modal-act-extra-info');
-    const d = record.details || {};
-
-    let gridHtml = `
-        <div class="part-detail-box">
-            <div class="part-detail-box-label">اسم الفعالية / النشاط</div>
-            <div class="part-detail-box-value">${escapeHtml(record.activity_name || '-')}</div>
-        </div>
-        <div class="part-detail-box">
-            <div class="part-detail-box-label">تاريخ وتوقيت المشاركة</div>
-            <div class="part-detail-box-value">${formatArabicDate(record.created_at)}</div>
-        </div>
-        <div class="part-detail-box">
-            <div class="part-detail-box-label">الحالة</div>
-            <div class="part-detail-box-value">${escapeHtml(record.status || '-')}</div>
-        </div>
-        <div class="part-detail-box">
-            <div class="part-detail-box-label">الدرجة المحققة</div>
-            <div class="part-detail-box-value" style="color: var(--color-primary); font-size: 1.15rem;">
-                ${record.score !== null && record.score !== undefined ? record.score : 'غير متوفر'}
-            </div>
-        </div>
-    `;
-
-    detailsGrid.innerHTML = gridHtml;
-
-    // Extra specific activity info
-    let extraHtml = '';
-    if (record.activity_type === 'reading') {
-        extraHtml = `
-            <div style="background: var(--color-bg-alt); padding: 1rem; border-radius: var(--border-radius-sm, 8px); border: 1px solid var(--color-border-light);">
-                <h5 style="margin: 0 0 0.5rem; color: var(--color-text);">معلومات مرحلة القراءة:</h5>
-                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>البرنامج:</strong> ${escapeHtml(d.challenge_title || 'برنامج القراءة المتدرج')}</p>
-                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>المرحلة:</strong> رقم ${escapeHtml(d.level_number || 1)} — ${escapeHtml(d.level_title || '')}</p>
-            </div>
-        `;
-    } else if (record.activity_type === 'competition') {
-        extraHtml = `
-            <div style="background: var(--color-bg-alt); padding: 1rem; border-radius: var(--border-radius-sm, 8px); border: 1px solid var(--color-border-light);">
-                <h5 style="margin: 0 0 0.5rem; color: var(--color-text);">معلومات محاولة المسابقة:</h5>
-                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>المسابقة:</strong> ${escapeHtml(d.competition_title || record.activity_name)}</p>
-                ${d.duration_seconds ? `<p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>المدة المقررة:</strong> ${Math.ceil(d.duration_seconds / 60)} دقيقة</p>` : ''}
-                ${d.started_at ? `<p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>وقت البدء:</strong> ${formatArabicDate(d.started_at)}</p>` : ''}
-                ${d.submitted_at ? `<p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>وقت التسليم:</strong> ${formatArabicDate(d.submitted_at)}</p>` : ''}
-            </div>
-        `;
-    } else if (record.activity_type === 'research') {
-        extraHtml = `
-            <div style="background: var(--color-bg-alt); padding: 1rem; border-radius: var(--border-radius-sm, 8px); border: 1px solid var(--color-border-light);">
-                <h5 style="margin: 0 0 0.5rem; color: var(--color-text);">معلومات البحث العلمي:</h5>
-                <p style="margin: 0.25rem 0; font-size: 0.88rem;"><strong>مجال البحث:</strong> ${escapeHtml(d.field || 'غير محدد')}</p>
-                ${d.summary ? `<p style="margin: 0.5rem 0; font-size: 0.88rem; line-height: 1.5;"><strong>ملخص الفكرة:</strong><br>${escapeHtml(d.summary)}</p>` : ''}
-                ${d.file_url ? `
-                    <div style="margin-top: 0.75rem;">
-                        <a href="${escapeHtml(d.file_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
-                            📄 فتح / تحميل ملف البحث ↗
-                        </a>
-                    </div>
-                ` : ''}
-                ${d.evaluation_notes ? `
-                    <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(34, 197, 94, 0.08); border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.2);">
-                        <strong>ملاحظات التحكيم:</strong> ${escapeHtml(d.evaluation_notes)}
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }
-    extraInfo.innerHTML = extraHtml;
-
-    // Find other activities by same student/guest
-    const otherActivities = allParticipantsData.filter(item => {
-        if (item.id === record.id) return false;
-        if (isReg && item.student_id && item.student_id === record.student_id) return true;
-        if (!isReg && record.guest_session_id && item.guest_session_id === record.guest_session_id) return true;
-        return false;
-    });
-
-    document.getElementById('modal-other-count').textContent = otherActivities.length;
-    const otherListEl = document.getElementById('modal-other-activities-list');
-    if (otherActivities.length === 0) {
-        otherListEl.innerHTML = `<p style="color: var(--color-text-muted); font-size: 0.85rem;">لا توجد مشاركات أخرى مسجلة لهذا المشارك.</p>`;
-    } else {
-        otherListEl.innerHTML = otherActivities.map(o => `
-            <div class="part-history-item">
-                <div>
-                    <div style="font-weight: 600; font-size: 0.9rem;">
-                        ${o.activity_type === 'competition' ? '🏆 ' : o.activity_type === 'reading' ? '📚 ' : '🔬 '}
-                        ${escapeHtml(o.activity_name)}
-                    </div>
-                    <div style="font-size: 0.78rem; color: var(--color-text-muted);">
-                        ${formatArabicDate(o.created_at)} — الحالة: ${escapeHtml(o.status || '-')}
-                    </div>
-                </div>
-                <div style="text-align: left;">
-                    <span style="font-weight: 700; color: var(--color-primary); font-size: 0.95rem;">
-                        ${o.score !== null && o.score !== undefined ? o.score : '-'}
-                    </span>
-                </div>
-            </div>
-        `).join('');
+    // All activities
+    const actList = document.getElementById('modal-all-activities');
+    if (actList) {
+        if (activities.length === 0) {
+            actList.innerHTML = '<p style="color: var(--color-text-muted);">لا توجد أنشطة مسجلة.</p>';
+        } else {
+            actList.innerHTML = activities.map(a => buildActivityCard(a)).join('');
+        }
     }
 
     modal.style.display = 'flex';
+}
+
+function buildActivityCard(a) {
+    const d = a.details || {};
+    const statusMap = {
+        'completed': { label: 'مكتمل ✓', color: '#22c55e' },
+        'submitted': { label: 'تم التسليم', color: '#3b82f6' },
+        'evaluated': { label: 'مقيّم', color: '#22c55e' },
+        'under_review': { label: 'قيد المراجعة', color: '#f59e0b' },
+        'in_progress': { label: 'قيد الإنجاز', color: '#f59e0b' },
+        'started': { label: 'بدأ المحاولة', color: '#3b82f6' }
+    };
+    const st = statusMap[a.status] || { label: a.status || '-', color: '#6b7280' };
+
+    let icon = '📋';
+    let typeLabel = 'نشاط';
+    let accentColor = '#6366f1';
+    if (a.activity_type === 'competition') { icon = '🏆'; typeLabel = 'مسابقة السراج'; accentColor = '#eab308'; }
+    else if (a.activity_type === 'reading') { icon = '📚'; typeLabel = 'تحدي القراءة'; accentColor = '#10b981'; }
+    else if (a.activity_type === 'research') { icon = '🔬'; typeLabel = 'البحث العلمي'; accentColor = '#8b5cf6'; }
+
+    let extraDetails = '';
+    if (a.activity_type === 'reading' && (d.level_number || d.level_title)) {
+        extraDetails = `<div class="act-card-detail"><span>المرحلة:</span> <strong>رقم ${d.level_number || '-'} — ${d.level_title || ''}</strong></div>`;
+        if (d.challenge_title) extraDetails += `<div class="act-card-detail"><span>البرنامج:</span> <strong>${escapeHtml(d.challenge_title)}</strong></div>`;
+    } else if (a.activity_type === 'competition') {
+        if (d.started_at) extraDetails += `<div class="act-card-detail"><span>بدأ:</span> <strong>${formatArabicDate(d.started_at)}</strong></div>`;
+        if (d.submitted_at) extraDetails += `<div class="act-card-detail"><span>سُلّم:</span> <strong>${formatArabicDate(d.submitted_at)}</strong></div>`;
+        if (d.duration_seconds) extraDetails += `<div class="act-card-detail"><span>المدة المقررة:</span> <strong>${Math.ceil(d.duration_seconds / 60)} دقيقة</strong></div>`;
+    } else if (a.activity_type === 'research') {
+        if (d.field) extraDetails += `<div class="act-card-detail"><span>المجال:</span> <strong>${escapeHtml(d.field)}</strong></div>`;
+        if (d.summary) extraDetails += `<div class="act-card-detail" style="grid-column:span 2;"><span>الملخص:</span> <span>${escapeHtml(d.summary.substring(0, 120))}${d.summary.length > 120 ? '...' : ''}</span></div>`;
+        if (d.file_url) extraDetails += `<div class="act-card-detail" style="grid-column:span 2;"><a href="${escapeHtml(d.file_url)}" target="_blank" class="btn btn-outline" style="font-size:0.78rem; padding:0.3rem 0.7rem;">📄 فتح ملف البحث ↗</a></div>`;
+    }
+
+    return `
+        <div class="modal-act-card" style="--act-accent: ${accentColor};">
+            <div class="modal-act-card-header">
+                <div class="modal-act-card-type">${icon} ${typeLabel}</div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span class="badge" style="background: ${st.color}20; color: ${st.color}; border: 1px solid ${st.color}40;">${st.label}</span>
+                    ${a.score !== null && a.score !== undefined ? `<span class="modal-act-score">${a.score} نقطة</span>` : ''}
+                </div>
+            </div>
+            <div class="modal-act-card-name">${escapeHtml(a.activity_name || '-')}</div>
+            <div class="modal-act-card-details">
+                <div class="act-card-detail"><span>تاريخ المشاركة:</span> <strong>${formatArabicDate(a.created_at)}</strong></div>
+                ${extraDetails}
+            </div>
+        </div>
+    `;
+}
+
+function openParticipantDetailModal(recordId) {
+    const record = allParticipantsData.find(p => p.id === recordId);
+    if (!record) return;
+    const isReg = record.participant_type === 'registered';
+    const key = isReg && record.student_id
+        ? 'reg_' + record.student_id
+        : 'guest_' + (record.guest_session_id || record.full_name || record.id);
+    openStudentDetailModal(key);
 }
 
 function exportParticipantsToCSV() {

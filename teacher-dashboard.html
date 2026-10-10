@@ -544,42 +544,22 @@
             </div>
           </div>
 
-          <!-- Data Table -->
-          <div class="td-table-wrapper">
-            <table class="td-table">
-              <thead>
-                <tr>
-                  <th style="width: 140px;">نوع الحساب</th>
-                  <th>اسم المشارك</th>
-                  <th>البريد الإلكتروني</th>
-                  <th>الصف والشعبة</th>
-                  <th>نوع النشاط</th>
-                  <th>اسم الفعالية / الموضوع</th>
-                  <th>تاريخ المشاركة</th>
-                  <th>الدرجة / النتيجة</th>
-                  <th>الحالة</th>
-                  <th style="text-align: center; width: 110px;">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="participants-table-body">
-                <tr>
-                  <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--color-text-muted);">
-                    جاري تحميل بيانات المشاركين...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Participants Cards Grid -->
+          <div id="participants-cards-grid" class="part-cards-grid">
+            <div class="part-loading-state">
+              <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⏳</div>
+              <span>جاري تحميل بيانات المشاركين...</span>
+            </div>
           </div>
 
           <!-- Pagination Bar -->
           <div class="part-pagination">
             <div class="flex items-center gap-2">
-              <span style="font-size: 0.85rem; color: var(--color-text-muted);">عدد العناصر بالصفحة:</span>
+              <span style="font-size: 0.85rem; color: var(--color-text-muted);">عدد البطاقات بالصفحة:</span>
               <select id="part-page-size" class="form-control" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.85rem;">
-                <option value="10">10</option>
-                <option value="25" selected>25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
+                <option value="12">12</option>
+                <option value="24" selected>24</option>
+                <option value="48">48</option>
               </select>
             </div>
 
@@ -641,64 +621,51 @@
 
   <!-- Participant Details Modal -->
   <div id="part-detail-modal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content modal-content-wide">
       <div class="modal-header">
         <div class="flex items-center gap-2">
-          <span style="font-size: 1.35rem;">👤</span>
+          <div class="modal-avatar" id="modal-avatar-initials">؟</div>
           <div>
-            <h3 id="modal-part-name" style="margin: 0; font-size: 1.15rem;">تفاصيل المشارك</h3>
-            <span id="modal-part-badge" class="badge badge-reg" style="margin-top: 0.25rem;">طالب مسجل</span>
+            <h3 id="modal-part-name" style="margin: 0; font-size: 1.2rem;">تفاصيل المشارك</h3>
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.3rem; flex-wrap: wrap;">
+              <span id="modal-part-badge" class="badge badge-reg">طالب مسجل</span>
+              <span id="modal-class-badge" class="badge" style="background: rgba(79,70,229,0.1); color: var(--color-primary);">--</span>
+            </div>
           </div>
         </div>
         <button id="btn-close-part-modal" class="btn-icon" style="font-size: 1.5rem; line-height: 1; cursor: pointer;">&times;</button>
       </div>
 
       <div class="modal-body">
-        <!-- Participant Identity Card -->
-        <div style="background: var(--color-bg-alt); padding: 1.25rem; border-radius: var(--border-radius-md, 12px); border: 1px solid var(--color-border-light); margin-bottom: 1.5rem;">
-          <h4 style="margin: 0 0 0.85rem; font-size: 0.95rem; color: var(--color-primary);">البيانات الشخصية والأكاديمية</h4>
-          <div class="grid grid-2" style="gap: 0.75rem;">
-            <div>
-              <span class="part-detail-box-label">البريد الإلكتروني:</span>
-              <div id="modal-part-email" class="part-detail-box-value">--</div>
-            </div>
-            <div>
-              <span class="part-detail-box-label">الصف والشعبة:</span>
-              <div id="modal-part-class" class="part-detail-box-value">--</div>
-            </div>
-            <div>
-              <span class="part-detail-box-label">نوع المشاركة:</span>
-              <div id="modal-part-usertype" class="part-detail-box-value">--</div>
-            </div>
-            <div>
-              <span class="part-detail-box-label">معرّف الجلسة / الطالب:</span>
-              <div id="modal-part-id" class="part-detail-box-value" style="font-family: monospace; font-size: 0.8rem;">--</div>
-            </div>
+        <!-- Student Info Grid -->
+        <div class="modal-info-grid">
+          <div class="modal-info-card">
+            <div class="modal-info-label">📧 البريد الإلكتروني</div>
+            <div id="modal-part-email" class="modal-info-value">--</div>
+          </div>
+          <div class="modal-info-card">
+            <div class="modal-info-label">🏫 الصف والشعبة</div>
+            <div id="modal-part-class" class="modal-info-value">--</div>
+          </div>
+          <div class="modal-info-card">
+            <div class="modal-info-label">👤 نوع الحساب</div>
+            <div id="modal-part-usertype" class="modal-info-value">--</div>
+          </div>
+          <div class="modal-info-card">
+            <div class="modal-info-label">📚 مستوى تحدي القراءة</div>
+            <div id="modal-reading-level" class="modal-info-value modal-reading-level">--</div>
+          </div>
+          <div class="modal-info-card" style="grid-column: span 2;">
+            <div class="modal-info-label">🔑 معرّف الطالب / الجلسة</div>
+            <div id="modal-part-id" class="modal-info-value" style="font-family: monospace; font-size: 0.82rem; word-break: break-all;">--</div>
           </div>
         </div>
 
-        <!-- Activity Selected Details -->
-        <div style="border: 1px solid var(--color-border); border-radius: var(--border-radius-md, 12px); padding: 1.25rem; margin-bottom: 1.5rem;">
-          <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
-            <h4 style="margin: 0; font-size: 0.95rem; color: var(--color-primary);">تفاصيل النشاط المحدد</h4>
-            <span id="modal-part-act-badge" class="badge">--</span>
-          </div>
-
-          <div class="part-modal-details-grid" id="modal-act-details-grid">
-            <!-- Dynamic Activity Info -->
-          </div>
-
-          <!-- Extended Detail block (Questions, Research summary, etc.) -->
-          <div id="modal-act-extra-info" style="margin-top: 1rem;"></div>
-        </div>
-
-        <!-- Related Activities for same user/guest -->
-        <div>
-          <h4 style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--color-text);">
-            سجل مشاركات أخرى لنفس المشارك (<span id="modal-other-count">0</span>)
-          </h4>
-          <div id="modal-other-activities-list" style="max-height: 220px; overflow-y: auto;">
-            <p style="color: var(--color-text-muted); font-size: 0.85rem;">لا توجد مشاركات أخرى مسجلة.</p>
+        <!-- All Activities Timeline -->
+        <div class="modal-activities-section">
+          <h4 class="modal-section-title">🗂️ جميع الأنشطة التي شارك فيها</h4>
+          <div id="modal-all-activities" class="modal-activities-list">
+            <!-- Dynamic activities -->
           </div>
         </div>
       </div>
