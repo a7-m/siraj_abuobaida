@@ -76,7 +76,7 @@ export async function loadCompetitions() {
 
     const { data, error } = await supabase
       .from('competitions')
-      .select('*, competition_questions(id)')
+      .select('*, competition_questions(question_id)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;

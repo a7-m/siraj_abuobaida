@@ -99,7 +99,7 @@ async function loadChallenges() {
         *,
         challenge_levels (
           id, level_number, title, passing_score, paragraph,
-          challenge_questions ( id )
+          challenge_questions ( question_id )
         )
       `)
       .order('order_num', { ascending: true });
