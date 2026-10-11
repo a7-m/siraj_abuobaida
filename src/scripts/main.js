@@ -30,23 +30,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const logged = isLoggedIn !== undefined ? isLoggedIn : authService.isLoggedIn();
     
     document.querySelectorAll('.auth-required').forEach(el => {
-      if (logged) el.classList.remove('hidden');
-      else el.classList.add('hidden');
+      if (logged) {
+        el.classList.remove('hidden');
+        el.style.display = ''; // إزالة أي display:none مباشر
+      } else {
+        el.classList.add('hidden');
+      }
     });
 
     document.querySelectorAll('.guest-only').forEach(el => {
-      if (!logged) el.classList.remove('hidden');
-      else el.classList.add('hidden');
+      if (!logged) {
+        el.classList.remove('hidden');
+        el.style.display = '';
+      } else {
+        el.classList.add('hidden');
+      }
     });
   };
 
-  // Initial Sync check
-  updateAuthUI();
-
-  // Async exact check (good for when navigating after tokens change)
+  // Async exact check FIRST (لتجنب الوميض)
   authService.getSessionAsync().then(({ session }) => {
     updateAuthUI(!!session);
   });
+
+  // Initial Sync check as fallback
+  updateAuthUI();
 
   // Listener for dynamic changes over time
   document.addEventListener('auth-status-changed', (e) => {

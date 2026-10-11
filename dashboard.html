@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>لوحة التحكم | سراج – مدرسة أبو عبيدة</title>
+  <title>لوحة الطالب | سراج – مدرسة أبو عبيدة</title>
   <meta name="description" content="لوحة تحكم الطالب في منصة سراج لمدرسة أبو عبيدة – تابع تقدّمك الدراسي، وشارك في المسابقات، وصل إلى جميع مواردك التعليمية.">
-  <meta name="keywords" content="لوحة التحكم، طالب، سراج، منصة تعليمية، مدرسة أبو عبيدة">
+  <meta name="keywords" content="لوحة الطالب، طالب، سراج، منصة تعليمية، مدرسة أبو عبيدة">
   <meta name="author" content="سراج – مدرسة أبو عبيدة">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#4F46E5">
-  <meta property="og:title" content="لوحة التحكم | سراج – مدرسة أبو عبيدة">
+  <meta property="og:title" content="لوحة الطالب | سراج – مدرسة أبو عبيدة">
   <meta property="og:description" content="لوحة تحكم الطالب في منصة سراج لمدرسة أبو عبيدة – تابع تقدّمك الدراسي، وشارك في المسابقات، وصل إلى جميع مواردك التعليمية.">
   <meta property="og:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
   <meta property="og:url" content="https://a7-m.github.io/siraj_abuobaida/dashboard.html">
@@ -17,7 +17,7 @@
   <meta property="og:locale" content="ar_SA">
   <meta property="og:site_name" content="سراج – مدرسة أبو عبيدة">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="لوحة التحكم | سراج – مدرسة أبو عبيدة">
+  <meta name="twitter:title" content="لوحة الطالب | سراج – مدرسة أبو عبيدة">
   <meta name="twitter:description" content="لوحة تحكم الطالب في منصة سراج لمدرسة أبو عبيدة – تابع تقدّمك الدراسي، وشارك في المسابقات، وصل إلى جميع مواردك التعليمية.">
   <meta name="twitter:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
 
@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="./src/styles/global.css">
   <link rel="stylesheet" href="./src/styles/layout.css">
   <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/student-dashboard.css">
   <script>
     (function () {
       const savedTheme = localStorage.getItem('siraj-theme');
@@ -45,11 +46,11 @@
         <a href="competition.html" class="nav-link">مسابقة السراج</a>
         <a href="research.html" class="nav-link">البحث العلمي</a>
         <a href="identity.html" class="nav-link">الهوية الوطنية</a>
-        <a href="dashboard.html" class="nav-link active">لوحة التحكم</a>
+        <a href="dashboard.html" class="nav-link active">لوحة الطالب</a>
       </nav>
       <div class="flex items-center gap-2">
         <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
-        <button onclick="window.mockLogout()" class="btn btn-outline" style="padding: 0.3rem 1rem; font-size: 0.9rem;">تسجيل خروج</button>
+        <button onclick="handleLogout()" class="btn btn-outline" style="padding: 0.3rem 1rem; font-size: 0.9rem;">تسجيل خروج</button>
         <button id="hamburger-btn" class="hamburger">&#9776;</button>
       </div>
     </div>
@@ -65,68 +66,137 @@
     <a href="competition.html" class="mobile-nav-link">مسابقة السراج</a>
     <a href="research.html" class="mobile-nav-link">البحث العلمي</a>
     <a href="identity.html" class="mobile-nav-link">الهوية الوطنية</a>
-    <a href="dashboard.html" class="mobile-nav-link active">لوحة التحكم</a>
-    <button onclick="window.mockLogout()" class="btn btn-outline" style="margin-top: 1rem; text-align: center;">تسجيل خروج</button>
+    <a href="dashboard.html" class="mobile-nav-link active">لوحة الطالب</a>
+    <button onclick="handleLogout()" class="btn btn-outline" style="margin-top: 1rem; text-align: center;">تسجيل خروج</button>
   </div>
 
-  <main id="auth-content" class="main-content container" style="opacity: 0; transition: opacity 0.3s ease;">
-    <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
-      <h2 id="user-welcome">مرحباً... جاري التحميل 👋</h2>
-      <span id="role-badge" style="background: var(--color-gold); color: white; padding: 0.25rem 1rem; border-radius: 20px; font-weight: 600;">--</span>
+  <main id="dashboard-content" class="main-content container" style="opacity: 0; transition: opacity 0.3s ease;">
+    
+    <!-- Welcome Section -->
+    <section id="student-welcome" class="welcome-section">
+      <div class="loading-skeleton" style="height: 80px; width: 100%;"></div>
+    </section>
+
+    <!-- Stats Cards -->
+    <div id="stats-cards" class="stats-grid">
+      <div class="loading-skeleton" style="height: 120px;"></div>
+      <div class="loading-skeleton" style="height: 120px;"></div>
+      <div class="loading-skeleton" style="height: 120px;"></div>
+      <div class="loading-skeleton" style="height: 120px;"></div>
     </div>
 
-    <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 3rem;">
-        <div class="card" style="text-align: center; padding: 2rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-accent);">🏆</div>
-            <h4>الإنجازات</h4>
-            <p style="color: var(--color-text-muted); font-size: 0.9rem;">3 شارات مكتسبة</p>
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- Badges Section -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">🎖️</span>
+            شاراتي
+          </h3>
         </div>
-        <div class="card" style="text-align: center; padding: 2rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-accent);">📚</div>
-            <h4>التحديات</h4>
-            <p style="color: var(--color-text-muted); font-size: 0.9rem;">1 تحدي مستمر</p>
+        <div class="section-body">
+          <div id="badges-container">
+            <div class="loading-skeleton" style="height: 100px;"></div>
+          </div>
         </div>
-        <div class="card" style="text-align: center; padding: 2rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--color-accent);">📝</div>
-            <h4>المسابقات</h4>
-            <p style="color: var(--color-text-muted); font-size: 0.9rem;">0 مسابقة حالية</p>
-        </div>
-    </div>
-
-    <div class="grid grid-2">
-      <!-- Activity Feed -->
-      <section class="card">
-        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">آخر الإشعارات والأنشطة</h3>
-        <ul style="display: flex; flex-direction: column; gap: 1rem;">
-            <li style="display: flex; gap: 1rem; align-items: flex-start;">
-                <div style="background: var(--color-bg); padding: 0.5rem; border-radius: 50%;">🔔</div>
-                <div>
-                    <h5 style="margin-bottom: 0.25rem;">تم إطلاق تحدي القراءة الجديد</h5>
-                    <p style="font-size: 0.85rem; color: var(--color-text-muted);">منذ 3 أيام. انضم الآن لجمع النقاط.</p>
-                </div>
-            </li>
-            <li style="display: flex; gap: 1rem; align-items: flex-start;">
-                <div style="background: var(--color-bg); padding: 0.5rem; border-radius: 50%;">⭐</div>
-                <div>
-                    <h5 style="margin-bottom: 0.25rem;">حصلت على شارة "الباحث الصغير"</h5>
-                    <p style="font-size: 0.85rem; color: var(--color-text-muted);">لإتمامك مسابقة البحث بنجاح.</p>
-                </div>
-            </li>
-        </ul>
       </section>
 
-      <!-- Profile Quick View -->
-      <section class="card">
-        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">الملف الشخصي المستقبلي</h3>
-        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--color-bg); border: 2px solid var(--color-border); display:flex; justify-content:center; align-items:center; font-size:1.5rem;">👤</div>
-            <div>
-                <h4 id="profile-name">جاري التحميل...</h4>
-                <p id="profile-grade" style="font-size: 0.85rem; color: var(--color-text-muted);">---</p>
+      <!-- Develop Progress -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">�</span>
+            طوّر نفسك
+          </h3>
+        </div>
+        <div class="section-body">
+          <div id="develop-progress">
+            <div class="loading-skeleton" style="height: 150px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Competitions -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">🏆</span>
+            المسابقات
+          </h3>
+        </div>
+        <div class="section-body">
+          <div id="competitions-list">
+            <div class="loading-skeleton" style="height: 150px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Activities -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">📋</span>
+            آخر الأنشطة
+          </h3>
+        </div>
+        <div class="section-body">
+          <div id="recent-activities" class="activities-list">
+            <div class="loading-skeleton" style="height: 200px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Info -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">👤</span>
+            الملف الشخصي
+          </h3>
+        </div>
+        <div class="section-body">
+          <div id="profile-info" class="profile-info">
+            <div class="loading-skeleton" style="height: 250px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon">⚙️</span>
+            الإعدادات
+          </h3>
+        </div>
+        <div class="section-body">
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.875rem 1rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--border-radius);">
+              <span style="font-weight: 600; color: var(--color-text);">المظهر</span>
+              <button id="theme-toggle-btn" class="btn btn-outline btn-sm">تبديل المظهر</button>
             </div>
+            
+            <a href="develop.html" class="btn btn-outline btn-sm">
+              انتقل إلى "طوّر نفسك" ←
+            </a>
+            
+            <a href="competition.html" class="btn btn-outline btn-sm">
+              انتقل إلى المسابقات ←
+            </a>
+            
+            <a href="research.html" class="btn btn-outline btn-sm">
+              انتقل إلى البحث العلمي ←
+            </a>
+            
+            <a href="index.html" class="btn btn-outline btn-sm">
+              العودة إلى الصفحة الرئيسية
+            </a>
+          </div>
         </div>
-        <button class="btn btn-outline" style="width: 100%;">تعديل الملف الشخصي</button>
       </section>
+
     </div>
 
   </main>
@@ -135,61 +205,38 @@
   
   <script type="module">
     import { authService } from './src/services/auth.js';
-    import { supabase } from './src/services/supabase.js';
+    import { studentDashboard } from './src/scripts/student-dashboard.js';
     import './src/scripts/main.js';
 
-    // Route Protection
-    authService.getSessionAsync().then(async ({ session }) => {
-      if (!session) {
-        // If not logged in, redirect immediately without showing dashboard content
-        window.location.replace('login.html');
-      } else {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('full_name, grade, section, role')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (error) throw error;
-
-          if (!profile || !profile.grade || !profile.section) {
-            // Redirect to onboarding if they haven't set their academic details.
-            // Useful for Google SSO or first-time users
-            window.location.replace('complete-profile.html');
-            return;
-          }
-
-          const displayName = profile.full_name || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'طالب سراج';
-          const firstName = displayName.split(' ')[0] || displayName;
-
-          document.getElementById('user-welcome').innerText = `مرحباً، ${firstName} 👋`;
-          document.getElementById('profile-name').innerText = displayName;
-          document.getElementById('profile-grade').innerText = profile.role === 'teacher' ? 'إدارة المنصة' : `الصف ${profile.grade} - شعبة ${profile.section}`;
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', async () => {
+      await studentDashboard.init();
+      
+      // Theme toggle in settings
+      const themeToggleBtn = document.getElementById('theme-toggle-btn');
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+          const currentTheme = document.documentElement.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
           
-          if (profile.role === 'teacher') {
-              window.location.replace('teacher-dashboard.html');
-              return;
+          if (newTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('siraj-theme', 'dark');
           } else {
-              document.getElementById('role-badge').innerText = 'طالب';
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('siraj-theme', 'light');
           }
-        } catch(err) {
-          console.error("Error fetching profile metrics:", err);
-          window.Toast.error("لم نتمكن من جلب بيانات الملف الشخصي.");
-        }
-        
-        // Reveal content
-        document.getElementById('auth-content').style.opacity = '1';
+        });
       }
     });
 
-    // Attach global mock logout
-    window.mockLogout = async () => {
+    // Logout handler
+    window.handleLogout = async function() {
       try {
         await authService.logout();
         window.location.href = 'index.html';
       } catch (err) {
-        console.error(err);
+        console.error('Logout error:', err);
       }
     };
   </script>
