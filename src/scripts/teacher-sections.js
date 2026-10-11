@@ -45,7 +45,7 @@ export async function loadSections() {
       .from('school_sections')
       .select('*')
       .order('grade', { ascending: true })
-      .order('section_number', { ascending: true });
+      .order('sort_order', { ascending: true });
 
     if (error) throw error;
     allSections = data || [];
@@ -84,8 +84,8 @@ function renderSectionsTable() {
     return `
       <tr>
         <td><strong>${gradeName}</strong></td>
-        <td>شعبة ${s.section_number}</td>
-        <td><span class="badge" style="background:rgba(0,0,0,0.06);">${escapeHtml(s.section_name || `${s.grade}/${s.section_number}`)}</span></td>
+        <td>شعبة ${s.section_name}</td>
+        <td><span class="badge" style="background:rgba(0,0,0,0.06);">${escapeHtml(s.section_name)}</span></td>
         <td>
           <button class="btn btn-sm btn-toggle-sec" data-id="${s.id}" data-active="${isActive}" style="border-radius:999px; padding:0.25rem 0.75rem; font-size:0.8rem; background:${isActive ? '#16a34a' : '#9ca3af'}; color:white; border:none; cursor:pointer;">
             ${isActive ? '✓ مفعلة' : '✕ معطلة'}
@@ -131,10 +131,10 @@ async function handleCreateSection() {
       .from('school_sections')
       .upsert({
         grade,
-        section_number: num,
         section_name: name,
+        sort_order: num,
         is_active: true
-      }, { onConflict: 'grade, section_number' });
+      }, { onConflict: 'grade, section_name' });
 
     if (error) throw error;
     window.Toast?.success(`تمت إضافة شعبة ${name} لمدرسة أبو عبيدة بنجاح`);
