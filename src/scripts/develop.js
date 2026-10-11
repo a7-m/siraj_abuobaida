@@ -308,6 +308,36 @@ class DevelopController {
       } catch (err) {
         console.warn('Could not load Supabase progress, using local storage:', err);
       }
+    } else if (!this.user && supabase) {
+      // Load guest progress from Supabase
+      try {
+        const iden = studentIdentity.getStoredIdentity() || {};
+        const sessionId = iden.sessionId;
+        
+        if (sessionId) {
+          const { data, error } = await supabase
+            .from('student_progress')
+            .select('challenge_level_id, status, score, completed_at')
+            .is('student_id', null)
+            .eq('guest_session_id', sessionId);
+
+          if (!error && data) {
+            data.forEach(p => {
+              this.progressMap[p.challenge_level_id] = {
+                status: p.status,
+                score: p.score || 0
+              };
+            });
+            // Also save to localStorage as backup
+            try {
+              localStorage.setItem('siraj_student_progress', JSON.stringify(this.progressMap));
+            } catch (e) {}
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load guest progress from Supabase:', err);
+      }
     }
 
     try {
@@ -347,7 +377,7 @@ class DevelopController {
             status,
             score: bestScore,
             completed_at: new Date().toISOString()
-          }, { onConflict: 'student_id, challenge_level_id' });
+          }, { onConflict: 'student_id,challenge_level_id' });
         if (error) throw error;
         persistedToSupabase = true;
       } catch (err) {
@@ -356,25 +386,56 @@ class DevelopController {
     } else if (supabase) {
       try {
         const iden = studentIdentity.getStoredIdentity() || {};
-        const { error } = await supabase
+        const sessionId = iden.sessionId || ('guest_' + Math.random().toString(36).substring(2, 9));
+        
+        // For guests, try to find existing progress by session and level
+        const { data: existingProgress } = await supabase
           .from('student_progress')
-          .insert({
-            student_id: null,
-            guest_name: iden.name || 'مشارك زائر',
-            guest_grade: iden.grade || null,
-            guest_section: iden.section || null,
-            guest_school_type: iden.school_type || 'abu_obaida',
-            guest_school_name: iden.school_name || (iden.school_type === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
-            guest_session_id: iden.sessionId || ('guest_' + Math.random().toString(36).substring(2, 9)),
-            challenge_level_id: levelId,
-            status,
-            score: bestScore,
-            completed_at: new Date().toISOString()
-          });
-        if (error) throw error;
+          .select('id')
+          .is('student_id', null)
+          .eq('guest_session_id', sessionId)
+          .eq('challenge_level_id', levelId)
+          .single();
+
+        if (existingProgress) {
+          // Update existing record
+          const { error } = await supabase
+            .from('student_progress')
+            .update({
+              guest_name: iden.name || 'مشارك زائر',
+              guest_grade: iden.grade || null,
+              guest_section: iden.section || null,
+              guest_school_type: iden.school_type || 'abu_obaida',
+              guest_school_name: iden.school_name || (iden.school_type === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+              status,
+              score: bestScore,
+              completed_at: new Date().toISOString()
+            })
+            .eq('id', existingProgress.id);
+          if (error) throw error;
+        } else {
+          // Insert new record
+          const { error } = await supabase
+            .from('student_progress')
+            .insert({
+              student_id: null,
+              guest_name: iden.name || 'مشارك زائر',
+              guest_grade: iden.grade || null,
+              guest_section: iden.section || null,
+              guest_school_type: iden.school_type || 'abu_obaida',
+              guest_school_name: iden.school_name || (iden.school_type === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+              guest_session_id: sessionId,
+              challenge_level_id: levelId,
+              status,
+              score: bestScore,
+              completed_at: new Date().toISOString()
+            });
+          if (error) throw error;
+        }
         persistedToSupabase = true;
       } catch (err) {
         console.error('Failed to save guest reading progress:', err);
+        Toast.error('تعذر حفظ السؤال في هذه المرحلة. بقيت بياناتك في المحرر؛ تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
       }
     }
 
