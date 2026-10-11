@@ -558,10 +558,6 @@ class StudentDashboardController {
         <span class="profile-value">${this.escapeHtml(this.profile.email || this.user.email || '-')}</span>
       </div>
       <div class="profile-field">
-        <span class="profile-label">الصف والشعبة</span>
-        <span class="profile-value">الصف ${this.escapeHtml(this.profile.grade)} - شعبة ${this.escapeHtml(this.profile.section)}</span>
-      </div>
-      <div class="profile-field">
         <span class="profile-label">المدرسة</span>
         <span class="profile-value">${
           this.profile.school_type === 'abu_obaida' 
@@ -570,10 +566,326 @@ class StudentDashboardController {
         }</span>
       </div>
       <div class="profile-field">
+        <span class="profile-label">الصف الدراسي</span>
+        <span class="profile-value">الصف ${this.escapeHtml(this.profile.grade)}</span>
+      </div>
+      <div class="profile-field">
+        <span class="profile-label">الشعبة</span>
+        <span class="profile-value">شعبة ${this.escapeHtml(this.profile.section)}</span>
+      </div>
+      <div class="profile-field">
         <span class="profile-label">تاريخ الانضمام</span>
         <span class="profile-value">${joinDate}</span>
       </div>
+      
+      <button onclick="studentDashboard.openEditProfile()" class="btn btn-outline btn-sm" style="margin-top: 1rem; width: 100%;">
+        ✏️ تعديل بياناتي
+      </button>
     `;
+  }
+
+  async openEditProfile() {
+    // Create modal for editing profile
+    const modal = document.createElement('div');
+    modal.className = 'profile-edit-modal-backdrop';
+    modal.innerHTML = `
+      <div class="profile-edit-modal">
+        <div class="modal-header">
+          <h3 style="margin: 0; color: var(--color-accent);">تعديل الملف الشخصي</h3>
+          <button onclick="this.closest('.profile-edit-modal-backdrop').remove()" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+        </div>
+        
+        <form id="edit-profile-form" class="modal-body">
+          
+          <!-- School Type Selection -->
+          <div class="form-group">
+            <label>المدرسة المنتمي إليها</label>
+            <div class="radio-pills-edit">
+              <div class="radio-pill-edit">
+                <input type="radio" name="edit_school_type" id="edit_school_abu_obaida" value="abu_obaida" ${this.profile.school_type === 'abu_obaida' || !this.profile.school_type ? 'checked' : ''}>
+                <label for="edit_school_abu_obaida">مدرسة أبو عبيدة</label>
+              </div>
+              <div class="radio-pill-edit">
+                <input type="radio" name="edit_school_type" id="edit_school_other" value="other" ${this.profile.school_type === 'other' ? 'checked' : ''}>
+                <label for="edit_school_other">مدرسة أخرى</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Abu Obaida Section -->
+          <div id="edit-abu-obaida-section" class="edit-conditional-section ${this.profile.school_type !== 'other' ? 'active' : ''}">
+            <div class="form-group">
+              <label for="edit-ao-grade">الصف الدراسي</label>
+              <select id="edit-ao-grade" class="form-control" required>
+                <option value="" disabled>اختر الصف</option>
+                <option value="العاشر" ${this.profile.grade === 'العاشر' ? 'selected' : ''}>العاشر</option>
+                <option value="الحادي عشر" ${this.profile.grade === 'الحادي عشر' ? 'selected' : ''}>الحادي عشر</option>
+                <option value="الثاني عشر" ${this.profile.grade === 'الثاني عشر' ? 'selected' : ''}>الثاني عشر</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="edit-ao-section">الشعبة</label>
+              <select id="edit-ao-section" class="form-control" required disabled>
+                <option value="" disabled>جاري التحميل...</option>
+              </select>
+              <div class="form-hint">
+                🏛️ الشعب المتاحة يتم تحديثها تلقائياً حسب الصف المختار.
+              </div>
+            </div>
+          </div>
+
+          <!-- Other School Section -->
+          <div id="edit-other-school-section" class="edit-conditional-section ${this.profile.school_type === 'other' ? 'active' : ''}">
+            <div class="form-group">
+              <label for="edit-other-school-name">اسم المدرسة</label>
+              <input 
+                type="text" 
+                id="edit-other-school-name" 
+                class="form-control" 
+                placeholder="أدخل اسم مدرستك كاملة..."
+                value="${this.escapeHtml(this.profile.school_type === 'other' ? this.profile.school_name || '' : '')}"
+                minlength="2"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-other-grade">الصف الدراسي</label>
+              <select id="edit-other-grade" class="form-control">
+                <option value="" disabled>اختر الصف</option>
+                ${['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'].map(g => 
+                  `<option value="${g}" ${this.profile.grade === g ? 'selected' : ''}>${g}</option>`
+                ).join('')}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-other-section">رقم الشعبة</label>
+              <input 
+                type="number" 
+                id="edit-other-section" 
+                class="form-control" 
+                placeholder="مثال: 3"
+                value="${this.profile.school_type === 'other' ? this.profile.section : ''}"
+                min="1"
+                max="50"
+                step="1"
+              >
+              <div class="form-hint">
+                📝 أدخل رقم الشعبة كعدد صحيح موجب.
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" onclick="this.closest('.profile-edit-modal-backdrop').remove()" class="btn btn-outline">
+              إلغاء
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-profile-btn">
+              💾 حفظ التغييرات
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Initialize edit form
+    await this.initEditForm(modal);
+  }
+
+  async initEditForm(modal) {
+    const form = modal.querySelector('#edit-profile-form');
+    const abuObaidaRadio = modal.querySelector('#edit_school_abu_obaida');
+    const otherRadio = modal.querySelector('#edit_school_other');
+    const abuObaidaSection = modal.querySelector('#edit-abu-obaida-section');
+    const otherSchoolSection = modal.querySelector('#edit-other-school-section');
+    const aoGradeSelect = modal.querySelector('#edit-ao-grade');
+    const aoSectionSelect = modal.querySelector('#edit-ao-section');
+    const otherSchoolName = modal.querySelector('#edit-other-school-name');
+    const otherGradeSelect = modal.querySelector('#edit-other-grade');
+    const otherSectionInput = modal.querySelector('#edit-other-section');
+    const saveBtn = modal.querySelector('#save-profile-btn');
+
+    // Sections cache
+    const sectionsCache = {};
+    const DEFAULT_SECTIONS = {
+      'العاشر': ['1', '2', '3', '4', '5', '6'],
+      'الحادي عشر': ['1', '2', '3', '4', '5'],
+      'الثاني عشر': ['1', '2', '3', '4']
+    };
+
+    const loadSectionsForGrade = async (grade) => {
+      if (!grade) return [];
+      if (sectionsCache[grade]) return sectionsCache[grade];
+
+      try {
+        const { data, error } = await supabase
+          .from('school_sections')
+          .select('section_name')
+          .eq('grade', grade)
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const sections = data.map(d => String(d.section_name));
+          sectionsCache[grade] = sections;
+          return sections;
+        }
+      } catch (e) {
+        console.warn('Failed to load sections:', e);
+      }
+
+      const fallback = DEFAULT_SECTIONS[grade] || ['1', '2', '3', '4'];
+      sectionsCache[grade] = fallback;
+      return fallback;
+    };
+
+    const updateAoSections = async (selectedGrade, currentSection = null) => {
+      aoSectionSelect.disabled = true;
+      aoSectionSelect.innerHTML = '<option value="" disabled>جاري التحميل...</option>';
+
+      const sections = await loadSectionsForGrade(selectedGrade);
+      
+      aoSectionSelect.innerHTML = sections.map(s => 
+        `<option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>شعبة ${s}</option>`
+      ).join('');
+
+      aoSectionSelect.disabled = false;
+
+      if (currentSection && !sections.includes(String(currentSection))) {
+        aoSectionSelect.value = sections[0];
+      }
+    };
+
+    // Load initial sections if Abu Obaida
+    if (this.profile.school_type !== 'other' && this.profile.grade) {
+      await updateAoSections(this.profile.grade, this.profile.section);
+    }
+
+    // School type toggle
+    const toggleSchoolSections = () => {
+      if (abuObaidaRadio.checked) {
+        abuObaidaSection.classList.add('active');
+        otherSchoolSection.classList.remove('active');
+        aoGradeSelect.required = true;
+        aoSectionSelect.required = true;
+        otherSchoolName.required = false;
+        otherGradeSelect.required = false;
+        otherSectionInput.required = false;
+      } else {
+        abuObaidaSection.classList.remove('active');
+        otherSchoolSection.classList.add('active');
+        aoGradeSelect.required = false;
+        aoSectionSelect.required = false;
+        otherSchoolName.required = true;
+        otherGradeSelect.required = true;
+        otherSectionInput.required = true;
+      }
+    };
+
+    abuObaidaRadio.addEventListener('change', toggleSchoolSections);
+    otherRadio.addEventListener('change', toggleSchoolSections);
+
+    aoGradeSelect.addEventListener('change', async () => {
+      await updateAoSections(aoGradeSelect.value, aoSectionSelect.value);
+    });
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'جاري الحفظ...';
+
+      try {
+        let updateData = {};
+
+        if (abuObaidaRadio.checked) {
+          const grade = aoGradeSelect.value;
+          const section = aoSectionSelect.value;
+
+          if (!grade || !section) {
+            Toast.error('يرجى اختيار الصف والشعبة');
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 حفظ التغييرات';
+            return;
+          }
+
+          const validSections = await loadSectionsForGrade(grade);
+          if (validSections.length > 0 && !validSections.includes(String(section))) {
+            Toast.error('الشعبة المختارة لا تنتمي للصف المحدد');
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 حفظ التغييرات';
+            return;
+          }
+
+          updateData = {
+            school_type: 'abu_obaida',
+            school_name: 'مدرسة أبو عبيدة',
+            grade: grade,
+            section: section,
+            last_verified_at: new Date().toISOString()
+          };
+        } else {
+          const schoolName = otherSchoolName.value.trim();
+          const grade = otherGradeSelect.value;
+          const sectionNum = parseInt(otherSectionInput.value, 10);
+
+          if (!schoolName || schoolName.length < 2) {
+            Toast.error('يرجى كتابة اسم المدرسة بشكل صحيح');
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 حفظ التغييرات';
+            return;
+          }
+
+          if (!grade) {
+            Toast.error('يرجى اختيار الصف الدراسي');
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 حفظ التغييرات';
+            return;
+          }
+
+          if (isNaN(sectionNum) || sectionNum <= 0 || sectionNum > 50) {
+            Toast.error('يرجى إدخال رقم شعبة صحيح (من 1 إلى 50)');
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 حفظ التغييرات';
+            return;
+          }
+
+          updateData = {
+            school_type: 'other',
+            school_name: schoolName,
+            grade: grade,
+            section: String(sectionNum),
+            last_verified_at: new Date().toISOString()
+          };
+        }
+
+        const { error } = await supabase
+          .from('profiles')
+          .update(updateData)
+          .eq('id', this.user.id);
+
+        if (error) throw error;
+
+        // Update local profile
+        Object.assign(this.profile, updateData);
+
+        // Re-render profile section
+        this.renderProfile();
+
+        Toast.success('تم حفظ التغييرات بنجاح!');
+        modal.remove();
+
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        Toast.error('حدث خطأ أثناء حفظ التغييرات');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 حفظ التغييرات';
+      }
+    });
   }
 
   formatDate(dateStr) {

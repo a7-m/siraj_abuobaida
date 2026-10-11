@@ -113,6 +113,69 @@ class AuthService {
     if (error) throw error;
   }
 
+  async checkProfileCompletion() {
+    /**
+     * Check if user profile has required fields (grade, section)
+     * Returns: { complete: boolean, profile: object | null }
+     */
+    if (!supabase || !this.session?.user) {
+      return { complete: false, profile: null };
+    }
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('full_name, grade, section, school_type, school_name, role')
+        .eq('id', this.session.user.id)
+        .single();
+
+      if (error) {
+        console.error('Profile check error:', error);
+        return { complete: false, profile: null };
+      }
+
+      // Teachers don't need school info
+      if (profile?.role === 'teacher') {
+        return { complete: true, profile };
+      }
+
+      // Students need grade and section
+      const isComplete = !!(profile?.grade && profile?.section);
+      
+      return { complete: isComplete, profile };
+    } catch (e) {
+      console.error('Profile completion check failed:', e);
+      return { complete: false, profile: null };
+    }
+  }
+
+  async requireCompleteProfile(redirectOnIncomplete = true) {
+    /**
+     * Middleware function to check profile completion
+     * Redirects to complete-profile.html if incomplete
+     * Returns profile if complete, or redirects
+     */
+    const { session } = await this.getSessionAsync();
+    
+    if (!session) {
+      if (redirectOnIncomplete) {
+        window.location.replace('login.html');
+      }
+      return null;
+    }
+
+    const { complete, profile } = await this.checkProfileCompletion();
+
+    if (!complete && redirectOnIncomplete) {
+      // Store current page to redirect back after completing profile
+      const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+      window.location.replace(`complete-profile.html?redirect=${encodeURIComponent(currentPage)}`);
+      return null;
+    }
+
+    return profile;
+  }
+
   _notify() {
     document.dispatchEvent(new CustomEvent('auth-status-changed', {
       detail: { isLoggedIn: this.isLoggedIn(), user: this.user }

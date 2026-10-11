@@ -37,8 +37,8 @@
   
   <style>
     .auth-container {
-      max-width: 450px;
-      margin: 4rem auto;
+      max-width: 550px;
+      margin: 3rem auto;
       padding: 2.5rem 2rem;
       border-radius: var(--border-radius-lg);
       background-color: var(--color-bg-secondary);
@@ -60,6 +60,12 @@
     .form-group label {
       font-weight: 600;
       font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .required-mark {
+      color: var(--color-danger, #dc2626);
     }
     .form-control {
       padding: 0.75rem 1rem;
@@ -69,21 +75,104 @@
       color: var(--color-text);
       font-family: inherit;
       font-size: 1rem;
+      transition: all 0.2s;
     }
     .form-control:focus {
       outline: none;
       border-color: var(--color-accent);
       box-shadow: 0 0 0 3px rgba(11, 83, 69, 0.1);
     }
+    .form-control:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: var(--color-bg-muted, #f3f4f6);
+    }
+    
+    /* Radio Pills for School Type */
+    .radio-pills {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .radio-pill {
+      flex: 1;
+      position: relative;
+    }
+    .radio-pill input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .radio-pill label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      background-color: var(--color-bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .radio-pill input[type="radio"]:checked + label {
+      border-color: var(--color-accent);
+      background-color: rgba(11, 83, 69, 0.05);
+      color: var(--color-accent);
+    }
+    .radio-pill label:hover {
+      border-color: var(--color-accent);
+    }
+
+    /* Conditional Sections */
+    .conditional-section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .conditional-section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-hint {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
     .btn-submit {
       width: 100%;
       padding: 0.85rem;
       font-size: 1.1rem;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
     }
     .btn-submit:disabled {
       opacity: 0.7;
       cursor: not-allowed;
+    }
+    
+    .loading-message {
+      text-align: center;
+      padding: 2rem;
+      color: var(--color-text-muted);
+    }
+
+    @media (max-width: 640px) {
+      .auth-container {
+        margin: 2rem 1rem;
+        padding: 2rem 1.5rem;
+      }
+      .radio-pills {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
     }
   </style>
 </head>
@@ -102,44 +191,131 @@
   </header>
 
   <main class="main-content container">
-    <div class="auth-container">
-      <div style="text-align: center; margin-bottom: 1rem; font-size: 3rem;">👋</div>
-      <h2 class="auth-title">لقد اقتربنا!</h2>
-      <p style="text-align: center; color: var(--color-text-muted); margin-bottom: 2rem;">
-        أهلاً بك في منصة سراج. يرجى استكمال بياناتك الأكاديمية للمتابعة.
-      </p>
+    <div class="auth-container" id="profile-container">
+      <div class="loading-message" id="loading-msg">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+        <p>جاري التحميل...</p>
+      </div>
 
-      <form id="complete-form">
-        <div class="form-group">
-          <label for="grade">الصف الدراسي</label>
-          <select id="grade" class="form-control" required>
-            <option value="" disabled selected>اختر الصف</option>
-            <option value="الخامس">الخامس</option>
-            <option value="السادس">السادس</option>
-            <option value="السابع">السابع</option>
-            <option value="الثامن">الثامن</option>
-            <option value="التاسع">التاسع</option>
-            <option value="العاشر">العاشر</option>
-            <option value="الحادي عشر">الحادي عشر</option>
-            <option value="الثاني عشر">الثاني عشر</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="section">الشعبة</label>
-          <select id="section" class="form-control" required>
-            <option value="" disabled selected>اختر الشعبة</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary btn-submit" id="submit-btn">
-          حفظ والمتابعة
-        </button>
-      </form>
+      <div id="profile-form-wrapper" style="display: none;">
+        <div style="text-align: center; margin-bottom: 1rem; font-size: 3rem;">👋</div>
+        <h2 class="auth-title">إكمال الملف الشخصي</h2>
+        <p style="text-align: center; color: var(--color-text-muted); margin-bottom: 2rem;">
+          أهلاً بك في منصة سراج. يرجى استكمال بياناتك الأكاديمية للمتابعة.
+        </p>
+
+        <form id="complete-form">
+          
+          <!-- School Type Selection -->
+          <div class="form-group">
+            <label>
+              <span>المدرسة المنتمي إليها</span>
+              <span class="required-mark">*</span>
+            </label>
+            <div class="radio-pills">
+              <div class="radio-pill">
+                <input type="radio" name="school_type" id="school_abu_obaida" value="abu_obaida" checked>
+                <label for="school_abu_obaida">مدرسة أبو عبيدة</label>
+              </div>
+              <div class="radio-pill">
+                <input type="radio" name="school_type" id="school_other" value="other">
+                <label for="school_other">مدرسة أخرى</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Abu Obaida Section -->
+          <div id="abu-obaida-section" class="conditional-section active">
+            <div class="form-group">
+              <label for="ao-grade">
+                <span>الصف الدراسي</span>
+                <span class="required-mark">*</span>
+              </label>
+              <select id="ao-grade" class="form-control" required>
+                <option value="" disabled selected>اختر الصف</option>
+                <option value="العاشر">العاشر</option>
+                <option value="الحادي عشر">الحادي عشر</option>
+                <option value="الثاني عشر">الثاني عشر</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="ao-section">
+                <span>الشعبة</span>
+                <span class="required-mark">*</span>
+              </label>
+              <select id="ao-section" class="form-control" required disabled>
+                <option value="" disabled selected>اختر الصف أولاً...</option>
+              </select>
+              <div class="form-hint">
+                🏛️ الشعب المتاحة يتم تحديثها تلقائياً حسب الصف المختار من إدارة المدرسة.
+              </div>
+            </div>
+          </div>
+
+          <!-- Other School Section -->
+          <div id="other-school-section" class="conditional-section">
+            <div class="form-group">
+              <label for="other-school-name">
+                <span>اسم المدرسة</span>
+                <span class="required-mark">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="other-school-name" 
+                class="form-control" 
+                placeholder="أدخل اسم مدرستك كاملة..."
+                minlength="2"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="other-grade">
+                <span>الصف الدراسي</span>
+                <span class="required-mark">*</span>
+              </label>
+              <select id="other-grade" class="form-control">
+                <option value="" disabled selected>اختر الصف</option>
+                <option value="الأول">الأول</option>
+                <option value="الثاني">الثاني</option>
+                <option value="الثالث">الثالث</option>
+                <option value="الرابع">الرابع</option>
+                <option value="الخامس">الخامس</option>
+                <option value="السادس">السادس</option>
+                <option value="السابع">السابع</option>
+                <option value="الثامن">الثامن</option>
+                <option value="التاسع">التاسع</option>
+                <option value="العاشر">العاشر</option>
+                <option value="الحادي عشر">الحادي عشر</option>
+                <option value="الثاني عشر">الثاني عشر</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="other-section">
+                <span>رقم الشعبة</span>
+                <span class="required-mark">*</span>
+              </label>
+              <input 
+                type="number" 
+                id="other-section" 
+                class="form-control" 
+                placeholder="مثال: 3"
+                min="1"
+                max="50"
+                step="1"
+              >
+              <div class="form-hint">
+                📝 أدخل رقم الشعبة كعدد صحيح موجب (1، 2، 3، إلخ).
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-submit" id="submit-btn">
+            حفظ والمتابعة ←
+          </button>
+        </form>
+      </div>
     </div>
   </main>
 
@@ -148,12 +324,106 @@
   <script type="module">
     import { authService } from './src/services/auth.js';
     import { supabase } from './src/services/supabase.js';
+    import { Toast } from './src/utils/toast.js';
     import './src/scripts/main.js';
 
     let currentUserId = null;
+    let redirectTo = 'dashboard.html'; // Default redirect
+
+    // Cache for sections
+    const sectionsCache = {};
+
+    // Default fallback sections
+    const DEFAULT_SECTIONS = {
+      'العاشر': ['1', '2', '3', '4', '5', '6'],
+      'الحادي عشر': ['1', '2', '3', '4', '5'],
+      'الثاني عشر': ['1', '2', '3', '4']
+    };
+
+    async function loadSectionsForGrade(grade) {
+      if (!grade) return [];
+      
+      // Check cache first
+      if (sectionsCache[grade]) {
+        return sectionsCache[grade];
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('school_sections')
+          .select('section_name')
+          .eq('grade', grade)
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const sections = data.map(d => String(d.section_name));
+          sectionsCache[grade] = sections;
+          return sections;
+        }
+      } catch (e) {
+        console.warn('Failed to load sections from DB, using fallback:', e);
+      }
+
+      // Fallback
+      const fallback = DEFAULT_SECTIONS[grade] || ['1', '2', '3', '4'];
+      sectionsCache[grade] = fallback;
+      return fallback;
+    }
+
+    async function updateAoSections(selectedGrade, currentSection = null) {
+      const sectionSelect = document.getElementById('ao-section');
+      sectionSelect.disabled = true;
+      sectionSelect.innerHTML = '<option value="" disabled selected>جاري التحميل...</option>';
+
+      const sections = await loadSectionsForGrade(selectedGrade);
+      
+      if (!sections || sections.length === 0) {
+        sectionSelect.innerHTML = '<option value="1">1</option>';
+        sectionSelect.disabled = false;
+        return;
+      }
+
+      sectionSelect.innerHTML = sections.map(s => 
+        `<option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>شعبة ${s}</option>`
+      ).join('');
+
+      sectionSelect.disabled = false;
+
+      // If current section not in list, select first
+      if (currentSection && !sections.includes(String(currentSection))) {
+        sectionSelect.value = sections[0];
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Must be authenticated to see this page
+      const loadingMsg = document.getElementById('loading-msg');
+      const formWrapper = document.getElementById('profile-form-wrapper');
+      const form = document.getElementById('complete-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      // School type radios
+      const abuObaidaRadio = document.getElementById('school_abu_obaida');
+      const otherRadio = document.getElementById('school_other');
+      const abuObaidaSection = document.getElementById('abu-obaida-section');
+      const otherSchoolSection = document.getElementById('other-school-section');
+
+      // Abu Obaida fields
+      const aoGradeSelect = document.getElementById('ao-grade');
+      const aoSectionSelect = document.getElementById('ao-section');
+
+      // Other school fields
+      const otherSchoolName = document.getElementById('other-school-name');
+      const otherGradeSelect = document.getElementById('other-grade');
+      const otherSectionInput = document.getElementById('other-section');
+
+      // Check if redirectTo is in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('redirect')) {
+        redirectTo = urlParams.get('redirect');
+      }
+
+      // Must be authenticated
       const { session } = await authService.getSessionAsync();
       if (!session) {
         window.location.replace('login.html');
@@ -161,27 +431,167 @@
       }
       currentUserId = session.user.id;
 
-      const form = document.getElementById('complete-form');
-      const submitBtn = document.getElementById('submit-btn');
+      // Check if profile already complete
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name, grade, section, school_type, school_name')
+          .eq('id', currentUserId)
+          .single();
 
+        if (!error && profile) {
+          // Check if profile is complete
+          if (profile.grade && profile.section) {
+            // Profile complete, redirect directly
+            window.location.replace(redirectTo);
+            return;
+          }
+
+          // Pre-fill if partial data exists
+          if (profile.school_type === 'other') {
+            otherRadio.checked = true;
+            abuObaidaSection.classList.remove('active');
+            otherSchoolSection.classList.add('active');
+            
+            if (profile.school_name) otherSchoolName.value = profile.school_name;
+            if (profile.grade) otherGradeSelect.value = profile.grade;
+            if (profile.section) otherSectionInput.value = profile.section;
+          } else {
+            // Abu Obaida (default)
+            if (profile.grade) {
+              aoGradeSelect.value = profile.grade;
+              await updateAoSections(profile.grade, profile.section);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error loading profile:', e);
+      }
+
+      // Show form
+      loadingMsg.style.display = 'none';
+      formWrapper.style.display = 'block';
+
+      // School type toggle
+      function toggleSchoolSections() {
+        if (abuObaidaRadio.checked) {
+          abuObaidaSection.classList.add('active');
+          otherSchoolSection.classList.remove('active');
+          
+          // Set required attributes
+          aoGradeSelect.required = true;
+          aoSectionSelect.required = true;
+          otherSchoolName.required = false;
+          otherGradeSelect.required = false;
+          otherSectionInput.required = false;
+        } else {
+          abuObaidaSection.classList.remove('active');
+          otherSchoolSection.classList.add('active');
+          
+          // Set required attributes
+          aoGradeSelect.required = false;
+          aoSectionSelect.required = false;
+          otherSchoolName.required = true;
+          otherGradeSelect.required = true;
+          otherSectionInput.required = true;
+          
+          setTimeout(() => otherSchoolName.focus(), 100);
+        }
+      }
+
+      abuObaidaRadio.addEventListener('change', toggleSchoolSections);
+      otherRadio.addEventListener('change', toggleSchoolSections);
+
+      // Grade change updates sections for Abu Obaida
+      aoGradeSelect.addEventListener('change', async () => {
+        await updateAoSections(aoGradeSelect.value);
+      });
+
+      // Form submission
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const grade = document.getElementById('grade').value;
-        const section = document.getElementById('section').value;
 
         submitBtn.disabled = true;
         submitBtn.textContent = 'جاري الحفظ...';
 
         try {
-          const updateData = { grade, section };
+          let updateData = {};
+
+          if (abuObaidaRadio.checked) {
+            // Abu Obaida School
+            const grade = aoGradeSelect.value;
+            const section = aoSectionSelect.value;
+
+            if (!grade || !section) {
+              Toast.error('يرجى اختيار الصف والشعبة');
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'حفظ والمتابعة ←';
+              return;
+            }
+
+            // Validate section belongs to grade
+            const validSections = await loadSectionsForGrade(grade);
+            if (validSections.length > 0 && !validSections.includes(String(section))) {
+              Toast.error('الشعبة المختارة لا تنتمي للصف المحدد');
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'حفظ والمتابعة ←';
+              return;
+            }
+
+            updateData = {
+              school_type: 'abu_obaida',
+              school_name: 'مدرسة أبو عبيدة',
+              grade: grade,
+              section: section,
+              last_verified_at: new Date().toISOString()
+            };
+
+          } else {
+            // Other School
+            const schoolName = otherSchoolName.value.trim();
+            const grade = otherGradeSelect.value;
+            const sectionNum = parseInt(otherSectionInput.value, 10);
+
+            if (!schoolName || schoolName.length < 2) {
+              Toast.error('يرجى كتابة اسم المدرسة بشكل صحيح');
+              otherSchoolName.focus();
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'حفظ والمتابعة ←';
+              return;
+            }
+
+            if (!grade) {
+              Toast.error('يرجى اختيار الصف الدراسي');
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'حفظ والمتابعة ←';
+              return;
+            }
+
+            if (isNaN(sectionNum) || sectionNum <= 0 || sectionNum > 50) {
+              Toast.error('يرجى إدخال رقم شعبة صحيح (من 1 إلى 50)');
+              otherSectionInput.focus();
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'حفظ والمتابعة ←';
+              return;
+            }
+
+            updateData = {
+              school_type: 'other',
+              school_name: schoolName,
+              grade: grade,
+              section: String(sectionNum),
+              last_verified_at: new Date().toISOString()
+            };
+          }
+
+          // Add full_name from metadata if exists
           const metaName = session.user?.user_metadata?.full_name || 
                            session.user?.user_metadata?.name;
           if (metaName) {
             updateData.full_name = metaName;
           }
 
-          // Update the existing profile record strictly using RLS
+          // Update profile
           const { error } = await supabase
             .from('profiles')
             .update(updateData)
@@ -189,14 +599,18 @@
 
           if (error) throw error;
 
-          window.Toast.success('تم استكمال البيانات بنجاح!');
-          setTimeout(() => { window.location.replace('dashboard.html'); }, 1000);
+          Toast.success('تم حفظ البيانات بنجاح!');
           
+          // Redirect after short delay
+          setTimeout(() => {
+            window.location.replace(redirectTo);
+          }, 800);
+
         } catch (error) {
-          console.error(error);
-          window.Toast.error('حدث خطأ أثناء حفظ البيانات.');
+          console.error('Error saving profile:', error);
+          Toast.error('حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مرة أخرى.');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'حفظ والمتابعة';
+          submitBtn.textContent = 'حفظ والمتابعة ←';
         }
       });
     });

@@ -206,7 +206,11 @@
   <script type="module">
     import { authService } from './src/services/auth.js';
     import { studentDashboard } from './src/scripts/student-dashboard.js';
+    import { Toast } from './src/utils/toast.js';
     import './src/scripts/main.js';
+    
+    // Make Toast globally accessible for dashboard functions
+    window.Toast = Toast;
 
     // Initialize dashboard
     document.addEventListener('DOMContentLoaded', async () => {
