@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>إدارة المحتوى التعليمي | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة ونشر وتعديل الصفحات والمقالات التعليمية في منصة سراج.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">📝 إدارة المحتوى والصفحات التعليمية</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="content-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">الصفحات والمقالات التعليمية</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                أنشئ مقالات وصفحات إثرائية لطلاب مدرسة أبو عبيدة مع إمكانية النشر الفوري أو الحفظ كمسودة.
+              </p>
+            </div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <input type="text" id="content-search" class="form-control" placeholder="🔍 بحث بالعنوان أو الرابط..." style="width: 220px;">
+              <select id="content-filter" class="form-control" style="width: auto;">
+                <option value="all">جميع الحالات</option>
+                <option value="published">منشور فقط</option>
+                <option value="draft">مسودة فقط</option>
+              </select>
+              <button id="btn-add-page" class="btn btn-primary">+ إضافة صفحة جديدة</button>
+            </div>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>عنوان الصفحة / الرابط</th>
+                  <th>الحالة</th>
+                  <th>تاريخ النشر / التعديل</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="content-table-body">
+                <tr><td colspan="4" style="text-align: center; padding: 2rem;">جاري تحميل الصفحات التعليمية...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="content-pagination"></div>
+        </div>
+
+        <!-- Editor View (Hidden by default) -->
+        <div id="content-editor-view" style="display: none;">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+            <h3 id="editor-title" style="margin: 0;">إضافة صفحة تعليمية جديدة</h3>
+            <button id="btn-back-list" class="btn btn-outline">← العودة لقائمة الصفحات</button>
+          </div>
+          
+          <div class="editor-layout" style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 1.5rem;">
+            <!-- Main Content Area -->
+            <div class="editor-main card" style="padding: 1.75rem;">
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" for="page-title">عنوان الصفحة *</label>
+                <input type="text" id="page-title" class="form-control" placeholder="مثال: مدخل إلى علم البلاغة العربية">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" for="page-slug">المعرّف بالرابط (Slug) *</label>
+                <input type="text" id="page-slug" class="form-control" placeholder="arabic-rhetoric-guide">
+                <small style="color: var(--color-text-muted); font-size: 0.8rem;">
+                  سيكون رابط الصفحة: <code>page.html?slug=الرابط</code>
+                </small>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">محتوى المقال التعليمي *</label>
+                <!-- WYSIWYG Toolbar -->
+                <div class="wysiwyg-toolbar" style="display: flex; gap: 0.4rem; padding: 0.5rem; background: var(--color-bg-alt); border: 1px solid var(--color-border); border-bottom: none; border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0; flex-wrap: wrap;">
+                  <button type="button" class="wysiwyg-btn" data-command="bold" title="عريض"><b>B</b></button>
+                  <button type="button" class="wysiwyg-btn" data-command="italic" title="مائل"><i>I</i></button>
+                  <button type="button" class="wysiwyg-btn" data-command="underline" title="تسطير"><u>U</u></button>
+                  <button type="button" class="wysiwyg-btn" data-command="strikeThrough" title="يتوسطه خط"><s>S</s></button>
+                  <span style="border-right: 1px solid var(--color-border); margin: 0 0.25rem;"></span>
+                  <button type="button" class="wysiwyg-btn" data-command="insertUnorderedList" title="قائمة نقطية">• قائمة</button>
+                  <button type="button" class="wysiwyg-btn" data-command="insertOrderedList" title="قائمة رقمية">1. قائمة</button>
+                  <span style="border-right: 1px solid var(--color-border); margin: 0 0.25rem;"></span>
+                  <button type="button" class="wysiwyg-btn" data-command="justifyRight" title="محاذاة لليمين">➔ يمين</button>
+                  <button type="button" class="wysiwyg-btn" data-command="justifyCenter" title="توسيط">↔ توسيط</button>
+                  <button type="button" class="wysiwyg-btn" data-command="justifyLeft" title="محاذاة لليسار">← يسار</button>
+                  <span style="border-right: 1px solid var(--color-border); margin: 0 0.25rem;"></span>
+                  <button type="button" class="wysiwyg-btn" id="btn-insert-link" title="إدراج رابط">🔗 رابط</button>
+                  <button type="button" class="wysiwyg-btn" id="btn-insert-image" title="إدراج صورة برابط خارجي">🖼️ صورة</button>
+                </div>
+
+                <div id="page-content" contenteditable="true" class="form-control" style="min-height: 340px; max-height: 600px; overflow-y: auto; border-top-left-radius: 0; border-top-right-radius: 0; line-height: 1.8; padding: 1.25rem;" placeholder="اكتب المحتوى التعليمي هنا..."></div>
+              </div>
+            </div>
+
+            <!-- Sidebar Details -->
+            <div class="editor-side card" style="padding: 1.75rem; height: fit-content;">
+              <h4 style="margin: 0 0 1rem; font-size: 1.05rem;">إعدادات النشر والغلاف</h4>
+              
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" for="page-status">حالة النشر</label>
+                <select id="page-status" class="form-control">
+                  <option value="draft">مسودة (غير مرئية للطلاب)</option>
+                  <option value="published">منشور فوراً (متاحة للجميع)</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">صورة الغلاف</label>
+                <div id="cover-upload-area" class="upload-dropzone" style="padding: 1.5rem 1rem;">
+                  <img id="cover-preview" src="" alt="معاينة الغلاف" style="display: none; width: 100%; max-height: 140px; object-fit: cover; border-radius: var(--border-radius-sm); margin-bottom: 0.5rem;">
+                  <div id="cover-upload-text">
+                    <span style="font-size: 1.75rem; display: block; margin-bottom: 0.25rem;">🖼️</span>
+                    <span style="font-size: 0.85rem;">اضغط لاختيار صورة من جهازك</span>
+                  </div>
+                </div>
+                <input type="file" id="cover-input" accept="image/*" style="display: none;">
+                <button type="button" id="btn-remove-cover" class="btn btn-outline-danger btn-sm" style="display: none; width: 100%; margin-top: 0.5rem;">إزالة الصورة</button>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <button id="btn-save-page" class="btn btn-primary" style="width: 100%;">💾 حفظ الصفحة</button>
+                <button id="btn-cancel-page" class="btn btn-outline" style="width: 100%;">إلغاء</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-content.js"></script>
+</body>
+</html>

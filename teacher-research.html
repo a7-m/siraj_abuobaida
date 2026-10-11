@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تحكيم وإدارة البحث العلمي | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة وتحكيم الأبحاث العلمية المقدمة من طلاب مدرسة أبو عبيدة والزوار، رصد الدرجات وإبداء الملاحظات.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">🔬 تحكيم وإدارة البحث العلمي</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="research-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">أبحاث الطلاب المقدمة للتحكيم</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                استعرض الملفات البحثية المرفوعة، قيّم الأبحاث وفق معايير التحكيم المعتمدة، وارصد الملاحظات والتوجيهات.
+              </p>
+            </div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <input type="text" id="res-search" class="form-control" placeholder="🔍 بحث بعنوان البحث أو الطالب..." style="width: 240px;">
+              <select id="res-filter-status" class="form-control" style="width: auto;">
+                <option value="all">جميع الحالات</option>
+                <option value="submitted">بانتظار التحكيم</option>
+                <option value="under_review">قيد التحكيم</option>
+                <option value="evaluated">تم التحكيم والتقييم</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>عنوان البحث والمجال</th>
+                  <th>مقدم البحث / الصف</th>
+                  <th>تاريخ التسليم</th>
+                  <th>الحالة</th>
+                  <th>الدرجة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="research-table-body">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">جاري تحميل الأبحاث العلمية...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="research-pagination"></div>
+        </div>
+
+        <!-- Evaluation Modal -->
+        <div id="eval-modal" class="modal">
+          <div class="modal-content card" style="max-width: 680px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.25rem;">
+              <h3 style="margin: 0; font-size: 1.25rem; color: var(--color-text);">🔬 تحكيم وتقييم البحث العلمي</h3>
+              <button id="btn-close-eval-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <!-- Research Info Summary -->
+            <div style="background: var(--color-bg-alt); padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--color-border);">
+              <h4 id="eval-res-title" style="margin: 0 0 0.5rem; color: var(--color-primary); font-size: 1.1rem;">-</h4>
+              <div class="grid grid-2" style="gap: 0.5rem; font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+                <div>الطالب: <strong id="eval-res-author" style="color: var(--color-text);">-</strong></div>
+                <div>المجال العلمي: <strong id="eval-res-field" style="color: var(--color-text);">-</strong></div>
+                <div>الصف والشعبة: <strong id="eval-res-grade" style="color: var(--color-text);">-</strong></div>
+                <div>تاريخ التسليم: <strong id="eval-res-date" style="color: var(--color-text);">-</strong></div>
+              </div>
+              <div id="eval-res-summary" style="font-size: 0.85rem; line-height: 1.6; color: var(--color-text); border-top: 1px dashed var(--color-border); padding-top: 0.5rem; margin-top: 0.5rem;">
+                <!-- Summary text -->
+              </div>
+              <div id="eval-file-link-box" style="margin-top: 0.75rem;">
+                <!-- Download button injected -->
+              </div>
+            </div>
+
+            <!-- Evaluation Criteria Form -->
+            <h4 style="margin: 0 0 1rem; font-size: 1.05rem;">معايير التحكيم والتقييم (إجمالي الدرجة من 100)</h4>
+
+            <div class="eval-criteria-card">
+              <div class="eval-criteria-header">
+                <div>
+                  <strong>1. أصالة الفكرة والابتكار</strong>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">جدة الفكرة وقيمتها العلمية والعملية للمجتمع أو المدرسة.</div>
+                </div>
+                <input type="number" id="score-crit-1" class="form-control eval-score-input" value="20" min="0" max="25">
+              </div>
+            </div>
+
+            <div class="eval-criteria-card">
+              <div class="eval-criteria-header">
+                <div>
+                  <strong>2. منهجية البحث ووضوح الأهداف</strong>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">تحديد المشكلة وصياغة الفرضيات والأسئلة البحثية.</div>
+                </div>
+                <input type="number" id="score-crit-2" class="form-control eval-score-input" value="20" min="0" max="25">
+              </div>
+            </div>
+
+            <div class="eval-criteria-card">
+              <div class="eval-criteria-header">
+                <div>
+                  <strong>3. جمع وتحليل البيانات والنتائج</strong>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">دقة الأدوات المستخدمة وتحليل النتائج والخروج بتوصيات واقعية.</div>
+                </div>
+                <input type="number" id="score-crit-3" class="form-control eval-score-input" value="20" min="0" max="25">
+              </div>
+            </div>
+
+            <div class="eval-criteria-card">
+              <div class="eval-criteria-header">
+                <div>
+                  <strong>4. جودة الصياغة وتوثيق المراجع</strong>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">السلامة اللغوية والتنسيق والأمانة العلمية للمصادر.</div>
+                </div>
+                <input type="number" id="score-crit-4" class="form-control eval-score-input" value="20" min="0" max="25">
+              </div>
+            </div>
+
+            <!-- Total Score Preview -->
+            <div class="flex justify-between items-center" style="background: rgba(79, 70, 229, 0.08); padding: 1rem 1.25rem; border-radius: 8px; margin: 1.25rem 0; border: 1px solid var(--color-primary);">
+              <span style="font-weight: 700; font-size: 1.05rem;">المجموع النهائي للتقييم:</span>
+              <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-primary);">
+                <span id="eval-total-score">80</span> <small style="font-size: 0.9rem;">/ 100</small>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="eval-status">حالة البحث بعد التحكيم</label>
+              <select id="eval-status" class="form-control">
+                <option value="evaluated">تم التقييم واعتماد الدرجة</option>
+                <option value="under_review">قيد التحكيم (مسودة تقييم غير نهائية)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label" for="eval-notes">ملاحظات المحكم والتغذية الراجعة للطالب</label>
+              <textarea id="eval-notes" class="form-control" rows="3" placeholder="اكتب نقاط القوة والتوصيات لتطوير البحث..."></textarea>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-eval" class="btn btn-outline">إلغاء</button>
+              <button id="btn-save-eval" class="btn btn-primary">💾 حفظ التقييم والدرجة</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-research.js"></script>
+</body>
+</html>

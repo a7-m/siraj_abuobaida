@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تحديات القراءة (طوّر نفسك) | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة برامج تحديات القراءة والمستويات والنصوص القرائية وبنك الأسئلة التفاعلية.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">📚 تحديات القراءة (طوّر نفسك)</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="chal-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">برامج تحدي القراءة والفهم</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                تحكم في مسارات وبرامج «طوّر نفسك» ومستوياتها ونصوصها القرائية وأسئلتها التفاعلية.
+              </p>
+            </div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <select id="chal-filter-category" class="form-control" style="width: auto;">
+                <option value="all">جميع الفئات</option>
+              </select>
+              <button id="btn-add-chal" class="btn btn-primary">+ برنامج جديد</button>
+            </div>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>اسم البرنامج والوصف</th>
+                  <th>الفئة</th>
+                  <th>المراحل والمستويات</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="chal-table-body">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">جاري تحميل البرامج...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Editor View (Hidden initially) -->
+        <div id="chal-editor-view" style="display: none;">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div class="flex items-center gap-2">
+              <button id="btn-chal-back-list" class="btn btn-outline btn-sm">← العودة للبرامج</button>
+              <h3 id="chal-editor-title" style="margin: 0;">تعديل البرنامج</h3>
+            </div>
+            <button id="btn-save-chal" class="btn btn-primary">💾 حفظ البرنامج</button>
+          </div>
+
+          <!-- Program Main Form -->
+          <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;">
+            <h4 style="margin: 0 0 1.25rem; font-size: 1.05rem;">بيانات البرنامج الأساسية</h4>
+            <div class="grid grid-2" style="gap: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label" for="chal-title">عنوان البرنامج *</label>
+                <input type="text" id="chal-title" class="form-control" placeholder="مثال: رواد القراءة السريعة">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="chal-category-select">الفئة التصنيفية</label>
+                <select id="chal-category-select" class="form-control">
+                  <option value="">بدون فئة</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+              <label class="form-label" for="chal-description">وصف البرنامج وأهدافه</label>
+              <textarea id="chal-description" class="form-control" rows="2" placeholder="اكتب نبذة تشجيعية للطلاب..."></textarea>
+            </div>
+
+            <div class="grid grid-2" style="gap: 1.25rem; margin-top: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="chal-order-num">ترتيب الظهور</label>
+                <input type="number" id="chal-order-num" class="form-control" value="1" min="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="chal-status">حالة البرنامج</label>
+                <select id="chal-status" class="form-control">
+                  <option value="draft">مسودة (غير مفعل للطلاب)</option>
+                  <option value="active">نشط ومتاح للطلاب</option>
+                  <option value="archived">مؤرشف</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Levels Panel -->
+          <div id="chal-levels-panel" style="display: none;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h4 style="margin: 0 0 0.25rem; font-size: 1.15rem;">مراحل ومستويات البرنامج</h4>
+                <p style="margin: 0; color: var(--color-text-muted); font-size: 0.85rem;">
+                  أضف المستويات المتتالية. كل مستوى يحتوي على نص قرائي ومجموعة من الأسئلة.
+                </p>
+              </div>
+              <button id="btn-add-level" class="btn btn-primary btn-sm">+ إضافة مرحلة جديدة</button>
+            </div>
+
+            <!-- Level Editor Card (inline) -->
+            <div id="level-editor-card" class="card" style="display: none; padding: 1.75rem; margin-bottom: 1.5rem; border: 2px solid var(--color-primary);">
+              <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                <h4 id="level-editor-title" style="margin: 0; color: var(--color-primary);">إضافة مرحلة</h4>
+                <button id="btn-cancel-level" class="btn btn-outline btn-sm">إلغاء</button>
+              </div>
+              
+              <div class="grid grid-3" style="gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="level-num">رقم المرحلة *</label>
+                  <input type="number" id="level-num" class="form-control" value="1" min="1">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label" for="level-title-input">عنوان المرحلة *</label>
+                  <input type="text" id="level-title-input" class="form-control" placeholder="مثال: المستوى الأول: الفهم المباشر">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="level-passing-score">درجة الاجتياز المطلوبة *</label>
+                <input type="number" id="level-passing-score" class="form-control" value="2" min="1" style="max-width: 150px;">
+                <small style="color: var(--color-text-muted);">النقاط التي يجب على الطالب تحقيقها لفتح المستوى التالي.</small>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label" for="level-paragraph">النص القرائي للمرحلة (الفقرة الإثرائية)</label>
+                <textarea id="level-paragraph" class="form-control" rows="5" placeholder="أدخل النص القرائي الذي سيقرأه الطالب قبل الإجابة عن الأسئلة..."></textarea>
+              </div>
+
+              <div class="flex gap-2">
+                <button id="btn-save-level" class="btn btn-primary">💾 حفظ المرحلة</button>
+              </div>
+
+              <!-- Level Questions Section (Inside Level Editor) -->
+              <div id="level-questions-panel" style="margin-top: 2rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem; display: none;">
+                <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                  <h5 style="margin: 0; font-size: 1rem;">أسئلة هذه المرحلة</h5>
+                  <button id="btn-add-level-question" class="btn btn-outline btn-sm">+ إضافة سؤال</button>
+                </div>
+
+                <div id="level-questions-list">
+                  <!-- Injected questions -->
+                </div>
+
+                <!-- Level Question Editor Modal/Card -->
+                <div id="level-question-editor" class="card" style="display: none; padding: 1.5rem; margin-top: 1rem; background: var(--color-bg-alt); border: 1px dashed var(--color-primary);">
+                  <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                    <strong id="lq-editor-title">سؤال جديد للمرحلة</strong>
+                    <button id="btn-cancel-lq" class="btn btn-outline btn-sm">إلغاء</button>
+                  </div>
+
+                  <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group">
+                      <label class="form-label" for="lq-type">نوع السؤال</label>
+                      <select id="lq-type" class="form-control">
+                        <option value="mcq">اختيار من متعدد</option>
+                        <option value="tf">صح أو خطأ</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="lq-points">الدرجة / النقاط</label>
+                      <input type="number" id="lq-points" class="form-control" value="1" min="1">
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" for="lq-text">نص السؤال *</label>
+                    <input type="text" id="lq-text" class="form-control" placeholder="مثال: ما الفكرة الرئيسية في الفقرة الأولى؟">
+                  </div>
+
+                  <div id="lq-options-area" style="margin-bottom: 1.25rem;">
+                    <!-- Options injected dynamically by teacher-challenges.js -->
+                  </div>
+
+                  <button id="btn-save-lq" class="btn btn-primary btn-sm">💾 حفظ السؤال</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- List of Existing Levels -->
+            <div id="chal-levels-list">
+              <!-- Injected by teacher-challenges.js -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-reading.js"></script>
+</body>
+</html>

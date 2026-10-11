@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>بنك الأسئلة المركزي | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة بنك الأسئلة المركزي لمنصة سراج – إضافة وتصنيف وتعديل كافة أنواع الأسئلة التفاعلية.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">❓ بنك الأسئلة المركزي</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="qbank-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">بنك الأسئلة والاختبارات</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                مستودع شامل لجميع الأسئلة التفاعلية (اختيار من متعدد، صح أو خطأ، ترتيب، اختيار متعدد، ومطابقة).
+              </p>
+            </div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <input type="text" id="q-search" class="form-control" placeholder="🔍 بحث بنص السؤال..." style="width: 220px;">
+              <select id="q-filter-type" class="form-control" style="width: auto;">
+                <option value="all">جميع الأنواع</option>
+                <option value="mcq">اختيار من متعدد</option>
+                <option value="tf">صح أو خطأ</option>
+                <option value="multi">متعدد الخيارات</option>
+                <option value="order">ترتيب تسلسلي</option>
+                <option value="match">مطابقة وتوصيل</option>
+              </select>
+              <button id="btn-add-qbank" class="btn btn-primary">+ إضافة سؤال جديد</button>
+            </div>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th style="width: 45%;">نص السؤال</th>
+                  <th>النوع</th>
+                  <th>الدرجة</th>
+                  <th>الإجابة الصحيحة / الخيارات</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="qbank-table-body">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">جاري تحميل بنك الأسئلة...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="qbank-pagination"></div>
+        </div>
+
+        <!-- Question Editor Card (Hidden initially) -->
+        <div id="qbank-editor-view" style="display: none;">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+            <h3 id="qbank-editor-title" style="margin: 0;">➕ إضافة سؤال لبنك الأسئلة</h3>
+            <button id="btn-back-qbank" class="btn btn-outline">← العودة للبنك</button>
+          </div>
+
+          <div class="card" style="padding: 1.75rem; max-width: 820px; margin: 0 auto;">
+            <div class="grid grid-2" style="gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label" for="qb-type">نوع السؤال *</label>
+                <select id="qb-type" class="form-control">
+                  <option value="mcq">اختيار من متعدد (إجابة واحدة)</option>
+                  <option value="tf">صح أو خطأ</option>
+                  <option value="multi">اختيار متعدد (عدة إجابات صحيحة)</option>
+                  <option value="order">ترتيب تسلسلي</option>
+                  <option value="match">مطابقة وتوصيل</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="qb-points">الدرجة المخصصة للسؤال *</label>
+                <input type="number" id="qb-points" class="form-control" value="1" min="1">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="qb-text">نص السؤال *</label>
+              <textarea id="qb-text" class="form-control" rows="3" placeholder="اكتب صيغة السؤال التعليمي هنا..."></textarea>
+            </div>
+
+            <!-- Optional Image URL -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="qb-image-url">رابط صورة توضيحية للسؤال (اختياري)</label>
+              <div class="flex gap-2">
+                <input type="url" id="qb-image-url" class="form-control" placeholder="https://... أو اختر رفع صورة">
+                <button type="button" id="btn-upload-q-img" class="btn btn-outline" style="white-space: nowrap;">📁 رفع صورة</button>
+              </div>
+              <input type="file" id="qb-file-input" accept="image/*" style="display: none;">
+              <div id="qb-img-preview-box" style="margin-top: 0.5rem; display: none;">
+                <img id="qb-img-preview" src="" alt="معاينة" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--color-border);">
+              </div>
+            </div>
+
+            <!-- Dynamic Options Area -->
+            <div id="qb-options-builder" style="background: var(--color-bg-alt); padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--color-border);">
+              <!-- Rendered based on qb-type -->
+            </div>
+
+            <!-- Explanation Note -->
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+              <label class="form-label" for="qb-explanation">التغذية الراجعة والشرح التوضيحي (اختياري)</label>
+              <input type="text" id="qb-explanation" class="form-control" placeholder="شرح يظهر للطالب عند مراجعة الإجابة...">
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-qbank" class="btn btn-outline">إلغاء</button>
+              <button id="btn-save-qbank" class="btn btn-primary">💾 حفظ السؤال في البنك</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-questions.js"></script>
+</body>
+</html>

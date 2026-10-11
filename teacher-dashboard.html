@@ -3,24 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>لوحة تحكم المعلم | سراج – مدرسة أبو عبيدة</title>
-  <meta name="description" content="لوحة تحكم المعلم في منصة سراج لمدرسة أبو عبيدة – أدر فصولك وطلابك ومواردك التعليمية بكفاءة وسهولة.">
-  <meta name="keywords" content="لوحة تحكم المعلم، معلم، سراج، منصة تعليمية، مدرسة أبو عبيدة">
-  <meta name="author" content="سراج – مدرسة أبو عبيدة">
-  <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#4F46E5">
-  <meta property="og:title" content="لوحة تحكم المعلم | سراج – مدرسة أبو عبيدة">
-  <meta property="og:description" content="لوحة تحكم المعلم في منصة سراج لمدرسة أبو عبيدة – أدر فصولك وطلابك ومواردك التعليمية بكفاءة وسهولة.">
-  <meta property="og:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
-  <meta property="og:url" content="https://a7-m.github.io/siraj_abuobaida/teacher-dashboard.html">
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="ar_SA">
-  <meta property="og:site_name" content="سراج – مدرسة أبو عبيدة">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="لوحة تحكم المعلم | سراج – مدرسة أبو عبيدة">
-  <meta name="twitter:description" content="لوحة تحكم المعلم في منصة سراج لمدرسة أبو عبيدة – أدر فصولك وطلابك ومواردك التعليمية بكفاءة وسهولة.">
-  <meta name="twitter:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
-
+  <title>لوحة التحكم والإحصائيات | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="مركز إدارة منصة سراج الشامل لمدرسة أبو عبيدة – إحصائيات عامة ومتابعة أنشطة المنصة.">
   <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
   <link rel="stylesheet" href="./src/styles/variables.css">
   <link rel="stylesheet" href="./src/styles/global.css">
@@ -30,922 +14,204 @@
   <script>
     (function () {
       const savedTheme = localStorage.getItem('siraj-theme');
-      if (savedTheme === 'dark') {document.documentElement.setAttribute('data-theme', 'dark');}
-      else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {document.documentElement.setAttribute('data-theme', 'dark');}
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
     })();
   </script>
 </head>
 <body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
 
   <div class="td-layout">
-    
     <!-- Sidebar -->
     <aside class="td-sidebar" id="td-sidebar">
-      <div class="td-sidebar-header">
-        <a href="index.html" class="logo"><img src="./src/assets/images/siraj-logo.png" alt="شعار سراج"></a>
-        <button id="td-sidebar-close" class="btn-icon td-sidebar-close-btn">&times;</button>
-      </div>
-      
-      <nav class="td-nav">
-        <a class="td-nav-item" data-target="home">
-          <span>🏠</span> الصفحة الرئيسية
-        </a>
-        <a class="td-nav-item" data-target="content">
-          <span>📝</span> إدارة المحتوى
-        </a>
-        <a class="td-nav-item" data-target="competitions">
-          <span>🏆</span> مسابقات السراج
-        </a>
-        <a class="td-nav-item" data-target="challenges">
-          <span>📚</span> طوّر نفسك
-        </a>
-        <a class="td-nav-item" data-target="sections">
-          <span>🏫</span> شُعب أبو عبيدة
-        </a>
-        <a class="td-nav-item" data-target="participants" id="td-nav-participants">
-          <span>👥</span> المشاركون
-        </a>
-        <a class="td-nav-item" data-target="profile">
-          <span>👤</span> الملف الشخصي
-        </a>
-      </nav>
-      
-      <div style="padding: 1.5rem; border-top: 1px solid var(--color-border);">
-        <button id="td-logout-btn" class="btn btn-outline" style="width: 100%;">تسجيل خروج</button>
-      </div>
+      <!-- Injected by teacher-nav.js -->
     </aside>
 
     <!-- Main Content -->
     <main class="td-main">
       <header class="td-header">
         <div class="flex items-center gap-2">
-          <button id="td-hamburger" class="td-hamburger">☰</button>
-          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">لوحة المعلم</h2>
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">📊 لوحة التحكم والإحصائيات</h2>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
-          <div class="badge" style="background: var(--color-primary); color: white;">حساب معلم</div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
         </div>
       </header>
       
       <div class="td-content">
-        <!-- Home Section -->
-        <section id="section-home" class="td-section active">
-          <div class="flex justify-between items-center" style="margin-bottom: 2rem;">
-            <h3>نظرة عامة</h3>
-          </div>
-          
-          <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 2rem;">
-            <div class="card" style="padding: 1.5rem;">
-              <h4 style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">الصفحات المنشورة</h4>
-              <div id="stat-published" style="font-size: 2rem; font-weight: 700; color: var(--color-primary);">--</div>
-            </div>
-            <div class="card" style="padding: 1.5rem;">
-              <h4 style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">المسودات</h4>
-              <div id="stat-drafts" style="font-size: 2rem; font-weight: 700; color: var(--color-secondary);">--</div>
-            </div>
-            <div class="card" style="padding: 1.5rem;">
-              <h4 style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">إجمالي الطلاب</h4>
-              <div style="font-size: 2rem; font-weight: 700;">--</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Content Management Section -->
-        <section id="section-content" class="td-section">
-          <div id="content-list-view">
-            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-              <h3>الصفحات التعليمية</h3>
-              <div class="flex gap-2">
-                <input type="text" id="content-search" class="form-control" placeholder="بحث بالاسم..." style="width: 200px;">
-                <select id="content-filter" class="form-control" style="width: auto;">
-                  <option value="all">الكل</option>
-                  <option value="published">منشور</option>
-                  <option value="draft">مسودة</option>
-                </select>
-                <button id="btn-add-page" class="btn btn-primary">إضافة صفحة</button>
-              </div>
-            </div>
-            
-            <div class="td-table-wrapper">
-              <table class="td-table">
-                <thead>
-                  <tr>
-                    <th>العنوان</th>
-                    <th>الحالة</th>
-                    <th>آخر تعديل</th>
-                    <th>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="content-table-body">
-                  <tr><td colspan="4" style="text-align: center;">جاري التحميل...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Content Editor (Hidden by default) -->
-          <div id="content-editor-view" style="display: none;">
-            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
-              <h3 id="editor-title">إضافة صفحة جديدة</h3>
-              <button id="btn-back-list" class="btn btn-outline">عودة للقائمة</button>
-            </div>
-            
-            <div class="editor-layout">
-              <div class="editor-main card" style="padding: 1.5rem;">
-                <div class="form-group">
-                  <label class="form-label">العنوان</label>
-                  <input type="text" id="page-title" class="form-control" placeholder="أدخل عنوان الصفحة">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">الرابط (Slug)</label>
-                  <input type="text" id="page-slug" class="form-control" placeholder="رابط-مخصص-للصفحة (إنجليزي أو أرقام وشرطات)">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">وصف مختصر</label>
-                  <textarea id="page-summary" class="form-control" rows="3" placeholder="وصف قصير يظهر في البطاقات..."></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">المحتوى</label>
-                  <div class="wysiwyg-toolbar">
-                    <button class="wysiwyg-btn" data-command="bold" title="عريض"><b>B</b></button>
-                    <button class="wysiwyg-btn" data-command="italic" title="مائل"><i>I</i></button>
-                    <button class="wysiwyg-btn" data-command="underline" title="تسطير"><u>U</u></button>
-                    <button class="wysiwyg-btn" data-command="insertUnorderedList" title="قائمة نقطية">•</button>
-                    <button class="wysiwyg-btn" data-command="insertOrderedList" title="قائمة رقمية">1.</button>
-                    <button class="wysiwyg-btn" data-command="justifyRight" title="محاذاة لليمين">➔</button>
-                    <button class="wysiwyg-btn" data-command="justifyCenter" title="توسيط">↔</button>
-                    <button class="wysiwyg-btn" data-command="justifyLeft" title="محاذاة لليسار">←</button>
-                    <button class="wysiwyg-btn" id="btn-insert-link" title="إدراج رابط">🔗</button>
-                    <button class="wysiwyg-btn" id="btn-insert-image" title="إدراج صورة بالرابط">🖼️</button>
-                  </div>
-                  <div id="page-content" class="wysiwyg-content" contenteditable="true" dir="rtl"></div>
-                </div>
-              </div>
-              
-              <div class="editor-sidebar">
-                <div class="card" style="padding: 1.5rem; margin-bottom: 1rem;">
-                  <h4 style="margin-bottom: 1rem;">النشر</h4>
-                  <div class="form-group">
-                    <label class="form-label">الحالة</label>
-                    <select id="page-status" class="form-control">
-                      <option value="draft">مسودة</option>
-                      <option value="published">منشور</option>
-                    </select>
-                  </div>
-                  <div class="flex gap-2" style="margin-top: 1.5rem;">
-                    <button id="btn-save-page" class="btn btn-primary" style="flex: 1;">حفظ</button>
-                    <button id="btn-preview-page" class="btn btn-outline">معاينة</button>
-                  </div>
-                </div>
-                
-                <div class="card" style="padding: 1.5rem;">
-                  <h4 style="margin-bottom: 1rem;">صورة الغلاف</h4>
-                  <div class="image-upload-area" id="cover-upload-area">
-                    <span id="cover-upload-text">اضغط لرفع صورة</span>
-                    <img id="cover-preview" class="image-preview" src="" alt="غلاف">
-                    <input type="file" id="cover-input" accept="image/*" style="display: none;">
-                  </div>
-                  <button id="btn-remove-cover" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem; display: none;">إزالة الصورة</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        <!-- Competitions Management Section -->
-        <section id="section-competitions" class="td-section">
-
-          <!-- List View -->
-          <div id="comp-list-view">
-            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-              <h3>إدارة المسابقات</h3>
-              <button id="btn-add-comp" class="btn btn-primary">+ مسابقة جديدة</button>
-            </div>
-
-            <div class="td-table-wrapper">
-              <table class="td-table">
-                <thead>
-                  <tr>
-                    <th>المسابقة</th>
-                    <th>الحالة</th>
-                    <th>المدة</th>
-                    <th>تاريخ البداية</th>
-                    <th>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="comp-table-body">
-                  <tr><td colspan="5" style="text-align:center">جاري التحميل...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Competition Editor (hidden by default) -->
-          <div id="comp-editor-view" style="display:none;">
-            <div class="flex justify-between items-center" style="margin-bottom:1.5rem;">
-              <h3 id="comp-editor-title">مسابقة جديدة</h3>
-              <button id="btn-comp-back-list" class="btn btn-outline">عودة للقائمة</button>
-            </div>
-
-            <div class="editor-layout">
-              <!-- Main form -->
-              <div class="editor-main card" style="padding:1.5rem;">
-                <div class="form-group">
-                  <label class="form-label">اسم المسابقة *</label>
-                  <input type="text" id="comp-title" class="form-control" placeholder="أدخل اسم المسابقة">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">وصف مختصر</label>
-                  <textarea id="comp-description" class="form-control" rows="3" placeholder="وصف يظهر للطلاب في بطاقة المسابقة..."></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ملاحظة نهائية (تظهر بعد الانتهاء)</label>
-                  <textarea id="comp-final-note" class="form-control" rows="2" placeholder="مثال: سيُعلَن عن الفائزين خلال أسبوع..."></textarea>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">تاريخ البداية</label>
-                    <input type="datetime-local" id="comp-start-date" class="form-control">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">تاريخ النهاية</label>
-                    <input type="datetime-local" id="comp-end-date" class="form-control">
-                  </div>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">مدة المسابقة (بالدقائق، اختياري)</label>
-                    <input type="number" id="comp-duration" class="form-control" placeholder="مثال: 30" min="1">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">الحد الأقصى للمحاولات (اختياري)</label>
-                    <input type="number" id="comp-max-attempts" class="form-control" placeholder="فارغ = غير محدود" min="1">
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sidebar -->
-              <div class="editor-sidebar">
-                <div class="card" style="padding:1.5rem; margin-bottom:1rem;">
-                  <h4 style="margin-bottom:1rem;">الإعدادات</h4>
-                  <div class="form-group">
-                    <label class="form-label">حالة المسابقة</label>
-                    <select id="comp-status" class="form-control">
-                      <option value="draft">مسودة</option>
-                      <option value="active" selected>نشطة</option>
-                      <option value="ended">منتهية</option>
-                      <option value="archived">مؤرشفة</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                      <input type="checkbox" id="comp-result-visibility" checked style="width:auto;">
-                      <span>إظهار الدرجة للطالب بعد الانتهاء</span>
-                    </label>
-                  </div>
-                  <div class="form-group">
-                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                      <input type="checkbox" id="comp-shuffle" style="width:auto;">
-                      <span>خلط ترتيب الأسئلة عشوائياً</span>
-                    </label>
-                  </div>
-
-                  <!-- Track configuration -->
-                  <div style="border-top:1px solid var(--color-border); margin-top:1rem; padding-top:1rem;">
-                    <div class="form-group">
-                      <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                        <input type="checkbox" id="comp-track-enabled" style="width:auto;">
-                        <span style="font-weight:600;">تفعيل شريط مسار التحدي (Track Bar)</span>
-                      </label>
-                    </div>
-                    <div id="comp-track-fields" style="display:none; margin-top:0.75rem;">
-                      <div class="form-group">
-                        <label class="form-label" style="font-size:0.85rem;">نوع المسار</label>
-                        <select id="comp-track-type" class="form-control" style="font-size:0.85rem;">
-                          <option value="numeric">أرقام ومحطات متتالية (Numeric)</option>
-                          <option value="timeline">جدول زمني / تواريخ (Timeline)</option>
-                        </select>
-                      </div>
-                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                        <div class="form-group">
-                          <label class="form-label" style="font-size:0.85rem;">بداية المسار</label>
-                          <input type="number" id="comp-track-start" class="form-control" value="1" style="font-size:0.85rem;">
-                        </div>
-                        <div class="form-group">
-                          <label class="form-label" style="font-size:0.85rem;">نهاية المسار</label>
-                          <input type="number" id="comp-track-end" class="form-control" value="10" style="font-size:0.85rem;">
-                        </div>
-                      </div>
-                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                        <div class="form-group">
-                          <label class="form-label" style="font-size:0.85rem;">الخطوة</label>
-                          <input type="number" id="comp-track-step" class="form-control" value="1" min="1" style="font-size:0.85rem;">
-                        </div>
-                        <div class="form-group">
-                          <label class="form-label" style="font-size:0.85rem;">الوحدة</label>
-                          <input type="text" id="comp-track-unit" class="form-control" value="سؤال" style="font-size:0.85rem;">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style="margin-top:1.5rem;">
-                    <button id="btn-save-comp" class="btn btn-primary" style="width:100%;">حفظ المسابقة</button>
-                  </div>
-                </div>
-
-                <div class="card" style="padding:1.5rem;">
-                  <h4 style="margin-bottom:1rem;">صورة الغلاف</h4>
-                  <div class="image-upload-area" id="comp-cover-upload-area">
-                    <span id="comp-cover-upload-text">اضغط لرفع صورة</span>
-                    <img id="comp-cover-preview" class="image-preview" src="" alt="غلاف المسابقة">
-                    <input type="file" id="comp-cover-input" accept="image/*" style="display:none;">
-                  </div>
-                  <button id="btn-remove-comp-cover" class="btn btn-outline" style="width:100%; margin-top:0.5rem; display:none;">إزالة الصورة</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Questions Sub-section (shown after saving) -->
-            <div id="comp-questions-panel" style="margin-top:2rem; display:none;">
-              <div class="flex justify-between items-center" style="margin-bottom:1rem;">
-                <h4>الأسئلة</h4>
-                <button id="btn-add-question" class="btn btn-primary">+ إضافة سؤال</button>
-              </div>
-              <div id="comp-questions-list"></div>
-
-              <!-- Question Editor (inline) -->
-              <div id="question-editor" class="card" style="padding:1.5rem; margin-top:1rem; display:none;">
-                <h5 id="q-editor-title" style="margin-bottom:1rem;">سؤال جديد</h5>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">نوع السؤال</label>
-                    <select id="q-type" class="form-control">
-                      <option value="mcq">اختيار من متعدد (MCQ)</option>
-                      <option value="tf">صح وخطأ</option>
-                      <option value="order">ترتيب</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">النقاط</label>
-                    <input type="number" id="q-points" class="form-control" value="1" min="1">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">نص السؤال *</label>
-                  <textarea id="q-text" class="form-control" rows="2" placeholder="اكتب السؤال هنا..."></textarea>
-                </div>
-                <div id="q-options-area"></div>
-                <div class="flex gap-2" style="margin-top:1rem;">
-                  <button id="btn-save-question" class="btn btn-primary">حفظ السؤال</button>
-                  <button id="btn-cancel-question" class="btn btn-outline">إلغاء</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- Challenges Management Section (طوّر نفسك) -->
-        <section id="section-challenges" class="td-section">
-          <!-- Challenges List View -->
-          <div id="chal-list-view">
-            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-              <div>
-                <h3 style="margin: 0; font-size: 1.4rem;">إدارة برنامج «طوّر نفسك»</h3>
-                <p style="margin: 0.25rem 0 0; color: var(--color-text-muted); font-size: 0.88rem;">
-                  إدارة برامج التحدي المعرفي المتدرجة، الفئات، المراحل القرائية، وشروط الاجتياز.
-                </p>
-              </div>
-              <div class="flex gap-2">
-                <select id="chal-filter-category" class="form-control" style="width: auto;">
-                  <option value="all">جميع الفئات</option>
-                </select>
-                <button id="btn-add-chal" class="btn btn-primary">+ برنامج جديد</button>
-              </div>
-            </div>
-
-            <div class="td-table-wrapper">
-              <table class="td-table">
-                <thead>
-                  <tr>
-                    <th>اسم البرنامج</th>
-                    <th>الفئة</th>
-                    <th>عدد المراحل</th>
-                    <th>الحالة</th>
-                    <th>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="chal-table-body">
-                  <tr><td colspan="5" style="text-align:center">جاري التحميل...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Challenge Editor View (Hidden by default) -->
-          <div id="chal-editor-view" style="display:none;">
-            <div class="flex justify-between items-center" style="margin-bottom:1.5rem;">
-              <h3 id="chal-editor-title">برنامج جديد</h3>
-              <button id="btn-chal-back-list" class="btn btn-outline">عودة للقائمة</button>
-            </div>
-
-            <div class="editor-layout">
-              <div class="editor-main card" style="padding:1.5rem;">
-                <div class="form-group">
-                  <label class="form-label">عنوان البرنامج *</label>
-                  <input type="text" id="chal-title" class="form-control" placeholder="مثال: برنامج القراءة المتدرج – إشراقات عُمانية">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">وصف البرنامج</label>
-                  <textarea id="chal-description" class="form-control" rows="3" placeholder="وصف البرنامج المعرفي وأهدافه..."></textarea>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">الفئة / التصنيف *</label>
-                    <select id="chal-category-select" class="form-control">
-                      <!-- Filled dynamically -->
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">ترتيب العرض</label>
-                    <input type="number" id="chal-order-num" class="form-control" value="1" min="1">
-                  </div>
-                </div>
-              </div>
-
-              <div class="editor-sidebar">
-                <div class="card" style="padding:1.5rem; margin-bottom:1rem;">
-                  <h4 style="margin-bottom:1rem;">الحالة والإجراءات</h4>
-                  <div class="form-group">
-                    <label class="form-label">حالة البرنامج</label>
-                    <select id="chal-status" class="form-control">
-                      <option value="draft">مسودة قيد الإعداد</option>
-                      <option value="active">نشط ومتاح للطلاب</option>
-                      <option value="archived">مؤرشف</option>
-                      <option value="inactive">غير نشط (قديم)</option>
-                    </select>
-                  </div>
-                  <button id="btn-save-chal" class="btn btn-primary" style="width:100%; margin-top:1rem;">حفظ البرنامج</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Challenge Levels Panel -->
-            <div id="chal-levels-panel" style="margin-top:2rem; display:none;">
-              <div class="flex justify-between items-center" style="margin-bottom:1rem;">
-                <h4>مراحل البرنامج القرائي</h4>
-                <button id="btn-add-level" class="btn btn-primary">+ إضافة مرحلة</button>
-              </div>
-              <div id="chal-levels-list"></div>
-
-              <!-- Level Editor (Inline modal/card) -->
-              <div id="level-editor-card" class="card" style="padding:1.5rem; margin-top:1rem; display:none; border:2px solid var(--color-primary);">
-                <h5 id="level-editor-title" style="margin-bottom:1rem;">إضافة مرحلة جديدة</h5>
-                <div style="display:grid; grid-template-columns:120px 1fr 150px; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">رقم المرحلة</label>
-                    <input type="number" id="level-num" class="form-control" value="1" min="1">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">عنوان المرحلة *</label>
-                    <input type="text" id="level-title-input" class="form-control" placeholder="مثال: القلاع والحصون في سلطنة عمان">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">درجة الاجتياز *</label>
-                    <input type="number" id="level-passing-score" class="form-control" value="2" min="1">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">النص القرائي للمرحلة (اتركه فارغاً إذا كانت أسئلة مباشرة)</label>
-                  <textarea id="level-paragraph" class="form-control" rows="5" placeholder="أدخل النص القرائي الذي سيقرأه الطالب قبل الإجابة..."></textarea>
-                </div>
-                <div class="flex gap-2">
-                  <button id="btn-save-level" class="btn btn-primary">حفظ المرحلة</button>
-                  <button id="btn-cancel-level" class="btn btn-outline">إلغاء</button>
-                </div>
-
-                <!-- Level Questions Panel -->
-                <div id="level-questions-panel" style="margin-top:1.5rem; border-top:1px solid var(--color-border); padding-top:1rem; display:none;">
-                  <div class="flex justify-between items-center" style="margin-bottom:0.75rem;">
-                    <h6>أسئلة التحدي لهذه المرحلة</h6>
-                    <button id="btn-add-level-question" class="btn btn-outline btn-sm">+ إضافة سؤال للمرحلة</button>
-                  </div>
-                  <div id="level-questions-list"></div>
-                  
-                  <!-- Level Question Editor -->
-                  <div id="level-question-editor" class="card" style="padding:1.25rem; margin-top:1rem; background:var(--color-bg-alt); display:none;">
-                    <h6 id="lq-editor-title" style="margin-bottom:0.75rem;">سؤال جديد للمرحلة</h6>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                      <div class="form-group">
-                        <label class="form-label">نوع السؤال</label>
-                        <select id="lq-type" class="form-control">
-                          <option value="mcq">اختيار من متعدد (MCQ)</option>
-                          <option value="tf">صح وخطأ</option>
-                        </select>
-                      </div>
-                      <div class="form-group">
-                        <label class="form-label">النقاط</label>
-                        <input type="number" id="lq-points" class="form-control" value="1" min="1">
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">نص السؤال *</label>
-                      <textarea id="lq-text" class="form-control" rows="2" placeholder="اكتب السؤال هنا..."></textarea>
-                    </div>
-                    <div id="lq-options-area"></div>
-                    <div class="flex gap-2" style="margin-top:1rem;">
-                      <button id="btn-save-lq" class="btn btn-primary">حفظ السؤال</button>
-                      <button id="btn-cancel-lq" class="btn btn-outline">إلغاء</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Abu Obaida School Sections Management -->
-        <section id="section-sections" class="td-section">
-          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <!-- Welcome Hero -->
+        <div class="card" style="padding: 1.75rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid var(--color-border);">
+          <div class="flex justify-between items-center" style="flex-wrap: wrap; gap: 1rem;">
             <div>
-              <h3 style="margin: 0; font-size: 1.4rem;">إدارة شُعب مدرسة أبو عبيدة بن الجراح</h3>
-              <p style="margin: 0.25rem 0 0; color: var(--color-text-muted); font-size: 0.88rem;">
-                التحكم في الشُعب الدراسية للصفوف (10، 11، 12) وتفعيلها لتظهر فوراً في قوائم تسجيل وتحقق الطلاب.
+              <h3 style="margin: 0 0 0.5rem; font-size: 1.4rem;">مرحباً بك في مركز إدارة سراج 👋</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.95rem;">
+                يمكنك من هنا متابعة كافة بيانات المنصة، وإدارة المسابقات، وتحديات القراءة، وبنك الأسئلة، والأبحاث العلمية.
               </p>
             </div>
             <div class="flex gap-2">
-              <select id="sec-filter-grade" class="form-control" style="width: auto;">
-                <option value="all">كل الصفوف</option>
-                <option value="10">الصف العاشر</option>
-                <option value="11">الصف الحادي عشر</option>
-                <option value="12">الصف الثاني عشر</option>
-              </select>
-              <button id="btn-add-section-modal" class="btn btn-primary">+ إضافة شعبة جديدة</button>
+              <button id="btn-refresh-stats" class="btn btn-outline btn-sm">🔄 تحديث الإحصائيات</button>
+              <a href="index.html" class="btn btn-primary btn-sm" target="_blank" style="text-decoration: none;">🌐 معاينة المنصة</a>
             </div>
           </div>
+        </div>
 
-          <div class="td-table-wrapper">
-            <table class="td-table">
-              <thead>
-                <tr>
-                  <th>الصف</th>
-                  <th>رقم الشعبة</th>
-                  <th>مسمى الشعبة</th>
-                  <th>الحالة</th>
-                  <th>تاريخ الإضافة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="sections-table-body">
-                <tr><td colspan="6" style="text-align:center">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
+        <!-- 8 Platform Stat Cards Grid -->
+        <div class="grid grid-4" style="gap: 1.25rem; margin-bottom: 2rem;">
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">🏆</span>
+              <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: var(--color-primary);">المسابقات</span>
+            </div>
+            <div id="stat-competitions" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: var(--color-primary);">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">إجمالي المسابقات المسجلة</div>
           </div>
 
-          <!-- Add Section Inline Form / Card -->
-          <div id="add-section-card" class="card" style="padding:1.5rem; margin-top:1.5rem; display:none; max-width:600px;">
-            <h4 style="margin-bottom:1rem;">إضافة شعبة جديدة</h4>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">الصف الدراسي *</label>
-                <select id="new-sec-grade" class="form-control">
-                  <option value="10">العاشر (10)</option>
-                  <option value="11">الحادي عشر (11)</option>
-                  <option value="12">الثاني عشر (12)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">رقم الشعبة *</label>
-                <input type="number" id="new-sec-num" class="form-control" min="1" max="25" placeholder="مثال: 7">
-              </div>
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">📚</span>
+              <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669;">طوّر نفسك</span>
             </div>
-            <div class="form-group">
-              <label class="form-label">مسمى الشعبة (اختياري)</label>
-              <input type="text" id="new-sec-name" class="form-control" placeholder="يُترك فارغاً للإنشاء التلقائي: 10/7">
-            </div>
-            <div class="flex gap-2">
-              <button id="btn-submit-new-sec" class="btn btn-primary">إضافة الشعبة</button>
-              <button id="btn-cancel-new-sec" class="btn btn-outline">إلغاء</button>
-            </div>
+            <div id="stat-challenges" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #059669;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">برامج تحدي القراءة</div>
           </div>
-        </section>
 
-        <!-- Participants Management Section -->
-        <section id="section-participants" class="td-section">
-          <!-- Header and Actions -->
-          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">❓</span>
+              <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">بنك الأسئلة</span>
+            </div>
+            <div id="stat-questions" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #d97706;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">سؤالاً جاهزاً للاختبارات</div>
+          </div>
+
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">🔬</span>
+              <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: #7c3aed;">البحث العلمي</span>
+            </div>
+            <div id="stat-research" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #7c3aed;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">أبحاث مقدمة للتحكيم</div>
+          </div>
+
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">🎓</span>
+              <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">الطلاب المسجلون</span>
+            </div>
+            <div id="stat-students" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #2563eb;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">حساب طالب مفعل بالمنصة</div>
+          </div>
+
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">👥</span>
+              <span class="badge" style="background: rgba(236, 72, 153, 0.1); color: #db2777;">محاولات الأنشطة</span>
+            </div>
+            <div id="stat-attempts" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #db2777;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">مشاركات بالمسابقات والقراءة</div>
+          </div>
+
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">📝</span>
+              <span class="badge" style="background: rgba(14, 165, 233, 0.1); color: #0284c7;">المحتوى التعليمي</span>
+            </div>
+            <div id="stat-pages" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #0284c7;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">صفحة ومقال منشورة ومسودات</div>
+          </div>
+
+          <div class="card" style="padding: 1.25rem;">
+            <div class="flex justify-between items-center">
+              <span style="font-size: 1.75rem;">🏫</span>
+              <span class="badge" style="background: rgba(34, 197, 94, 0.1); color: #16a34a;">شُعب أبو عبيدة</span>
+            </div>
+            <div id="stat-sections" style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #16a34a;">--</div>
+            <div style="font-size: 0.82rem; color: var(--color-text-muted);">شعبة مدرسية مهيأة للأنشطة</div>
+          </div>
+        </div>
+
+        <!-- Quick Access Module Shortcuts -->
+        <h4 style="margin: 0 0 1rem; font-size: 1.15rem;">⚡ وصول سريع لإدارة الأقسام</h4>
+        <div class="grid grid-3" style="gap: 1rem; margin-bottom: 2.5rem;">
+          <a href="teacher-competitions.html" class="card" style="padding: 1.25rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div style="font-size: 2.2rem;">🏆</div>
             <div>
-              <h3 style="margin: 0; font-size: 1.4rem;">سجل المشاركين في المنصة</h3>
-              <p style="margin: 0.25rem 0 0; color: var(--color-text-muted); font-size: 0.88rem;">
-                متابعة شاملة لجميع الطلاب والزوار المشاركين في تحديات القراءة ومسابقات السراج والبحث العلمي.
-              </p>
+              <strong style="display: block; font-size: 1rem;">إدارة مسابقات السراج</strong>
+              <small style="color: var(--color-text-muted);">إنشاء وتعديل المسابقات وتحديد مدتها</small>
             </div>
-            <div class="flex gap-2">
-              <button id="btn-refresh-participants" class="btn btn-outline" title="تحديث البيانات">
-                🔄 تحديث
-              </button>
-              <button id="btn-export-participants" class="btn btn-primary" title="تصدير النتائج المفلترة إلى ملف CSV">
-                📥 تصدير CSV
-              </button>
-            </div>
-          </div>
+          </a>
 
-          <!-- 6 Stat Cards -->
-          <div class="part-stats-grid">
-            <div class="part-stat-card" style="--card-accent: #6366f1;">
-              <div class="part-stat-top">
-                <span class="part-stat-title">إجمالي المشاركين</span>
-                <span class="part-stat-icon" style="--icon-bg: rgba(99, 102, 241, 0.12); color: #6366f1;">👥</span>
-              </div>
-              <div id="stat-part-total" class="part-stat-value">--</div>
-              <span class="part-stat-sub">طالب وزائر فريد</span>
+          <a href="teacher-reading.html" class="card" style="padding: 1.25rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div style="font-size: 2.2rem;">📚</div>
+            <div>
+              <strong style="display: block; font-size: 1rem;">إدارة تحديات القراءة</strong>
+              <small style="color: var(--color-text-muted);">المستويات، الفقرات، والأسئلة المتدرجة</small>
             </div>
+          </a>
 
-            <div class="part-stat-card" style="--card-accent: #22c55e;">
-              <div class="part-stat-top">
-                <span class="part-stat-title">الطلاب المسجلون</span>
-                <span class="part-stat-icon" style="--icon-bg: rgba(34, 197, 94, 0.12); color: #22c55e;">🎓</span>
-              </div>
-              <div id="stat-part-registered" class="part-stat-value">--</div>
-              <span class="part-stat-sub">بحسابات مفعلة</span>
+          <a href="teacher-questions.html" class="card" style="padding: 1.25rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div style="font-size: 2.2rem;">❓</div>
+            <div>
+              <strong style="display: block; font-size: 1rem;">بنك الأسئلة المركزي</strong>
+              <small style="color: var(--color-text-muted);">إضافة وتصنيف الأسئلة المتنوعة</small>
             </div>
+          </a>
 
-            <div class="part-stat-card" style="--card-accent: #f59e0b;">
-              <div class="part-stat-top">
-                <span class="part-stat-title">المشاركون الزوار</span>
-                <span class="part-stat-icon" style="--icon-bg: rgba(245, 158, 11, 0.12); color: #f59e0b;">🌐</span>
-              </div>
-              <div id="stat-part-guests" class="part-stat-value">--</div>
-              <span class="part-stat-sub">مشاركون دون حساب</span>
+          <a href="teacher-research.html" class="card" style="padding: 1.25rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div style="font-size: 2.2rem;">🔬</div>
+            <div>
+              <strong style="display: block; font-size: 1rem;">تحكيم البحث العلمي</strong>
+              <small style="color: var(--color-text-muted);">فحص الأبحاث المرفوعة ورصد التقييمات</small>
             </div>
+          </a>
 
-            <div class="part-stat-card" style="--card-accent: #10b981;">
-              <div class="part-stat-top">
-                <span class="part-stat-title">تحديات القراءة</span>
-                <span class="part-stat-icon" style="--icon-bg: rgba(16, 185, 129, 0.12); color: #10b981;">📚</span>
-              </div>
-              <div id="stat-part-reading" class="part-stat-value">--</div>
-              <span class="part-stat-sub">مرحلة قراءة منجزة</span>
+          <a href="teacher-participants.html" class="card" style="padding: 1.25rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div style="font-size: 2.2rem;">👥</div>
+            <div>
+              <strong style="display: block; font-size: 1rem;">سجل المشاركين والنتائج</strong>
+              <small style="color: var(--color-text-muted);">متابعة نتائج الطلاب والزوار وتصديرها</small>
             </div>
+          </a>
 
-            <div class="part-stat-card" style="--card-accent: #eab308;">
-              <div class="part-stat-top">
-                <span class="part-stat-title">مسابقات السراج</span>
-                <span class="part-stat-icon" style="--icon-bg: rgba(234, 179, 8, 0.12); color: #eab308;">🏆</span>
-              </div>
-              <div id="stat-part-competitions" class="part-stat-value">--</div>
-              <span class="part-stat-sub">محاولة مسابقة مكتملة</span>
+          <a href="teacher-media.html" class="card" style="padding: 1.25rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div style="font-size: 2.2rem;">📁</div>
+            <div>
+              <strong style="display: block; font-size: 1rem;">مكتبة الملفات والوسائط</strong>
+              <small style="color: var(--color-text-muted);">رفع وإدارة الصور والمستندات بـ Supabase</small>
             </div>
+          </a>
+        </div>
 
-            <div class="part-stat-card" style="--card-accent: #8b5cf6;">
-              <div class="part-stat-top">
-                <span class="part-stat-title">البحث العلمي</span>
-                <span class="part-stat-icon" style="--icon-bg: rgba(139, 92, 246, 0.12); color: #8b5cf6;">🔬</span>
-              </div>
-              <div id="stat-part-research" class="part-stat-value">--</div>
-              <span class="part-stat-sub">بحث علمي مستلم</span>
+        <!-- Recent Submissions & Activity Preview -->
+        <div class="grid grid-2" style="gap: 1.5rem;">
+          <div class="card" style="padding: 1.5rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+              <h4 style="margin: 0; font-size: 1.05rem;">🏆 أحدث المسابقات المضافة</h4>
+              <a href="teacher-competitions.html" style="font-size: 0.85rem; color: var(--color-primary);">عرض الكل ←</a>
+            </div>
+            <div id="recent-comps-list">
+              <div style="text-align: center; color: var(--color-text-muted); padding: 1.5rem;">جاري التحميل...</div>
             </div>
           </div>
 
-          <!-- Comprehensive Search & Filter Panel -->
-          <div class="part-filters-card">
-            <div class="part-filters-grid">
-              <div class="part-filter-group">
-                <label class="part-filter-label">البحث بالاسم</label>
-                <input type="text" id="part-filter-name" class="form-control" placeholder="اسم المشارك...">
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">البحث بالبريد</label>
-                <input type="text" id="part-filter-email" class="form-control" placeholder="example@school.om">
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">نوع النشاط</label>
-                <select id="part-filter-activity" class="form-control">
-                  <option value="all">كل الأنشطة</option>
-                  <option value="competition">مسابقة السراج 🏆</option>
-                  <option value="reading">تحديات القراءة 📚</option>
-                  <option value="research">البحث العلمي 🔬</option>
-                </select>
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">نوع الحساب</label>
-                <select id="part-filter-user-type" class="form-control">
-                  <option value="all">الكل (مسجل وزائر)</option>
-                  <option value="registered">طالب مسجل الدخول</option>
-                  <option value="guest">مشارك دون حساب (زائر)</option>
-                </select>
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">الصف</label>
-                <select id="part-filter-grade" class="form-control">
-                  <option value="all">كل الصفوف</option>
-                  <option value="الخامس">الخامس</option>
-                  <option value="السادس">السادس</option>
-                  <option value="السابع">السابع</option>
-                  <option value="الثامن">الثامن</option>
-                  <option value="التاسع">التاسع</option>
-                  <option value="العاشر">العاشر</option>
-                  <option value="الحادي عشر">الحادي عشر</option>
-                  <option value="الثاني عشر">الثاني عشر</option>
-                </select>
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">الشعبة</label>
-                <input type="text" id="part-filter-section" class="form-control" placeholder="مثال: 5">
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">المدرسة</label>
-                <select id="part-filter-school" class="form-control">
-                  <option value="all">كل المدارس</option>
-                  <option value="abu_obaida">مدرسة أبو عبيدة بن الجراح</option>
-                  <option value="other">مدارس أخرى</option>
-                </select>
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">حالة المشاركة</label>
-                <select id="part-filter-status" class="form-control">
-                  <option value="all">كل الحالات</option>
-                  <option value="completed">مكتمل / ناجح</option>
-                  <option value="submitted">تم التسليم</option>
-                  <option value="evaluated">مقيّم / محكّم</option>
-                  <option value="under_review">قيد المراجعة</option>
-                  <option value="in_progress">قيد التقدم</option>
-                  <option value="started">بدأ المحاولة</option>
-                </select>
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">من تاريخ</label>
-                <input type="date" id="part-filter-date-from" class="form-control">
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">إلى تاريخ</label>
-                <input type="date" id="part-filter-date-to" class="form-control">
-              </div>
-
-              <div class="part-filter-group">
-                <label class="part-filter-label">الترتيب حسب</label>
-                <select id="part-filter-sort" class="form-control">
-                  <option value="date-desc">الأحدث مشاركة</option>
-                  <option value="date-asc">الأقدم مشاركة</option>
-                  <option value="name-asc">الاسم (أ - ي)</option>
-                  <option value="name-desc">الاسم (ي - أ)</option>
-                  <option value="score-desc">الدرجة (من الأعلى للأقل)</option>
-                  <option value="score-asc">الدرجة (من الأقل للأعلى)</option>
-                </select>
-              </div>
+          <div class="card" style="padding: 1.5rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+              <h4 style="margin: 0; font-size: 1.05rem;">🔬 أحدث الأبحاث العلمية المرفوعة</h4>
+              <a href="teacher-research.html" style="font-size: 0.85rem; color: var(--color-primary);">عرض الكل ←</a>
             </div>
-
-            <div class="part-filters-actions">
-              <span id="part-results-count" style="font-size: 0.88rem; color: var(--color-text-muted); font-weight: 600;">
-                جاري تحميل النتائج...
-              </span>
-              <button id="btn-reset-part-filters" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">
-                إعادة ضبط الفلاتر
-              </button>
+            <div id="recent-research-list">
+              <div style="text-align: center; color: var(--color-text-muted); padding: 1.5rem;">جاري التحميل...</div>
             </div>
           </div>
-
-          <!-- Participants Cards Grid -->
-          <div id="participants-cards-grid" class="part-cards-grid">
-            <div class="part-loading-state">
-              <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⏳</div>
-              <span>جاري تحميل بيانات المشاركين...</span>
-            </div>
-          </div>
-
-          <!-- Pagination Bar -->
-          <div class="part-pagination">
-            <div class="flex items-center gap-2">
-              <span style="font-size: 0.85rem; color: var(--color-text-muted);">عدد البطاقات بالصفحة:</span>
-              <select id="part-page-size" class="form-control" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.85rem;">
-                <option value="12">12</option>
-                <option value="24" selected>24</option>
-                <option value="48">48</option>
-              </select>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <span id="part-page-info" style="font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600;">
-                الصفحة 1 من 1
-              </span>
-              <div class="part-page-btns" id="part-page-buttons">
-                <!-- Dynamically generated buttons -->
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Profile Section -->
-        <section id="section-profile" class="td-section">
-          <h3>الملف الشخصي</h3>
-          <div class="card" style="max-width: 600px; margin-top: 1.5rem; padding: 2rem;">
-            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
-              <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--color-primary-light); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
-                👨‍🏫
-              </div>
-              <div>
-                <h4 id="prof-name">--</h4>
-                <p style="color: var(--color-text-muted);">حساب معلم / إدارة</p>
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">الاسم الكامل</label>
-              <input type="text" id="prof-name-input" class="form-control" disabled>
-            </div>
-            <div class="form-group">
-              <label class="form-label">البريد الإلكتروني</label>
-              <input type="text" id="prof-email-input" class="form-control" disabled>
-            </div>
-            
-            <p style="font-size: 0.85rem; color: var(--color-text-muted);">
-              ملاحظة: لا يمكن تغيير الصلاحيات (الدور) من هنا. يجب أن يتم ذلك عبر مدير النظام.
-            </p>
-          </div>
-        </section>
+        </div>
 
       </div>
     </main>
-  </div>
-
-  <!-- Confirmation Modal -->
-  <div id="confirm-modal" class="modal">
-    <div class="modal-content card" style="max-width: 400px; text-align: center;">
-      <h3 id="confirm-title" style="margin-bottom: 1rem;">تأكيد الحذف</h3>
-      <p id="confirm-message" style="margin-bottom: 1.5rem; color: var(--color-text-muted);">هل أنت متأكد من هذا الإجراء؟ لا يمكن التراجع عنه.</p>
-      <div class="flex gap-2 justify-center">
-        <button id="btn-confirm-yes" class="btn btn-primary" style="background-color: #ef4444; border-color: #ef4444;">نعم، متأكد</button>
-        <button id="btn-confirm-no" class="btn btn-outline">إلغاء</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Participant Details Modal -->
-  <div id="part-detail-modal" class="modal">
-    <div class="modal-content modal-content-wide">
-      <div class="modal-header">
-        <div class="flex items-center gap-2">
-          <div class="modal-avatar" id="modal-avatar-initials">؟</div>
-          <div>
-            <h3 id="modal-part-name" style="margin: 0; font-size: 1.2rem;">تفاصيل المشارك</h3>
-            <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.3rem; flex-wrap: wrap;">
-              <span id="modal-part-badge" class="badge badge-reg">طالب مسجل</span>
-              <span id="modal-class-badge" class="badge" style="background: rgba(79,70,229,0.1); color: var(--color-primary);">--</span>
-            </div>
-          </div>
-        </div>
-        <button id="btn-close-part-modal" class="btn-icon" style="font-size: 1.5rem; line-height: 1; cursor: pointer;">&times;</button>
-      </div>
-
-      <div class="modal-body">
-        <!-- Student Info Grid -->
-        <div class="modal-info-grid">
-          <div class="modal-info-card">
-            <div class="modal-info-label">📧 البريد الإلكتروني</div>
-            <div id="modal-part-email" class="modal-info-value">--</div>
-          </div>
-          <div class="modal-info-card">
-            <div class="modal-info-label">🏫 الصف والشعبة</div>
-            <div id="modal-part-class" class="modal-info-value">--</div>
-          </div>
-          <div class="modal-info-card">
-            <div class="modal-info-label">👤 نوع الحساب</div>
-            <div id="modal-part-usertype" class="modal-info-value">--</div>
-          </div>
-          <div class="modal-info-card">
-            <div class="modal-info-label">📚 مستوى تحدي القراءة</div>
-            <div id="modal-reading-level" class="modal-info-value modal-reading-level">--</div>
-          </div>
-          <div class="modal-info-card" style="grid-column: span 2;">
-            <div class="modal-info-label">🔑 معرّف الطالب / الجلسة</div>
-            <div id="modal-part-id" class="modal-info-value" style="font-family: monospace; font-size: 0.82rem; word-break: break-all;">--</div>
-          </div>
-        </div>
-
-        <!-- All Activities Timeline -->
-        <div class="modal-activities-section">
-          <h4 class="modal-section-title">🗂️ جميع الأنشطة التي شارك فيها</h4>
-          <div id="modal-all-activities" class="modal-activities-list">
-            <!-- Dynamic activities -->
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button id="btn-modal-close" class="btn btn-outline">إغلاق</button>
-      </div>
-    </div>
   </div>
 
   <script type="module" src="./src/scripts/teacher-dashboard.js"></script>
