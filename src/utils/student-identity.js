@@ -2,7 +2,8 @@
  * Unified Student Identity System — منصة السراج (مدرسة أبو عبيدة)
  * ─────────────────────────────────────────────────────────────
  * • Unified across competition.html and develop.html
- * • Modal must be confirmed ("موافق") on each visit before starting activity
+ * • Smart 3-level caching: Memory → localStorage → Supabase (only if needed)
+ * • Modal shown only for: guests, incomplete profiles, or when forced
  * • Abu Obaida School: grades (10, 11, 12) + dynamic sections managed via DB
  * • Other Schools: custom school name + grades (1-12) + manual positive integer section
  * • Works seamlessly with both authenticated Supabase accounts and persistent guest sessions
@@ -165,23 +166,63 @@ export const studentIdentity = {
 
   /**
    * Mandatory verification prompt before starting activity.
-   * If already confirmed in the current page execution, returns immediately.
-   * Otherwise renders the modal and waits for "موافق".
+   * Uses smart multi-level caching:
+   * 1. Memory cache (_currentVerified) - fastest
+   * 2. localStorage - fast, persists across page reloads
+   * 3. Supabase - only if logged in and localStorage is stale/missing
+   * 
+   * IMPORTANT: Checks localStorage first for logged-in users to avoid unnecessary API calls.
    */
   async requireVerification({
     activityName = 'النشاط',
     forcePrompt = false
   } = {}) {
+    // Level 1: Check memory cache (same session)
     if (this._currentVerified && !forcePrompt) {
+      console.log('✅ Identity from memory cache');
       return this._currentVerified;
     }
 
-    // Check if user is logged in and fetch latest profile
+    // Check if user is logged in
     const { session } = await authService.getSessionAsync();
     const user = session?.user || null;
-    let prefilled = this.getStoredIdentity();
 
-    if (user && supabase) {
+    // Level 2: Check localStorage (persists across page reloads)
+    const storedIdentity = this.getStoredIdentity();
+    
+    if (user && !forcePrompt) {
+      // For logged-in users: check if localStorage has valid, complete data
+      const isLocalStorageComplete = !!(
+        storedIdentity.name && 
+        storedIdentity.grade && 
+        storedIdentity.section &&
+        storedIdentity.verifiedAt
+      );
+
+      if (isLocalStorageComplete) {
+        // localStorage has complete data, use it directly!
+        const verifiedIdentity = {
+          name: storedIdentity.name,
+          schoolType: storedIdentity.schoolType || 'abu_obaida',
+          schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
+          grade: storedIdentity.grade,
+          section: storedIdentity.section,
+          sessionId: storedIdentity.sessionId || generateUUID(),
+          verifiedAt: storedIdentity.verifiedAt,
+          email: user.email,
+          isRegistered: true
+        };
+
+        // Cache it for this session
+        this._currentVerified = verifiedIdentity;
+        
+        console.log('✅ Identity from localStorage (no API call needed)');
+        return verifiedIdentity;
+      }
+
+      // Level 3: localStorage incomplete or missing, fetch from Supabase
+      console.log('⚠️ localStorage incomplete, fetching from Supabase...');
+      
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -190,23 +231,67 @@ export const studentIdentity = {
           .single();
 
         if (!error && data) {
-          if (data.full_name) prefilled.name = data.full_name;
-          if (data.grade) prefilled.grade = data.grade;
-          if (data.section) prefilled.section = data.section;
-          if (data.school_type) prefilled.schoolType = data.school_type;
-          if (data.school_name) prefilled.schoolName = data.school_name;
-          prefilled.email = data.email || user.email;
-          prefilled.isRegistered = true;
+          // Check if profile is complete (has all required fields)
+          const isComplete = !!(data.full_name && data.grade && data.section);
+          
+          if (isComplete) {
+            // Profile is complete! Build verified identity and save to localStorage
+            const verifiedIdentity = {
+              name: data.full_name,
+              schoolType: data.school_type || 'abu_obaida',
+              schoolName: data.school_type === 'other' ? (data.school_name || 'مدرسة أخرى') : 'مدرسة أبو عبيدة',
+              grade: data.grade,
+              section: data.section,
+              sessionId: storedIdentity.sessionId || generateUUID(),
+              verifiedAt: data.last_verified_at || new Date().toISOString(),
+              email: data.email || user.email,
+              isRegistered: true
+            };
+
+            // Cache it for this session
+            this._currentVerified = verifiedIdentity;
+
+            // Save to localStorage for future visits
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(verifiedIdentity));
+              localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({
+                name: verifiedIdentity.name,
+                grade: verifiedIdentity.grade,
+                section: verifiedIdentity.section,
+                sessionId: verifiedIdentity.sessionId
+              }));
+            } catch (e) {
+              console.warn('Failed to save to localStorage:', e);
+            }
+
+            console.log('✅ Identity from Supabase (saved to localStorage)');
+            return verifiedIdentity;
+          }
+
+          // Profile incomplete, prepare prefilled data for modal
+          if (data.full_name) storedIdentity.name = data.full_name;
+          if (data.grade) storedIdentity.grade = data.grade;
+          if (data.section) storedIdentity.section = data.section;
+          if (data.school_type) storedIdentity.schoolType = data.school_type;
+          if (data.school_name) storedIdentity.schoolName = data.school_name;
+          storedIdentity.email = data.email || user.email;
+          storedIdentity.isRegistered = true;
         }
       } catch (e) {
-        console.warn('Error fetching user profile:', e);
+        console.warn('Error fetching user profile from Supabase:', e);
+        // Continue to show modal with whatever data we have
       }
     }
 
+    // Show modal if:
+    // 1. User is guest (not logged in)
+    // 2. User is logged in but profile incomplete
+    // 3. forcePrompt=true
+    console.log('⚠️ Showing verification modal');
     return new Promise((resolve) => {
       this._renderModal({
         activityName,
-        prefilled,
+        prefilled: storedIdentity,
         user,
         onConfirm: async (data) => {
           const saved = await this.saveIdentity(data);
