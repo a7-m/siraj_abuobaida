@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مسابقات السراج | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة وتخصيص مسابقات منصة سراج – تحديد التوقيت والأسئلة والمسارات والشعب.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">🏆 إدارة مسابقات السراج</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="comp-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">المسابقات المدرسية والتفاعلية</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                أنشئ مسابقات جديدة، حدد مواعيدها، أضف الأسئلة، واضبط خيارات الترتيب والمسارات.
+              </p>
+            </div>
+            <button id="btn-add-comp" class="btn btn-primary">+ مسابقة جديدة</button>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>اسم المسابقة والوصف</th>
+                  <th>الفترة الزمنية</th>
+                  <th>عدد الأسئلة</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="comp-table-body">
+                <tr><td colspan="5" style="text-align: center; padding: 2rem;">جاري تحميل المسابقات...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Editor View (Hidden initially) -->
+        <div id="comp-editor-view" style="display: none;">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div class="flex items-center gap-2">
+              <button id="btn-comp-back-list" class="btn btn-outline btn-sm">← العودة لقائمة المسابقات</button>
+              <h3 id="comp-editor-title" style="margin: 0;">مسابقة جديدة</h3>
+            </div>
+            <button id="btn-save-comp" class="btn btn-primary">💾 حفظ المسابقة</button>
+          </div>
+
+          <!-- Main Competition Settings -->
+          <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;">
+            <h4 style="margin: 0 0 1.25rem; font-size: 1.05rem;">الإعدادات العامة للمسابقة</h4>
+
+            <div class="grid grid-2" style="gap: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label" for="comp-title">اسم المسابقة *</label>
+                <input type="text" id="comp-title" class="form-control" placeholder="مثال: مسابقة اللغة العربية الأسبوعية">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-status">حالة المسابقة</label>
+                <select id="comp-status" class="form-control">
+                  <option value="active">نشطة (متاحة للطلاب)</option>
+                  <option value="draft">مسودة (غير معلنة)</option>
+                  <option value="ended">منتهية</option>
+                  <option value="archived">مؤرشفة</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+              <label class="form-label" for="comp-description">وصف المسابقة وشروطها</label>
+              <textarea id="comp-description" class="form-control" rows="2" placeholder="اكتب نبذة توجيهية للطلاب المشاركين..."></textarea>
+            </div>
+
+            <div class="grid grid-4" style="gap: 1rem; margin-top: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="comp-start-date">تاريخ ووقت البدء</label>
+                <input type="datetime-local" id="comp-start-date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-end-date">تاريخ ووقت الانتهاء</label>
+                <input type="datetime-local" id="comp-end-date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-duration">المدة بالدقائق</label>
+                <input type="number" id="comp-duration" class="form-control" placeholder="فارغ = بدون وقت" min="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-max-attempts">أقصى عدد محاولات</label>
+                <input type="number" id="comp-max-attempts" class="form-control" placeholder="فارغ = غير محدود" min="1">
+              </div>
+            </div>
+
+            <div class="flex gap-4" style="margin-top: 1.25rem; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="comp-result-visibility" checked>
+                <span>إظهار النتيجة للطالب فور الانتهاء</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="comp-shuffle">
+                <span>خلط ترتيب الأسئلة عشوائياً لكل طالب</span>
+              </label>
+            </div>
+
+            <!-- Track config -->
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border);">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 700;">
+                <input type="checkbox" id="comp-track-enabled">
+                <span>تفعيل مسار تسلسلي للمسابقة (مسار تقدم تدريجي)</span>
+              </label>
+
+              <div id="comp-track-fields" style="display: none; margin-top: 1rem; background: var(--color-bg-alt); padding: 1.25rem; border-radius: 8px;">
+                <div class="grid grid-4" style="gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="comp-track-type">نوع المسار</label>
+                    <select id="comp-track-type" class="form-control">
+                      <option value="numeric">أرقام عددية</option>
+                      <option value="custom">مخصص</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="comp-track-start">البداية</label>
+                    <input type="number" id="comp-track-start" class="form-control" value="1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="comp-track-end">النهاية</label>
+                    <input type="number" id="comp-track-end" class="form-control" value="10">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="comp-track-unit">الوحدة</label>
+                    <input type="text" id="comp-track-unit" class="form-control" value="سؤال">
+                  </div>
+                  <input type="hidden" id="comp-track-step" value="1">
+                </div>
+              </div>
+            </div>
+
+            <!-- Cover Image Upload -->
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border);">
+              <label class="form-label">صورة غلاف المسابقة (اختياري)</label>
+              <div id="comp-cover-upload-area" class="upload-dropzone" style="max-width: 480px; padding: 1.5rem;">
+                <img id="comp-cover-preview" src="" alt="غلاف المسابقة" style="display: none; width: 100%; max-height: 160px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;">
+                <div id="comp-cover-upload-text">
+                  <span style="font-size: 1.75rem;">🖼️</span>
+                  <div>اضغط هنا لاختيار صورة غلاف</div>
+                </div>
+              </div>
+              <input type="file" id="comp-cover-input" accept="image/*" style="display: none;">
+              <button type="button" id="btn-remove-comp-cover" class="btn btn-outline-danger btn-sm" style="display: none; margin-top: 0.5rem;">إزالة الغلاف</button>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.25rem;">
+              <label class="form-label" for="comp-final-note">رسالة ختامية تظهر بعد الإجابة</label>
+              <input type="text" id="comp-final-note" class="form-control" placeholder="مثال: أحسنت! تم رصد نتيجتك بنجاح في سجل المسابقة.">
+            </div>
+          </div>
+
+          <!-- Questions Panel -->
+          <div id="comp-questions-panel" style="display: none;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h4 style="margin: 0 0 0.25rem; font-size: 1.15rem;">أسئلة المسابقة</h4>
+                <p style="margin: 0; color: var(--color-text-muted); font-size: 0.85rem;">
+                  أضف الأسئلة وحدد خياراتها ودرجاتها وإجاباتها الصحيحة.
+                </p>
+              </div>
+              <button id="btn-add-question" class="btn btn-primary btn-sm">+ إضافة سؤال للمسابقة</button>
+            </div>
+
+            <!-- Question Editor Form (inline) -->
+            <div id="question-editor" class="card" style="display: none; padding: 1.75rem; margin-bottom: 1.5rem; border: 2px solid var(--color-primary);">
+              <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                <h5 id="q-editor-title" style="margin: 0; color: var(--color-primary); font-size: 1.05rem;">سؤال جديد</h5>
+                <button id="btn-cancel-question" class="btn btn-outline btn-sm">إلغاء</button>
+              </div>
+
+              <div class="grid grid-3" style="gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="q-type">نوع السؤال</label>
+                  <select id="q-type" class="form-control">
+                    <option value="mcq">اختيار من متعدد</option>
+                    <option value="tf">صح أو خطأ</option>
+                    <option value="order">ترتيب تسلسلي</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="q-points">الدرجة</label>
+                  <input type="number" id="q-points" class="form-control" value="1" min="1">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="q-text">نص السؤال *</label>
+                <input type="text" id="q-text" class="form-control" placeholder="اكتب نص السؤال هنا...">
+              </div>
+
+              <div id="q-options-area" style="margin-bottom: 1.25rem;">
+                <!-- Injected options UI -->
+              </div>
+
+              <button id="btn-save-question" class="btn btn-primary btn-sm">💾 حفظ السؤال في المسابقة</button>
+            </div>
+
+            <!-- Questions List -->
+            <div id="comp-questions-list">
+              <!-- Injected by teacher-competitions.js -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-competitions-page.js"></script>
+</body>
+</html>

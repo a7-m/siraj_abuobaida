@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مكتبة الوسائط والملفات | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة وسائط وملفات منصة سراج المرفوعة على Supabase Storage – استعراض، رفع، نسخ الروابط وحذف.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">📁 مكتبة الوسائط والمستودع السحابي</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="margin: 0 0 0.25rem;">ملفات ومستندات Supabase Storage</h3>
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+              استعرض الملفات المرفوعة في المستودعات (صور المقالات، أغلفة المسابقات، مستندات الأبحاث)، انسخ روابطها بضغطة زر أو ارفع ملفات جديدة.
+            </p>
+          </div>
+          <div class="flex gap-2" style="flex-wrap: wrap;">
+            <select id="media-bucket-select" class="form-control" style="width: auto;">
+              <option value="public_assets">مستودع الوسائط العامة (public_assets)</option>
+              <option value="research_files">ملفات أبحاث الطلاب (research_files)</option>
+            </select>
+            <input type="text" id="media-search" class="form-control" placeholder="🔍 بحث بالاسم..." style="width: 200px;">
+            <button id="btn-upload-media" class="btn btn-primary">📤 رفع ملف جديد</button>
+          </div>
+        </div>
+
+        <!-- Upload Dropzone Modal -->
+        <div id="media-upload-modal" class="modal">
+          <div class="modal-content card" style="max-width: 500px; padding: 2rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.25rem;">
+              <h3 style="margin: 0; font-size: 1.2rem;">رفع ملف جديد إلى السحابة</h3>
+              <button id="btn-close-upload-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="upload-target-folder">المجلد المستهدف</label>
+              <select id="upload-target-folder" class="form-control">
+                <option value="general">عام (general/)</option>
+                <option value="content-covers">أغلفة المحتوى (content-covers/)</option>
+                <option value="questions">صور الأسئلة (questions/)</option>
+                <option value="competitions">أغلفة المسابقات (competitions/)</option>
+              </select>
+            </div>
+
+            <div id="media-dropzone" class="upload-dropzone" style="padding: 2.5rem 1.5rem; margin-bottom: 1.5rem;">
+              <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">☁️</span>
+              <strong style="display: block; margin-bottom: 0.25rem;">اضغط هنا لاختيار الملف أو اسحبه إلى هنا</strong>
+              <small style="color: var(--color-text-muted);">يدعم الصور ومستندات PDF بحد أقصى 15 ميجابايت</small>
+            </div>
+            <input type="file" id="media-file-input" style="display: none;">
+
+            <div id="upload-status-text" style="font-size: 0.88rem; text-align: center; margin-bottom: 1rem; color: var(--color-primary); display: none;"></div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-upload" class="btn btn-outline">إلغاء</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Files Grid View -->
+        <div id="media-grid-container" class="media-grid">
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--color-text-muted);">
+            جاري استعراض ملفات المستودع السحابي...
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-media.js"></script>
+</body>
+</html>

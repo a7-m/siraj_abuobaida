@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>إدارة الطلاب والمستخدمين | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة حسابات طلاب ومعلمي مدرسة أبو عبيدة، تحديث الصفوف والشعب والصلاحيات ومتابعة التقدم الأكاديمي.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">👥 إدارة الطلاب والمستخدمين</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="users-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">سجل الطلاب والمستخدمين</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                عرض بيانات الطلاب والشعب والصفوف، تعديل الصلاحيات والنقاط، والاطلاع على سجل الإنجازات الأكاديمية.
+              </p>
+            </div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <input type="text" id="usr-search" class="form-control" placeholder="🔍 بحث بالاسم..." style="width: 220px;">
+              <select id="usr-filter-role" class="form-control" style="width: auto;">
+                <option value="all">جميع الأدوار</option>
+                <option value="student">طلاب فقط</option>
+                <option value="teacher">معلمون وإدارة</option>
+              </select>
+              <select id="usr-filter-grade" class="form-control" style="width: auto;">
+                <option value="all">جميع الصفوف</option>
+                <option value="10">الصف العاشر</option>
+                <option value="11">الصف الحادي عشر</option>
+                <option value="12">الصف الثاني عشر</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>المستخدم / الطالب</th>
+                  <th>الدور</th>
+                  <th>الصف والشعبة</th>
+                  <th>مجموع النقاط</th>
+                  <th>تاريخ الانضمام</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">جاري تحميل سجل المستخدمين...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="users-pagination"></div>
+        </div>
+
+        <!-- Edit Profile Modal -->
+        <div id="edit-user-modal" class="modal">
+          <div class="modal-content card" style="max-width: 520px; padding: 2rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+              <h3 id="edit-user-title" style="margin: 0; font-size: 1.2rem;">تعديل بيانات المستخدم</h3>
+              <button id="btn-close-edit-user" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="eu-name">الاسم الكامل *</label>
+              <input type="text" id="eu-name" class="form-control">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="eu-role">الدور والصلاحية *</label>
+              <select id="eu-role" class="form-control">
+                <option value="student">طالب</option>
+                <option value="teacher">معلم / مشرف</option>
+              </select>
+            </div>
+
+            <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label" for="eu-grade">المرحلة الدراسية / الصف</label>
+                <input type="text" id="eu-grade" class="form-control" placeholder="مثال: العاشر">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="eu-section">الشعبة</label>
+                <input type="text" id="eu-section" class="form-control" placeholder="مثال: 1">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+              <label class="form-label" for="eu-points">رصيد النقاط</label>
+              <input type="number" id="eu-points" class="form-control" value="0" min="0">
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-edit-user" class="btn btn-outline">إلغاء</button>
+              <button id="btn-save-edit-user" class="btn btn-primary">💾 حفظ التعديلات</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Activity & History Modal -->
+        <div id="user-activity-modal" class="modal">
+          <div class="modal-content card" style="max-width: 680px; padding: 2rem; max-height: 85vh; overflow-y: auto;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.25rem;">
+              <div>
+                <h3 id="ua-student-name" style="margin: 0; font-size: 1.2rem; color: var(--color-primary);">-</h3>
+                <span id="ua-student-info" style="font-size: 0.85rem; color: var(--color-text-muted);">-</span>
+              </div>
+              <button id="btn-close-activity-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <h4 style="margin: 1rem 0 0.5rem; font-size: 1rem;">🏆 نتائج ومشاركات المسابقات</h4>
+            <div id="ua-competitions-list" style="margin-bottom: 1.5rem;">
+              <!-- Injected attempts -->
+            </div>
+
+            <h4 style="margin: 1rem 0 0.5rem; font-size: 1rem;">📚 إنجاز تحديات القراءة (طوّر نفسك)</h4>
+            <div id="ua-progress-list">
+              <!-- Injected reading progress -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-users.js"></script>
+</body>
+</html>

@@ -590,7 +590,7 @@ async function saveQuestion() {
       // Update
       const { error } = await supabase
         .from('questions')
-        .update({ type, text, points, metadata })
+        .update({ type, question_type: type, text, points, metadata })
         .eq('id', questionId);
       if (error) throw error;
       window.Toast?.success('تم تعديل السؤال بنجاح');
@@ -598,7 +598,7 @@ async function saveQuestion() {
       // Insert new question
       const { data: qData, error: qErr } = await supabase
         .from('questions')
-        .insert({ type, text, points, metadata })
+        .insert({ type, question_type: type, text, points, metadata })
         .select()
         .single();
       if (qErr) throw qErr;
