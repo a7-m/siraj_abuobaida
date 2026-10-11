@@ -108,9 +108,25 @@ class AuthService {
   }
 
   async logout() {
-    if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    this.session = null;
+    this.user = null;
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.warn('Supabase signOut warning:', err);
+      }
+    }
+    try {
+      localStorage.removeItem('siraj-session');
+      sessionStorage.clear();
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('sb-')) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch (_) {}
+    this._notify();
   }
 
   async checkProfileCompletion() {

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>سجل المشاركين | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="سجل شامل لمشاركات الطلاب والزوار في مسابقات السراج، وتحديات القراءة، والأبحاث العلمية.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar">
+      <!-- Injected by teacher-nav.js -->
+    </aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">👥 سجل المشاركين والأنشطة</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+          <button id="header-logout-btn" class="btn btn-outline-danger btn-sm header-logout-btn" title="تسجيل الخروج">
+            🚪 خروج
+          </button>
+        </div>
+      </header>
+
+      <div class="td-content">
+        <!-- Page Title & Header Actions -->
+        <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="margin: 0 0 0.25rem; font-size: 1.35rem;">سجل المشاركات والنتائج</h3>
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 0.9rem;">
+              مركز موحد لمتابعة جميع مشاركات ومحاولات الطلاب والزوار في المسابقات، وتحديات القراءة، والأبحاث العلمية.
+            </p>
+          </div>
+          <div class="flex gap-2" style="flex-wrap: wrap;">
+            <button id="btn-refresh-participants" class="btn btn-outline btn-sm">🔄 تحديث السجل</button>
+            <button id="btn-export-csv" class="btn btn-primary btn-sm">📥 تصدير السجل (Excel)</button>
+          </div>
+        </div>
+
+        <!-- 6 KPI Stat Cards Grid -->
+        <div class="part-stats-grid">
+          <div class="part-stat-card" style="--card-accent: #4f46e5;">
+            <div class="part-stat-top">
+              <span class="part-stat-title">إجمالي المحاولات</span>
+              <span class="part-stat-icon" style="--icon-bg: rgba(79, 70, 229, 0.1);">📊</span>
+            </div>
+            <div class="part-stat-value" id="stat-total-attempts">--</div>
+            <div class="part-stat-sub">عبر كافة أقسام المنصة</div>
+          </div>
+
+          <div class="part-stat-card" style="--card-accent: #ca8a04;">
+            <div class="part-stat-top">
+              <span class="part-stat-title">مسابقات السراج</span>
+              <span class="part-stat-icon" style="--icon-bg: rgba(234, 179, 8, 0.1);">🏆</span>
+            </div>
+            <div class="part-stat-value" id="stat-comp-attempts" style="color: #ca8a04;">--</div>
+            <div class="part-stat-sub">محاولة مسابقة مكتملة</div>
+          </div>
+
+          <div class="part-stat-card" style="--card-accent: #059669;">
+            <div class="part-stat-top">
+              <span class="part-stat-title">تحديات القراءة</span>
+              <span class="part-stat-icon" style="--icon-bg: rgba(16, 185, 129, 0.1);">📚</span>
+            </div>
+            <div class="part-stat-value" id="stat-reading-attempts" style="color: #059669;">--</div>
+            <div class="part-stat-sub">مستوى تم اجتيازه</div>
+          </div>
+
+          <div class="part-stat-card" style="--card-accent: #7c3aed;">
+            <div class="part-stat-top">
+              <span class="part-stat-title">البحث العلمي</span>
+              <span class="part-stat-icon" style="--icon-bg: rgba(124, 58, 237, 0.1);">🔬</span>
+            </div>
+            <div class="part-stat-value" id="stat-research-attempts" style="color: #7c3aed;">--</div>
+            <div class="part-stat-sub">بحث مقدم للتحكيم</div>
+          </div>
+
+          <div class="part-stat-card" style="--card-accent: #16a34a;">
+            <div class="part-stat-top">
+              <span class="part-stat-title">طلاب مسجلون</span>
+              <span class="part-stat-icon" style="--icon-bg: rgba(22, 163, 74, 0.1);">🎓</span>
+            </div>
+            <div class="part-stat-value" id="stat-reg-students" style="color: #16a34a;">--</div>
+            <div class="part-stat-sub">بحساب منصة رسمي</div>
+          </div>
+
+          <div class="part-stat-card" style="--card-accent: #d97706;">
+            <div class="part-stat-top">
+              <span class="part-stat-title">مشاركون زوار</span>
+              <span class="part-stat-icon" style="--icon-bg: rgba(217, 119, 6, 0.1);">👥</span>
+            </div>
+            <div class="part-stat-value" id="stat-guest-participants" style="color: #d97706;">--</div>
+            <div class="part-stat-sub">مشاركات زوار بدون حساب</div>
+          </div>
+        </div>
+
+        <!-- Comprehensive Filters Card -->
+        <div class="part-filters-card">
+          <div class="part-filters-grid">
+            <div class="part-filter-group" style="grid-column: span 2;">
+              <label class="part-filter-label" for="filter-search">🔍 بحث باسم المشارك أو النشاط</label>
+              <input type="text" id="filter-search" class="form-control" placeholder="اكتب اسم الطالب، اسم المسابقة، البحث...">
+            </div>
+
+            <div class="part-filter-group">
+              <label class="part-filter-label" for="filter-activity">نوع النشاط</label>
+              <select id="filter-activity" class="form-control">
+                <option value="all">جميع الأنشطة</option>
+                <option value="competition">🏆 مسابقات السراج</option>
+                <option value="reading">📚 تحديات القراءة (طوّر نفسك)</option>
+                <option value="research">🔬 البحث العلمي</option>
+              </select>
+            </div>
+
+            <div class="part-filter-group">
+              <label class="part-filter-label" for="filter-user-type">نوع المشارك</label>
+              <select id="filter-user-type" class="form-control">
+                <option value="all">الكل (مسجلون وزوار)</option>
+                <option value="registered">🎓 طلاب مسجلون فقط</option>
+                <option value="guest">👥 زوار المنصة فقط</option>
+              </select>
+            </div>
+
+            <div class="part-filter-group">
+              <label class="part-filter-label" for="filter-grade">الصف الدراسي</label>
+              <select id="filter-grade" class="form-control">
+                <option value="all">جميع الصفوف</option>
+                <option value="5">الصف الخامس</option>
+                <option value="6">الصف السادس</option>
+                <option value="7">الصف السابع</option>
+                <option value="8">الصف الثامن</option>
+                <option value="9">الصف التاسع</option>
+                <option value="10">الصف العاشر</option>
+                <option value="11">الصف الحادي عشر</option>
+                <option value="12">الصف الثاني عشر</option>
+              </select>
+            </div>
+
+            <div class="part-filter-group">
+              <label class="part-filter-label" for="filter-date">الفترة الزمنية</label>
+              <select id="filter-date" class="form-control">
+                <option value="all">كل الفترات</option>
+                <option value="today">اليوم</option>
+                <option value="week">آخر 7 أيام</option>
+                <option value="month">آخر 30 يوماً</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="part-filters-actions">
+            <div class="flex items-center gap-2">
+              <span style="font-size: 0.85rem; color: var(--color-text-muted);">نمط العرض:</span>
+              <button id="btn-view-table" class="btn btn-sm btn-primary" title="عرض كجدول">📋 جدول</button>
+              <button id="btn-view-cards" class="btn btn-sm btn-outline" title="عرض كبطاقات">🗂️ بطاقات</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="filter-results-count" style="font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600;">جاري التحميل...</span>
+              <button id="btn-reset-filters" class="btn btn-sm btn-outline" style="color: #ef4444;">❌ إعادة ضبط الفلاتر</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div id="part-table-view">
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th style="min-width: 180px;">اسم المشارك</th>
+                  <th style="min-width: 110px;">نوع المشاركة</th>
+                  <th style="min-width: 140px;">نوع النشاط</th>
+                  <th style="min-width: 180px;">عنوان النشاط / البرنامج</th>
+                  <th style="min-width: 120px;">النتيجة / الحالة</th>
+                  <th style="min-width: 150px;">التاريخ والوقت</th>
+                  <th style="min-width: 130px; text-align: center;">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="part-table-body">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 3rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⏳</div>
+                    <div>جاري تحميل سجل المشاركين من قاعدة البيانات...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Cards View (Initially hidden) -->
+        <div id="part-cards-view" class="part-cards-grid" style="display: none;">
+          <!-- Injected dynamically -->
+        </div>
+
+        <!-- Pagination -->
+        <div id="part-pagination"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="part-detail-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-part-name">
+    <div class="modal-content modal-content-wide">
+      <div class="modal-header">
+        <div class="flex items-center gap-3">
+          <div class="modal-avatar" id="modal-part-avatar">👤</div>
+          <div>
+            <h3 id="modal-part-name" style="margin: 0; font-size: 1.2rem; color: var(--color-text);">تفاصيل المشاركة</h3>
+            <div id="modal-part-badge" style="margin-top: 0.25rem;"></div>
+          </div>
+        </div>
+        <button id="btn-close-detail-modal" class="btn-icon" aria-label="إغلاق">&times;</button>
+      </div>
+
+      <div class="modal-body" id="modal-part-body">
+        <!-- Content injected dynamically -->
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-detail-close" class="btn btn-outline">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-participants.js"></script>
+</body>
+</html>

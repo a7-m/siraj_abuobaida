@@ -111,11 +111,19 @@
   <footer class="footer"><div class="container"><p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p></div></footer>
   <script type="module">
     import { authService } from './src/services/auth.js';
+    import { supabase } from './src/services/supabase.js';
     import './src/scripts/main.js';
     
-    // Auto-redirect if already logged in (prevent showing login page unnecessarily)
-    authService.getSessionAsync().then(({ session }) => {
+    // Auto-redirect if already logged in
+    authService.getSessionAsync().then(async ({ session }) => {
       if (session) {
+        try {
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+          if (profile?.role === 'teacher') {
+            window.location.replace('teacher-dashboard.html');
+            return;
+          }
+        } catch (_) {}
         window.location.replace('dashboard.html');
       }
     });
@@ -132,11 +140,23 @@
       btn.disabled = true;
       
       try {
-        await authService.login(email, pass);
+        const data = await authService.login(email, pass);
         window.Toast.success('تم تسجيل الدخول بنجاح! جاري التوجيه...');
+        
+        let targetUrl = 'dashboard.html';
+        try {
+          const userId = data?.user?.id || (await authService.getSessionAsync())?.session?.user?.id;
+          if (userId) {
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).single();
+            if (profile?.role === 'teacher') {
+              targetUrl = 'teacher-dashboard.html';
+            }
+          }
+        } catch (_) {}
+
         setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1000);
+          window.location.href = targetUrl;
+        }, 800);
       } catch (error) {
         btn.innerText = 'دخول';
         btn.disabled = false;

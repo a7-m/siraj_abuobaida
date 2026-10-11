@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>لوحة الطالب | سراج – مدرسة أبو عبيدة</title>
+  <title>لوحة التحكم | سراج – مدرسة أبو عبيدة</title>
   <meta name="description" content="لوحة تحكم الطالب في منصة سراج لمدرسة أبو عبيدة – تابع تقدّمك الدراسي، وشارك في المسابقات، وصل إلى جميع مواردك التعليمية.">
-  <meta name="keywords" content="لوحة الطالب، طالب، سراج، منصة تعليمية، مدرسة أبو عبيدة">
+  <meta name="keywords" content="لوحة التحكم، طالب، سراج، منصة تعليمية، مدرسة أبو عبيدة">
   <meta name="author" content="سراج – مدرسة أبو عبيدة">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#4F46E5">
-  <meta property="og:title" content="لوحة الطالب | سراج – مدرسة أبو عبيدة">
+  <meta property="og:title" content="لوحة التحكم | سراج – مدرسة أبو عبيدة">
   <meta property="og:description" content="لوحة تحكم الطالب في منصة سراج لمدرسة أبو عبيدة – تابع تقدّمك الدراسي، وشارك في المسابقات، وصل إلى جميع مواردك التعليمية.">
   <meta property="og:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
   <meta property="og:url" content="https://a7-m.github.io/siraj_abuobaida/dashboard.html">
@@ -17,7 +17,7 @@
   <meta property="og:locale" content="ar_SA">
   <meta property="og:site_name" content="سراج – مدرسة أبو عبيدة">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="لوحة الطالب | سراج – مدرسة أبو عبيدة">
+  <meta name="twitter:title" content="لوحة التحكم | سراج – مدرسة أبو عبيدة">
   <meta name="twitter:description" content="لوحة تحكم الطالب في منصة سراج لمدرسة أبو عبيدة – تابع تقدّمك الدراسي، وشارك في المسابقات، وصل إلى جميع مواردك التعليمية.">
   <meta name="twitter:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
 
@@ -46,7 +46,7 @@
         <a href="competition.html" class="nav-link">مسابقة السراج</a>
         <a href="research.html" class="nav-link">البحث العلمي</a>
         <a href="identity.html" class="nav-link">الهوية الوطنية</a>
-        <a href="dashboard.html" class="nav-link active">لوحة الطالب</a>
+        <a href="dashboard.html" class="nav-link active">لوحة التحكم</a>
       </nav>
       <div class="flex items-center gap-2">
         <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
@@ -66,7 +66,7 @@
     <a href="competition.html" class="mobile-nav-link">مسابقة السراج</a>
     <a href="research.html" class="mobile-nav-link">البحث العلمي</a>
     <a href="identity.html" class="mobile-nav-link">الهوية الوطنية</a>
-    <a href="dashboard.html" class="mobile-nav-link active">لوحة الطالب</a>
+    <a href="dashboard.html" class="mobile-nav-link active">لوحة التحكم</a>
     <button onclick="handleLogout()" class="btn btn-outline" style="margin-top: 1rem; text-align: center;">تسجيل خروج</button>
   </div>
 
@@ -209,8 +209,9 @@
     import { Toast } from './src/utils/toast.js';
     import './src/scripts/main.js';
     
-    // Make Toast globally accessible for dashboard functions
+    // Make Toast and studentDashboard globally accessible for dashboard buttons and handlers
     window.Toast = Toast;
+    window.studentDashboard = studentDashboard;
 
     // Initialize dashboard
     document.addEventListener('DOMContentLoaded', async () => {
@@ -230,6 +231,11 @@
             document.documentElement.removeAttribute('data-theme');
             localStorage.setItem('siraj-theme', 'light');
           }
+          // Also trigger header toggle if exists
+          const headerThemeBtn = document.getElementById('theme-toggle');
+          if (headerThemeBtn) {
+            headerThemeBtn.dispatchEvent(new Event('theme-updated'));
+          }
         });
       }
     });
@@ -238,9 +244,17 @@
     window.handleLogout = async function() {
       try {
         await authService.logout();
-        window.location.href = 'index.html';
       } catch (err) {
         console.error('Logout error:', err);
+      } finally {
+        try {
+          localStorage.removeItem('siraj-session');
+          sessionStorage.clear();
+          Object.keys(localStorage).forEach(k => {
+            if (k.startsWith('sb-')) localStorage.removeItem(k);
+          });
+        } catch (_) {}
+        window.location.href = 'index.html';
       }
     };
   </script>

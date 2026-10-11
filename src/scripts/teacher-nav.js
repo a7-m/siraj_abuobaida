@@ -87,9 +87,15 @@ export async function checkTeacherAccess() {
 /**
  * Build or hydrate sidebar navigation
  */
+/**
+ * Build or hydrate sidebar navigation
+ */
 function renderSidebar(activeKey) {
   const sidebar = document.getElementById('td-sidebar');
   if (!sidebar) return;
+
+  // Ensure mobile backdrop exists
+  ensureSidebarBackdrop();
 
   const currentPath = window.location.pathname.split('/').pop() || 'teacher-dashboard.html';
 
@@ -137,30 +143,61 @@ function renderSidebar(activeKey) {
   // Bind close button
   const closeBtn = document.getElementById('td-sidebar-close');
   if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      sidebar.classList.remove('open');
-    });
+    closeBtn.addEventListener('click', closeMobileSidebar);
   }
 
   // Close sidebar on link click on small screens
   sidebar.querySelectorAll('.td-nav-item').forEach(link => {
     link.addEventListener('click', () => {
       if (window.innerWidth <= 992) {
-        sidebar.classList.remove('open');
+        closeMobileSidebar();
       }
     });
   });
 }
 
+function ensureSidebarBackdrop() {
+  let backdrop = document.getElementById('td-sidebar-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'td-sidebar-backdrop';
+    backdrop.className = 'td-sidebar-backdrop';
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', closeMobileSidebar);
+  }
+  return backdrop;
+}
+
+export function openMobileSidebar() {
+  const sidebar = document.getElementById('td-sidebar');
+  const backdrop = ensureSidebarBackdrop();
+  if (sidebar) sidebar.classList.add('open');
+  if (backdrop) backdrop.classList.add('active');
+  document.body.classList.add('sidebar-opened');
+}
+
+export function closeMobileSidebar() {
+  const sidebar = document.getElementById('td-sidebar');
+  const backdrop = document.getElementById('td-sidebar-backdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('active');
+  document.body.classList.remove('sidebar-opened');
+}
+
 /**
- * Bind Header controls (Theme toggle, mobile hamburger, badges)
+ * Bind Header controls (Theme toggle, mobile hamburger, badges, header logout)
  */
 function setupHeaderControls(profile) {
   const hamburger = document.getElementById('td-hamburger');
   const sidebar = document.getElementById('td-sidebar');
   if (hamburger && sidebar) {
-    hamburger.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (sidebar.classList.contains('open')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
     });
   }
 
@@ -168,6 +205,21 @@ function setupHeaderControls(profile) {
   const badgeName = document.getElementById('header-teacher-name');
   if (badgeName && profile) {
     badgeName.textContent = profile.full_name || 'المعلم';
+  }
+
+  // Inject header logout button if not already in the header
+  const header = document.querySelector('.td-header');
+  if (header) {
+    const headerActions = header.querySelector('.flex.items-center.gap-3') || header.lastElementChild;
+    if (headerActions && !document.getElementById('header-logout-btn')) {
+      const headerLogout = document.createElement('button');
+      headerLogout.id = 'header-logout-btn';
+      headerLogout.className = 'btn btn-outline-danger btn-sm header-logout-btn';
+      headerLogout.title = 'تسجيل الخروج';
+      headerLogout.style.cssText = 'display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; padding: 0.35rem 0.75rem;';
+      headerLogout.innerHTML = '<span>🚪</span> <span>خروج</span>';
+      headerActions.appendChild(headerLogout);
+    }
   }
 
   // Theme toggle button
@@ -182,6 +234,22 @@ function setupHeaderControls(profile) {
       updateThemeToggleIcon(themeToggle);
     });
   }
+
+  // Esc key closes mobile sidebar and modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeMobileSidebar();
+      const openModal = document.querySelector('.modal.active');
+      if (openModal) openModal.classList.remove('active');
+    }
+  });
+
+  // Window resize resets mobile sidebar
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 992) {
+      closeMobileSidebar();
+    }
+  });
 }
 
 function initTheme() {
@@ -200,31 +268,51 @@ function updateThemeToggleIcon(btn) {
 }
 
 /**
- * Handle Logout
+ * Handle Logout across any triggered element
  */
-function setupLogout() {
-  const logoutBtn = document.getElementById('td-logout-btn');
-  if (!logoutBtn) return;
+export async function logoutTeacher() {
+  try {
+    await authService.logout();
+  } catch (err) {
+    console.warn('Logout warning:', err);
+  } finally {
+    try {
+      localStorage.removeItem('siraj-session');
+      sessionStorage.clear();
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('sb-')) localStorage.removeItem(k);
+      });
+    } catch (_) {}
+    Toast.success('تم تسجيل الخروج بنجاح');
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 350);
+  }
+}
 
-  logoutBtn.addEventListener('click', async () => {
+// Make globally accessible
+window.logoutTeacher = logoutTeacher;
+window.handleLogout = logoutTeacher;
+
+function setupLogout() {
+  const triggerLogoutConfirm = () => {
     showConfirmModal({
       title: 'تسجيل الخروج',
       message: 'هل أنت متأكد من رغبتك في تسجيل الخروج من لوحة المعلم؟',
       confirmText: 'نعم، تسجيل خروج',
       confirmClass: 'btn-danger',
       onConfirm: async () => {
-        try {
-          await authService.logout();
-          Toast.success('تم تسجيل الخروج بنجاح');
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 400);
-        } catch (err) {
-          console.error('Logout error:', err);
-          Toast.error('حدث خطأ أثناء تسجيل الخروج');
-        }
+        await logoutTeacher();
       }
     });
+  };
+
+  // Bind all potential logout triggers
+  const logoutButtons = document.querySelectorAll('#td-logout-btn, #header-logout-btn, #btn-logout, #td-logout, .btn-logout, [data-action="logout"]');
+  logoutButtons.forEach(btn => {
+    // Avoid double binding
+    btn.removeEventListener('click', triggerLogoutConfirm);
+    btn.addEventListener('click', triggerLogoutConfirm);
   });
 }
 
