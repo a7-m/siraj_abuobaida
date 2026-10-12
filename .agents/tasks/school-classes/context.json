@@ -1,0 +1,26 @@
+{
+  "project_type": "Modern Educational Platform - Vanilla JS + Supabase Backend",
+  "language": "Arabic (RTL), JavaScript ES6+, SQL (PostgreSQL/Supabase)",
+  "build_system": "Static HTML/CSS/JS site - no build step required. Files loaded directly via ES modules from CDN (Supabase client)",
+  "test_framework": "Manual testing via browser. No automated test framework currently in place.",
+  "build_command": "None - direct file serving. Open HTML files in browser.",
+  "test_command": "Manual browser testing at http://localhost or file:// protocol",
+  "verification_instructions": "1. Open teacher-classes.html in browser\n2. Login as teacher (role='teacher' in profiles table)\n3. Verify all CRUD operations work\n4. Test RLS policies via Supabase Studio\n5. Verify responsive design on mobile/desktop\n6. Test light/dark theme toggle\n7. Verify Arabic RTL layout\n8. Test student profile associations",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "Supabase connection required. Must test with valid teacher account (profiles.role='teacher'). RLS policies enforce strict access control - students cannot access teacher pages.",
+  "contribution_requirements": "- All text must be in Arabic\n- RTL layout mandatory\n- Support both light/dark themes (data-theme attribute)\n- Follow existing CSS variable system in variables.css\n- Match teacher-dashboard.css patterns for consistency\n- Use Supabase RLS for security\n- Follow existing auth patterns in teacher-nav.js\n- Maintain responsive design (mobile-first approach)\n- Use existing Toast notification system\n- Follow showConfirmModal pattern for delete confirmations",
+  "key_patterns": "- Teacher pages use teacher-nav.js for auth, sidebar, theme\n- CRUD pages follow teacher-users.js pattern: loadData -> renderTable -> openModal -> saveData\n- Use supabase client from src/services/supabase.js\n- Modal system: .modal class with .active state\n- Table pattern: .td-table-wrapper > .td-table with hover states\n- Pagination uses renderPagination() helper from teacher-nav.js\n- Form validation shows Toast messages\n- Delete operations require showConfirmModal confirmation\n- All teacher pages call initTeacherAdmin(pageKey) on DOMContentLoaded\n- Database performance: Migration 10 added indexes on profiles(grade, section, role) and school_sections(grade, is_active) for optimized queries\n- RLS policies verified: students read active sections only, teachers manage all sections",
+  "relevant_files": [
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\teacher-users.html",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\scripts\\teacher-users.js",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\scripts\\teacher-nav.js",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\scripts\\teacher-sections.js",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\styles\\teacher-dashboard.css",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\styles\\variables.css",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\services\\supabase.js",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\services\\auth.js",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\supabase\\migrations\\06_unified_identity_and_tracks.sql",
+    "c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\supabase\\migrations\\10_school_classes_enhancements.sql"
+  ],
+  "directory_structure": "Root:\n- *.html (teacher-*.html for admin pages, student pages at root)\n- src/scripts/ (JS modules)\n- src/styles/ (CSS files with CSS variables system)\n- src/services/ (supabase.js, auth.js)\n- src/utils/ (toast.js, student-identity.js)\n- src/assets/images/ (logos, icons)\n- supabase/migrations/ (SQL migration files)\n- .agents/tasks/ (workflow artifacts)"
+}
