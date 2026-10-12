@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Add toast notifications on save/delete operations across all teacher dashboard pages, and ensure notifications appear at the top of the page. Root cause: some files already have Toast.success/Toast.error calls, but user reports notifications don't appear at top of page. The Toast utility creates a .toast-container and appends it to document.body. Verify toast.js is working correctly and CSS positions the container at the top. Also ensure all save operations (not just delete) trigger toast notifications.",
+  "status": "completed",
+  "steps": [
+    "Read src/utils/toast.js lines 1-80 to understand how the toast container is created and positioned. The ToastManager._getOrCreateContainer creates a .toast-container and appends it to document.body. The CSS for .toast-container should position it at the top of the viewport (e.g., position: fixed; top: 1rem; right: 1rem; or top center).",
+    "Check if CSS for .toast-container exists in the project. Search for .toast-container in all .css files. If missing, add CSS to position the container at the top center of the viewport with z-index high enough to appear above modals.",
+    "Audit each teacher-*.js file for save operations (saveChallenge, savePage, saveQuestion, saveEvaluation, saveUserProfile, etc.) and ensure they call Toast.success on success and Toast.error on error. Based on exploration: teacher-content.js savePage (line ~235) has toast calls; teacher-questions.js saveQuestion (line ~360) has toast calls; teacher-research.js saveEvaluation (line ~185) has toast calls; teacher-users.js saveUserProfile (line ~150) has toast calls; teacher-profile.js saveProfileDetails (line ~85) has toast calls; teacher-challenges.js saveChallenge (line ~260), saveLevel (line ~385), saveLevelQuestion (line ~680) all have toast calls.",
+    "Specifically check teacher-challenges.js: ensure toast notifications appear when saving challenges, levels, and level questions. The user report says 'لا توجد إشعارات عند حفظ أي شي' (no notifications on save). Verify Toast.success is called in saveChallenge, saveLevel, saveLevelQuestion, and that the toast container CSS is correct.",
+    "Add Toast.success('تم الحفظ بنجاح') or similar to any save function that doesn't currently have it. Add Toast.error('تعذر الحفظ: ' + err.message) to catch blocks.",
+    "Test: perform save operations on each page and verify toast notifications appear at the top of the page."
+  ],
+  "acceptance_criteria": [
+    "Toast notifications appear at the top of the page (not bottom or hidden)",
+    "All save operations show success toast on successful save",
+    "All save operations show error toast on failed save",
+    "All delete operations show success toast on successful delete",
+    "All delete operations show error toast on failed delete",
+    "Toast notifications are visible for 4 seconds (default duration) and then fade out",
+    "Toast notifications stack vertically if multiple appear at once"
+  ],
+  "verification": [
+    "Open teacher-content.html, save a page → toast appears at top with 'تم حفظ الصفحة بنجاح' or similar",
+    "Open teacher-questions.html, save a question → toast appears at top with success message",
+    "Open teacher-research.html, save an evaluation → toast appears at top",
+    "Open teacher-users.html, save user profile edits → toast appears at top",
+    "Open teacher-profile.html, save profile details → toast appears at top",
+    "Open teacher-reading.html (challenges), save a challenge/level/question → toast appears at top",
+    "Trigger a save error (e.g., disconnect network) → error toast appears at top",
+    "Trigger multiple toasts rapidly → they stack vertically at the top without overlapping"
+  ],
+  "blocked_reason": null,
+  "findings": "COMPLETED: All save operations across teacher dashboard files already have Toast.success and Toast.error calls. CSS for .toast-container exists in components.css and is properly positioned at top center (position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 99999). All teacher HTML pages include components.css. Added inline styles to ToastManager._getOrCreateContainer() as a fallback to ensure toast container is always positioned at the top of the viewport even if CSS hasn't loaded or there are conflicts. This provides double insurance that notifications will always appear at the top. Verified all save functions: teacher-content.js savePage, teacher-challenges.js saveChallenge/saveLevel/saveLevelQuestion, teacher-questions.js saveQuestion, teacher-research.js saveEvaluation, teacher-users.js saveUserProfile, teacher-profile.js saveProfileDetails, teacher-competitions.js saveCompetition, and teacher-media.js uploadFile all have proper toast notifications."
+}
