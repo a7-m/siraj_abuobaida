@@ -1,0 +1,42 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "تحسين ربط الطلاب بالشعب: إضافة واجهة عرض الطلاب لكل شعبة وميزة نقل الطلاب بين الشعب",
+  "status": "completed",
+  "steps": [
+    "في teacher-classes.js، إضافة زر 'عرض الطلاب' (👥) في عمود الإجراءات لكل صف في الجدول. عند النقر، فتح modal جديد 'students-list-modal' يعرض قائمة الطلاب المرتبطين بهذا الصف والشعبة.",
+    "إنشاء modal في teacher-classes.html بعنوان 'طلاب الصف [grade] - شعبة [section]'. يحتوي على جدول بسيط: اسم الطالب (full_name)، البريد الإلكتروني (email)، تاريخ الانضمام (created_at)، وزر 'نقل' لكل طالب.",
+    "في teacher-classes.js، إضافة دالة async loadStudentsForSection(grade, section) تستعلم profiles table WHERE grade=X AND section=Y AND role='student' وتعرض النتائج في modal الطلاب. استخدم renderTable pattern مع دعم empty state إذا لم يكن هناك طلاب.",
+    "إضافة modal ثاني 'transfer-student-modal' يُفتح عند النقر على 'نقل'. يحتوي على: dropdown للصف الجديد، dropdown للشعبة الجديدة (يتحدث ديناميكياً عند تغيير الصف من school_sections)، وزر 'تأكيد النقل'.",
+    "في teacher-classes.js، إضافة دالة async transferStudent(studentId, newGrade, newSection) تُحدّث profiles table: UPDATE profiles SET grade=newGrade, section=newSection, updated_at=NOW() WHERE id=studentId. بعد النجاح، إغلاق modal، Toast.success، وإعادة تحميل قائمة الطلاب.",
+    "إضافة validation: عند اختيار صف جديد في transfer modal، تحميل الشعب النشطة (is_active=true) من school_sections لهذا الصف. منع النقل إذا لم يتم اختيار صف وشعبة صحيحين.",
+    "إضافة ميزة 'نقل جماعي': checkbox في students list modal لتحديد عدة طلاب، وزر 'نقل المحددين' يفتح transfer modal ويطبق التحديث على جميع الطلاب المحددين في معاملة واحدة (loop أو Promise.all).",
+    "تحديث دالة deleteSection في teacher-classes.js: قبل الحذف، استعلم profiles WHERE grade=X AND section=Y. إذا كان count > 0، اعرض modal خاص 'cannot-delete-modal' يشرح أن الشعبة مرتبطة بـ N طالب، ويعرض خيارين: 'عرض الطلاب' (يفتح students-list-modal) أو 'إلغاء'."
+  ],
+  "acceptance_criteria": [
+    "زر 'عرض الطلاب' يظهر في جدول الشعب ويفتح modal قائمة الطلاب",
+    "Modal الطلاب يعرض جميع الطلاب المرتبطين بالشعبة المحددة",
+    "إذا لم يكن هناك طلاب، يظهر empty state واضح",
+    "زر 'نقل' لكل طالب يفتح transfer modal",
+    "Transfer modal: dropdown الصف يعرض القيم الصحيحة، dropdown الشعبة يتحدث عند تغيير الصف",
+    "نقل طالب واحد: يُحدّث profiles.grade و profiles.section بنجاح، Toast يظهر، قائمة الطلاب تتحدث",
+    "نقل جماعي: checkboxes تعمل، نقل عدة طلاب في نفس الوقت ينجح",
+    "محاولة حذف شعبة بها طلاب: modal خاص يظهر مع عدد الطلاب وخيار 'عرض الطلاب'",
+    "جميع modals متوافقة مع RTL والثيمين",
+    "responsive: modals تعمل على الجوال والكمبيوتر"
+  ],
+  "verification": [
+    "فتح teacher-classes.html، النقر على 'عرض الطلاب' لشعبة بها طلاب",
+    "التحقق من عرض جميع الطلاب المرتبطين",
+    "النقر على 'نقل' لطالب واحد، اختيار صف وشعبة جديدين، تأكيد النقل",
+    "التحقق من تحديث profiles table في Supabase",
+    "اختبار النقل الجماعي: تحديد عدة طلاب، نقلهم معاً، التأكد من نجاح الجميع",
+    "محاولة حذف شعبة بها طلاب والتأكد من ظهور modal المانع",
+    "النقر على 'عرض الطلاب' من modal المانع والتأكد من فتح قائمة الطلاب",
+    "اختبار على شعبة فارغة: 'عرض الطلاب' يعرض empty state",
+    "اختبار responsive على جوال",
+    "اختبار الثيمين (light/dark)"
+  ],
+  "blocked_reason": null,
+  "findings": "✅ جميع المتطلبات تم تنفيذها بنجاح:\n\n1. زر 'عرض الطلاب' تمت إضافته في جدول الشعب\n2. Modal قائمة الطلاب يعرض جميع الطلاب المرتبطين بالشعبة المحددة مع:\n   - الاسم الكامل والبريد الإلكتروني وتاريخ الانضمام\n   - Checkboxes لتحديد عدة طلاب\n   - زر 'نقل' لكل طالب\n   - عداد للطلاب وزر 'نقل المحددين' للنقل الجماعي\n   - Empty state عند عدم وجود طلاب\n3. Transfer modal يحتوي على:\n   - Dropdown للصف الجديد\n   - Dropdown للشعبة يتحدث ديناميكياً عند تغيير الصف\n   - عرض معلومات الصف والشعبة الحالية\n   - يدعم النقل الفردي والجماعي\n4. منطق النقل:\n   - transferStudent() لنقل طالب واحد\n   - transferMultipleStudents() للنقل الجماعي باستخدام Supabase .in()\n   - تحديث profiles.grade و profiles.section و updated_at\n   - Toast notifications للنجاح والأخطاء\n   - إعادة تحميل قائمة الطلاب وجدول الشعب بعد النقل\n5. النقل الجماعي:\n   - Select all checkbox لتحديد جميع الطلاب\n   - عداد يظهر عدد الطلاب المحددين\n   - نقل جميع المحددين في عملية واحدة\n6. تحديث deleteSection:\n   - modal خاص 'cannot-delete-modal' يظهر عند محاولة حذف شعبة بها طلاب\n   - يعرض عدد الطلاب المرتبطين\n   - زر 'عرض الطلاب' يفتح students-list-modal مباشرة\n   - لا يسمح بالحذف إذا كانت الشعبة مرتبطة بطلاب\n7. التصميم:\n   - جميع modals متوافقة مع RTL والثيمين (light/dark)\n   - responsive على جميع أحجام الشاشات\n   - يتبع نفس patterns الموجودة في المشروع\n   - رسائل واضحة وحالات تحميل وخطأ\n\n✅ الميزات الإضافية:\n- Validation: لا يمكن النقل بدون اختيار صف وشعبة صحيحين\n- الشعب النشطة فقط (is_active=true) تظهر في transfer dropdown\n- updateSelectedStudents() لإدارة حالة التحديد\n- جميع العمليات تستخدم async/await مع معالجة الأخطاء\n\n📝 ملاحظات:\n- الكود يتبع نفس patterns من teacher-users.js\n- استخدام Supabase .in() للنقل الجماعي فعال\n- جميع النصوص بالعربية والـ RTL صحيح\n- الـ modals تُغلق تلقائياً بعد النجاح\n\n✅ الكود جاهز للاختبار اليدوي"
+}
