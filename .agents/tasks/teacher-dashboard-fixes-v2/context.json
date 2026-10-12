@@ -1,0 +1,27 @@
+{
+  "project_type": "Vanilla JavaScript SPA with Supabase backend, teacher dashboard admin panel",
+  "language": "JavaScript (ES6 modules), Arabic UI/comments",
+  "build_system": "None (direct HTML + JavaScript modules, no bundler)",
+  "test_framework": "None (manual testing in browser)",
+  "build_command": "N/A (static files)",
+  "test_command": "Manual browser testing at http://localhost:PORT or file:// protocol",
+  "verification_instructions": "Open each affected HTML page in browser, log in as teacher, and verify: (1) delete buttons trigger confirmation modals and delete records with success toast; (2) view/edit buttons open modals or navigate; (3) upload buttons trigger file input; (4) logout buttons (sidebar, header, profile) all trigger logout confirmation; (5) save operations show success/error toasts; (6) notifications appear at top of page",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "Must test with a live Supabase connection. The auth.js logout function must clear Supabase session + localStorage. Toast notifications managed by Toast singleton in src/utils/toast.js.",
+  "contribution_requirements": "Maintain Arabic comments and UI messages. Follow existing code style (ES6 imports, async/await, showConfirmModal for destructive operations). All event listeners must be bound after DOM elements are rendered or exist.",
+  "key_patterns": "Event delegation pattern: buttons are rendered dynamically in tables/lists, so event listeners are attached after rendering via querySelectorAll. Delete operations use showConfirmModal from teacher-nav.js. Success/error operations call Toast.success/Toast.error. Logout uses authService.logout() then redirects to login.html.",
+  "relevant_files": [
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-content.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-challenges.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-questions.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-research.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-participants.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-users.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-media.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-nav.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/scripts/teacher-profile.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/services/auth.js",
+    "c:/Users/win 11/Desktop/siraj_abuobaida/src/utils/toast.js"
+  ],
+  "directory_structure": "src/scripts/ contains all teacher-*.js modules; src/services/ contains auth.js and supabase.js; src/utils/ contains toast.js; root contains teacher-*.html pages"
+}

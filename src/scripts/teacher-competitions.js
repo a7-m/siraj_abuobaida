@@ -5,6 +5,8 @@
 
 import { supabase } from '../services/supabase.js';
 import { authService } from '../services/auth.js';
+import { Toast } from '../utils/toast.js';
+import { showConfirmModal } from './teacher-nav.js';
 
 let currentCompetitions = [];
 let editingCompetitionId = null;
@@ -256,11 +258,11 @@ async function handleCoverUpload(e) {
 
   // Validate file type and size
   if (!file.type.startsWith('image/')) {
-    window.Toast?.error('يرجى اختيار صورة');
+    Toast.error('يرجى اختيار صورة');
     return;
   }
   if (file.size > 5 * 1024 * 1024) { // 5MB
-    window.Toast?.error('حجم الصورة يجب أن لا يتجاوز 5MB');
+    Toast.error('حجم الصورة يجب أن لا يتجاوز 5MB');
     return;
   }
 
@@ -285,18 +287,18 @@ async function handleCoverUpload(e) {
       resetCoverPreview(urlData.publicUrl);
       // Store the Storage path for later reference
       window.currentCoverPath = filename;
-      window.Toast?.success('تم تحميل الصورة بنجاح');
+      Toast.success('تم تحميل الصورة بنجاح');
     }
   } catch (err) {
     console.error('Error uploading cover:', err);
-    window.Toast?.error(`تعذر تحميل الصورة: ${err.message}`);
+    Toast.error(`تعذر تحميل الصورة: ${err.message}`);
   }
 }
 
 async function saveCompetition() {
   const title = (document.getElementById('comp-title').value || '').trim();
   if (!title) {
-    window.Toast?.error('يرجى كتابة اسم المسابقة');
+    Toast.error('يرجى كتابة اسم المسابقة');
     return;
   }
 
@@ -350,7 +352,7 @@ async function saveCompetition() {
         .update(payload)
         .eq('id', editingCompetitionId);
       if (error) throw error;
-      window.Toast?.success('تم تحديث المسابقة بنجاح');
+      Toast.success('تم تحديث المسابقة بنجاح');
     } else {
       const { data, error } = await supabase
         .from('competitions')
@@ -359,7 +361,7 @@ async function saveCompetition() {
         .single();
       if (error) throw error;
       editingCompetitionId = data.id;
-      window.Toast?.success('تم إنشاء المسابقة بنجاح. يمكنك الآن إضافة الأسئلة.');
+      Toast.success('تم إنشاء المسابقة بنجاح. يمكنك الآن إضافة الأسئلة.');
       document.getElementById('comp-questions-panel').style.display = 'block';
       loadCompetitionQuestions(data.id);
     }
@@ -367,7 +369,7 @@ async function saveCompetition() {
     window.currentCoverPath = null;
   } catch (err) {
     console.error('Error saving competition:', err);
-    window.Toast?.error(`حدث خطأ أثناء الحفظ: ${err.message}`);
+    Toast.error(`حدث خطأ أثناء الحفظ: ${err.message}`);
   }
 }
 
@@ -379,28 +381,35 @@ async function toggleCompetitionStatus(id, currentStatus) {
       .update({ status: newStatus })
       .eq('id', id);
     if (error) throw error;
-    window.Toast?.success(`تم تغيير حالة المسابقة إلى ${newStatus === 'active' ? 'نشطة' : 'مسودة'}`);
+    Toast.success(`تم تغيير حالة المسابقة إلى ${newStatus === 'active' ? 'نشطة' : 'مسودة'}`);
     loadCompetitions();
   } catch (err) {
     console.error('Error toggling competition status:', err);
-    window.Toast?.error(`تعذر تغيير حالة المسابقة: ${err.message}`);
+    Toast.error(`تعذر تغيير حالة المسابقة: ${err.message}`);
   }
 }
 
 async function deleteCompetition(id) {
-  if (!confirm('هل أنت متأكد من حذف هذه المسابقة وجميع أسئلتها؟')) return;
-  try {
-    const { error } = await supabase
-      .from('competitions')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
-    window.Toast?.success('تم حذف المسابقة بنجاح');
-    loadCompetitions();
-  } catch (err) {
-    console.error('Error deleting competition:', err);
-    window.Toast?.error(`تعذر حذف المسابقة: ${err.message}`);
-  }
+  showConfirmModal({
+    title: 'حذف المسابقة',
+    message: 'هل أنت متأكد من حذف هذه المسابقة وجميع أسئلتها؟ لن يمكن التراجع عن هذا الإجراء.',
+    confirmText: 'نعم، حذف المسابقة',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const { error } = await supabase
+          .from('competitions')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        Toast.success('تم حذف المسابقة بنجاح');
+        loadCompetitions();
+      } catch (err) {
+        console.error('Error deleting competition:', err);
+        Toast.error(`تعذر حذف المسابقة: ${err.message}`);
+      }
+    }
+  });
 }
 
 // ── Competition Questions Logic ─────────────────────────────
@@ -583,13 +592,13 @@ function renderQuestionOptionsForm(type, metadata = {}) {
 
 async function saveQuestion() {
   if (!editingCompetitionId) {
-    window.Toast?.error('يرجى حفظ المسابقة أولاً قبل إضافة الأسئلة');
+    Toast.error('يرجى حفظ المسابقة أولاً قبل إضافة الأسئلة');
     return;
   }
 
   const text = (document.getElementById('q-text').value || '').trim();
   if (!text) {
-    window.Toast?.error('يرجى إدخال نص السؤال');
+    Toast.error('يرجى إدخال نص السؤال');
     return;
   }
 
@@ -601,7 +610,7 @@ async function saveQuestion() {
     const inputs = document.querySelectorAll('.q-mcq-opt');
     const opts = Array.from(inputs).map(inp => (inp.value || '').trim()).filter(Boolean);
     if (opts.length < 2) {
-      window.Toast?.error('يرجى إدخال خيارين على الأقل لسؤال الاختيار من متعدد');
+      Toast.error('يرجى إدخال خيارين على الأقل لسؤال الاختيار من متعدد');
       return;
     }
     const selectedRadio = document.querySelector('input[name="q-correct-mcq"]:checked');
@@ -617,7 +626,7 @@ async function saveQuestion() {
     const inputs = document.querySelectorAll('.q-order-item');
     const items = Array.from(inputs).map(inp => (inp.value || '').trim()).filter(Boolean);
     if (items.length < 2) {
-      window.Toast?.error('يرجى إدخال عنصرين على الأقل لسؤال الترتيب');
+      Toast.error('يرجى إدخال عنصرين على الأقل لسؤال الترتيب');
       return;
     }
     metadata = { items, correct_order: [...items] };
@@ -633,7 +642,7 @@ async function saveQuestion() {
         .update({ type, question_type: type, text, points, metadata })
         .eq('id', questionId);
       if (error) throw error;
-      window.Toast?.success('تم تعديل السؤال بنجاح');
+      Toast.success('تم تعديل السؤال بنجاح');
     } else {
       // Insert new question
       const { data: qData, error: qErr } = await supabase
@@ -656,45 +665,48 @@ async function saveQuestion() {
         });
       if (cqErr) throw cqErr;
 
-      window.Toast?.success('تمت إضافة السؤال بنجاح');
+      Toast.success('تمت إضافة السؤال بنجاح');
     }
 
     closeQuestionEditor();
     loadCompetitionQuestions(editingCompetitionId);
   } catch (err) {
     console.error('Error saving question:', err);
-    window.Toast?.error(`تعذر حفظ السؤال: ${err.message}`);
+    Toast.error(`تعذر حفظ السؤال: ${err.message}`);
   }
 }
 
 async function deleteQuestion(qId) {
-  if (!confirm('هل أنت متأكد من حذف هذا السؤال من المسابقة؟')) return;
-  try {
-    // Delete link from competition_questions (question will cascade delete)
-    const { error: linkError } = await supabase
-      .from('competition_questions')
-      .delete()
-      .eq('competition_id', editingCompetitionId)
-      .eq('question_id', qId);
+  showConfirmModal({
+    title: 'حذف السؤال',
+    message: 'هل أنت متأكد من حذف هذا السؤال من المسابقة؟',
+    confirmText: 'نعم، حذف السؤال',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const { error: linkError } = await supabase
+          .from('competition_questions')
+          .delete()
+          .eq('competition_id', editingCompetitionId)
+          .eq('question_id', qId);
+        if (linkError) throw linkError;
 
-    if (linkError) throw linkError;
+        const { error: questionError } = await supabase
+          .from('questions')
+          .delete()
+          .eq('id', qId);
+        if (questionError) {
+          console.warn('Question may be used elsewhere:', questionError);
+        }
 
-    // Delete question record if it's not used elsewhere
-    const { error: questionError } = await supabase
-      .from('questions')
-      .delete()
-      .eq('id', qId);
-
-    if (questionError) {
-      console.warn('Question may be used elsewhere:', questionError);
+        Toast.success('تم حذف السؤال بنجاح');
+        loadCompetitionQuestions(editingCompetitionId);
+      } catch (err) {
+        console.error('Error deleting question:', err);
+        Toast.error(`تعذر حذف السؤال: ${err.message}`);
+      }
     }
-
-    window.Toast?.success('تم حذف السؤال بنجاح');
-    loadCompetitionQuestions(editingCompetitionId);
-  } catch (err) {
-    console.error('Error deleting question:', err);
-    window.Toast?.error(`تعذر حذف السؤال: ${err.message}`);
-  }
+  });
 }
 
 function escapeHtml(str) {

@@ -4,6 +4,8 @@
  */
 
 import { supabase } from '../services/supabase.js';
+import { Toast } from '../utils/toast.js';
+import { showConfirmModal } from './teacher-nav.js';
 
 let allSections = [];
 
@@ -118,7 +120,7 @@ async function handleCreateSection() {
   let name = (document.getElementById('new-sec-name').value || '').trim();
 
   if (!grade || !num || num < 1) {
-    window.Toast?.error('يرجى تحديد الصف ورقم الشعبة بشكل صحيح');
+    Toast.error('يرجى تحديد الصف ورقم الشعبة بشكل صحيح');
     return;
   }
 
@@ -137,7 +139,7 @@ async function handleCreateSection() {
       }, { onConflict: 'grade, section_name' });
 
     if (error) throw error;
-    window.Toast?.success(`تمت إضافة شعبة ${name} لمدرسة أبو عبيدة بنجاح`);
+    Toast.success(`تمت إضافة شعبة ${name} لمدرسة أبو عبيدة بنجاح`);
 
     document.getElementById('new-sec-num').value = '';
     document.getElementById('new-sec-name').value = '';
@@ -146,7 +148,7 @@ async function handleCreateSection() {
     loadSections();
   } catch (err) {
     console.error('handleCreateSection error:', err);
-    window.Toast?.error(`تعذر إضافة الشعبة: ${err.message}`);
+    Toast.error(`تعذر إضافة الشعبة: ${err.message}`);
   }
 }
 
@@ -158,27 +160,33 @@ async function toggleSectionActive(id, currentActive) {
       .eq('id', id);
 
     if (error) throw error;
-    window.Toast?.success(`تم ${!currentActive ? 'تفعيل' : 'تعطيل'} الشعبة بنجاح`);
+    Toast.success(`تم ${!currentActive ? 'تفعيل' : 'تعطيل'} الشعبة بنجاح`);
     loadSections();
   } catch (err) {
-    window.Toast?.error('تعذر تحديث حالة الشعبة');
+    Toast.error('تعذر تحديث حالة الشعبة');
   }
 }
 
 async function deleteSection(id) {
-  if (!confirm('هل أنت متأكد من حذف هذه الشعبة؟')) return;
-  try {
-    const { error } = await supabase
-      .from('school_sections')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-    window.Toast?.success('تم حذف الشعبة بنجاح');
-    loadSections();
-  } catch (err) {
-    window.Toast?.error('تعذر حذف الشعبة');
-  }
+  showConfirmModal({
+    title: 'حذف الشعبة',
+    message: 'هل أنت متأكد من حذف هذه الشعبة؟ لن يمكن التراجع عن هذا الإجراء.',
+    confirmText: 'نعم، حذف الشعبة',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const { error } = await supabase
+          .from('school_sections')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        Toast.success('تم حذف الشعبة بنجاح');
+        loadSections();
+      } catch (err) {
+        Toast.error('تعذر حذف الشعبة');
+      }
+    }
+  });
 }
 
 function escapeHtml(str) {

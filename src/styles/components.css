@@ -49,9 +49,7 @@
   transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="dark"] .logo img {
-  /* PNG logo doesn't need invert filter */
-}
+
 
 .logo:hover img {
   transform: scale(1.05);
@@ -453,6 +451,14 @@ select:focus {
 
 .toast.success {
   border-right-color: var(--color-primary); /* Olive green for success */
+}
+
+.toast.warning {
+  border-right-color: #d97706; /* Amber for warnings */
+}
+
+.toast.info {
+  border-right-color: #0ea5e9; /* Sky blue for info */
 }
 
 .toast-message {
