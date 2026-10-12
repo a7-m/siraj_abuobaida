@@ -179,23 +179,44 @@ function renderTable() {
   console.log(`[teacher-users] Binding ${editButtons.length} edit, ${viewButtons.length} view, ${deleteButtons.length} delete buttons`);
   
   editButtons.forEach(b => {
-    b.addEventListener('click', () => {
-      const u = allProfiles.find(item => item.id === b.dataset.id);
-      if (u) openEditModal(u);
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      const userId = b.dataset.id || b.getAttribute('data-id');
+      console.log(`[teacher-users] Edit button clicked for user: ${userId}`);
+      const u = allProfiles.find(item => item.id === userId);
+      if (u) {
+        openEditModal(u);
+      } else {
+        console.error(`[teacher-users] User not found: ${userId}`);
+      }
     });
   });
 
   viewButtons.forEach(b => {
-    b.addEventListener('click', () => {
-      const u = allProfiles.find(item => item.id === b.dataset.id);
-      if (u) openActivityModal(u);
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      const userId = b.dataset.id || b.getAttribute('data-id');
+      console.log(`[teacher-users] View activity button clicked for user: ${userId}`);
+      const u = allProfiles.find(item => item.id === userId);
+      if (u) {
+        openActivityModal(u);
+      } else {
+        console.error(`[teacher-users] User not found: ${userId}`);
+      }
     });
   });
 
   deleteButtons.forEach(b => {
-    b.addEventListener('click', () => {
-      const u = allProfiles.find(item => item.id === b.dataset.id);
-      if (u) confirmDeleteUser(u);
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      const userId = b.dataset.id || b.getAttribute('data-id');
+      console.log(`[teacher-users] Delete button clicked for user: ${userId}`);
+      const u = allProfiles.find(item => item.id === userId);
+      if (u) {
+        confirmDeleteUser(u);
+      } else {
+        console.error(`[teacher-users] User not found: ${userId}`);
+      }
     });
   });
 

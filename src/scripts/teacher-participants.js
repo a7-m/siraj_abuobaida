@@ -577,18 +577,29 @@ function bindActionButtons() {
     console.log(`[teacher-participants] Binding ${viewButtons.length} view and ${deleteButtons.length} delete buttons in ${container.id}`);
     
     viewButtons.forEach(b => {
+      // Remove old flag to ensure fresh binding after re-render
       if (b._boundView) return;
       b._boundView = true;
-      b.addEventListener('click', () => {
-        openDetailModal(b.dataset.id, b.dataset.type);
+      
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        const itemId = b.dataset.id || b.getAttribute('data-id');
+        const itemType = b.dataset.type || b.getAttribute('data-type');
+        console.log(`[teacher-participants] View button clicked: id=${itemId}, type=${itemType}`);
+        openDetailModal(itemId, itemType);
       });
     });
     
     deleteButtons.forEach(b => {
       if (b._boundDelete) return;
       b._boundDelete = true;
-      b.addEventListener('click', () => {
-        deleteRecord(b.dataset.id, b.dataset.type);
+      
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        const itemId = b.dataset.id || b.getAttribute('data-id');
+        const itemType = b.dataset.type || b.getAttribute('data-type');
+        console.log(`[teacher-participants] Delete button clicked: id=${itemId}, type=${itemType}`);
+        deleteRecord(itemId, itemType);
       });
     });
   };

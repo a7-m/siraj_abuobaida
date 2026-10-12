@@ -47,9 +47,17 @@ function setupEvents() {
   }
 
   if (btnUpload) {
-    btnUpload.addEventListener('click', () => {
-      uploadModal.classList.add('active');
+    btnUpload.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('[teacher-media] Upload button clicked, opening modal');
+      if (uploadModal) {
+        uploadModal.classList.add('active');
+      } else {
+        console.error('[teacher-media] Upload modal element not found!');
+      }
     });
+  } else {
+    console.error('[teacher-media] Upload button #btn-upload-media not found in DOM');
   }
 
   if (btnCloseModal) btnCloseModal.addEventListener('click', closeUploadModal);

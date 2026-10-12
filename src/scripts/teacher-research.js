@@ -199,16 +199,30 @@ function renderTable() {
   console.log(`[teacher-research] Binding ${evalButtons.length} eval buttons and ${deleteButtons.length} delete buttons`);
   
   evalButtons.forEach(b => {
-    b.addEventListener('click', () => {
-      const sub = allSubmissions.find(s => s.id === b.dataset.id);
-      if (sub) openEvalModal(sub);
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      const subId = b.dataset.id || b.getAttribute('data-id');
+      console.log(`[teacher-research] Eval button clicked for submission: ${subId}`);
+      const sub = allSubmissions.find(s => s.id === subId);
+      if (sub) {
+        openEvalModal(sub);
+      } else {
+        console.error(`[teacher-research] Submission not found: ${subId}`);
+      }
     });
   });
 
   deleteButtons.forEach(b => {
-    b.addEventListener('click', () => {
-      const sub = allSubmissions.find(s => s.id === b.dataset.id);
-      if (sub) confirmDeleteSubmission(sub);
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      const subId = b.dataset.id || b.getAttribute('data-id');
+      console.log(`[teacher-research] Delete button clicked for submission: ${subId}`);
+      const sub = allSubmissions.find(s => s.id === subId);
+      if (sub) {
+        confirmDeleteSubmission(sub);
+      } else {
+        console.error(`[teacher-research] Submission not found: ${subId}`);
+      }
     });
   });
 
