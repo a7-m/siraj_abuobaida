@@ -204,7 +204,12 @@ function renderGrid() {
   }).join('');
 
   // Bind actions
-  container.querySelectorAll('.btn-copy-link').forEach(btn => {
+  const copyButtons = container.querySelectorAll('.btn-copy-link');
+  const deleteButtons = container.querySelectorAll('.btn-del-file');
+  
+  console.log(`[teacher-media] Binding ${copyButtons.length} copy buttons and ${deleteButtons.length} delete buttons`);
+  
+  copyButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const url = btn.dataset.url;
       navigator.clipboard.writeText(url).then(() => {
@@ -215,7 +220,7 @@ function renderGrid() {
     });
   });
 
-  container.querySelectorAll('.btn-del-file').forEach(btn => {
+  deleteButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const path = btn.dataset.path;
       confirmDeleteFile(path);

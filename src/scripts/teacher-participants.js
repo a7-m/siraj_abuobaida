@@ -564,21 +564,37 @@ function renderCards(items) {
 }
 
 function bindActionButtons() {
-  document.querySelectorAll('.btn-view-item').forEach(b => {
-    b.addEventListener('click', () => {
-      const id = b.dataset.id;
-      const type = b.dataset.type;
-      openDetailModal(id, type);
-    });
-  });
+  // Use scoped containers to avoid double-binding when view refreshes
+  const tableBody = document.getElementById('part-table-body');
+  const cardsView = document.getElementById('part-cards-view');
 
-  document.querySelectorAll('.btn-delete-item').forEach(b => {
-    b.addEventListener('click', () => {
-      const id = b.dataset.id;
-      const type = b.dataset.type;
-      deleteRecord(id, type);
+  const bindIn = (container) => {
+    if (!container) return;
+    
+    const viewButtons = container.querySelectorAll('.btn-view-item');
+    const deleteButtons = container.querySelectorAll('.btn-delete-item');
+    
+    console.log(`[teacher-participants] Binding ${viewButtons.length} view and ${deleteButtons.length} delete buttons in ${container.id}`);
+    
+    viewButtons.forEach(b => {
+      if (b._boundView) return;
+      b._boundView = true;
+      b.addEventListener('click', () => {
+        openDetailModal(b.dataset.id, b.dataset.type);
+      });
     });
-  });
+    
+    deleteButtons.forEach(b => {
+      if (b._boundDelete) return;
+      b._boundDelete = true;
+      b.addEventListener('click', () => {
+        deleteRecord(b.dataset.id, b.dataset.type);
+      });
+    });
+  };
+
+  bindIn(tableBody);
+  bindIn(cardsView);
 }
 
 /**

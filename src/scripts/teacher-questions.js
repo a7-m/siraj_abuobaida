@@ -197,14 +197,19 @@ function renderTable() {
     `;
   }).join('');
 
-  tbody.querySelectorAll('.btn-edit-q').forEach(b => {
+  const editButtons = tbody.querySelectorAll('.btn-edit-q');
+  const deleteButtons = tbody.querySelectorAll('.btn-delete-q');
+  
+  console.log(`[teacher-questions] Binding ${editButtons.length} edit buttons and ${deleteButtons.length} delete buttons`);
+  
+  editButtons.forEach(b => {
     b.addEventListener('click', () => {
       const q = allQuestions.find(item => item.id === b.dataset.id);
       if (q) openEditor(q);
     });
   });
 
-  tbody.querySelectorAll('.btn-delete-q').forEach(b => {
+  deleteButtons.forEach(b => {
     b.addEventListener('click', () => {
       const q = allQuestions.find(item => item.id === b.dataset.id);
       if (q) confirmDeleteQuestion(q);

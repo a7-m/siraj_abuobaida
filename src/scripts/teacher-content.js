@@ -204,8 +204,13 @@ function renderTable() {
     </tr>
   `).join('');
 
-  // Bind row buttons
-  tbody.querySelectorAll('.btn-edit-page').forEach(btn => {
+  // Bind row buttons - ensure they exist before binding
+  const editButtons = tbody.querySelectorAll('.btn-edit-page');
+  const deleteButtons = tbody.querySelectorAll('.btn-delete-page');
+  
+  console.log(`[teacher-content] Binding ${editButtons.length} edit buttons and ${deleteButtons.length} delete buttons`);
+  
+  editButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
       const page = allPages.find(p => p.id === id);
@@ -213,7 +218,7 @@ function renderTable() {
     });
   });
 
-  tbody.querySelectorAll('.btn-delete-page').forEach(btn => {
+  deleteButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
       const page = allPages.find(p => p.id === id);

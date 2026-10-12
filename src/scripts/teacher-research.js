@@ -193,14 +193,19 @@ function renderTable() {
     `;
   }).join('');
 
-  tbody.querySelectorAll('.btn-eval-res').forEach(b => {
+  const evalButtons = tbody.querySelectorAll('.btn-eval-res');
+  const deleteButtons = tbody.querySelectorAll('.btn-delete-res');
+  
+  console.log(`[teacher-research] Binding ${evalButtons.length} eval buttons and ${deleteButtons.length} delete buttons`);
+  
+  evalButtons.forEach(b => {
     b.addEventListener('click', () => {
       const sub = allSubmissions.find(s => s.id === b.dataset.id);
       if (sub) openEvalModal(sub);
     });
   });
 
-  tbody.querySelectorAll('.btn-delete-res').forEach(b => {
+  deleteButtons.forEach(b => {
     b.addEventListener('click', () => {
       const sub = allSubmissions.find(s => s.id === b.dataset.id);
       if (sub) confirmDeleteSubmission(sub);

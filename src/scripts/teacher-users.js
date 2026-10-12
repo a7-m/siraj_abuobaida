@@ -165,23 +165,37 @@ function renderTable() {
           <div class="flex gap-2">
             <button class="btn btn-outline btn-sm btn-edit-usr" data-id="${u.id}">✏️ تعديل</button>
             <button class="btn btn-outline btn-sm btn-view-act" data-id="${u.id}" title="سجل الأنشطة والنتائج">📊 السجل</button>
+            <button class="btn btn-outline-danger btn-sm btn-delete-usr" data-id="${u.id}" data-name="${escapeHtml(u.full_name || 'المستخدم')}" title="حذف الحساب">🗑️</button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
 
-  tbody.querySelectorAll('.btn-edit-usr').forEach(b => {
+  const editButtons = tbody.querySelectorAll('.btn-edit-usr');
+  const viewButtons = tbody.querySelectorAll('.btn-view-act');
+  const deleteButtons = tbody.querySelectorAll('.btn-delete-usr');
+  
+  console.log(`[teacher-users] Binding ${editButtons.length} edit, ${viewButtons.length} view, ${deleteButtons.length} delete buttons`);
+  
+  editButtons.forEach(b => {
     b.addEventListener('click', () => {
       const u = allProfiles.find(item => item.id === b.dataset.id);
       if (u) openEditModal(u);
     });
   });
 
-  tbody.querySelectorAll('.btn-view-act').forEach(b => {
+  viewButtons.forEach(b => {
     b.addEventListener('click', () => {
       const u = allProfiles.find(item => item.id === b.dataset.id);
       if (u) openActivityModal(u);
+    });
+  });
+
+  deleteButtons.forEach(b => {
+    b.addEventListener('click', () => {
+      const u = allProfiles.find(item => item.id === b.dataset.id);
+      if (u) confirmDeleteUser(u);
     });
   });
 
@@ -353,4 +367,31 @@ async function openActivityModal(user) {
 
 function closeActivityModal() {
   document.getElementById('user-activity-modal').classList.remove('active');
+}
+
+function confirmDeleteUser(user) {
+  const isTeacher = user.role === 'teacher' || user.role === 'admin';
+  showConfirmModal({
+    title: 'حذف حساب المستخدم',
+    message: `هل أنت متأكد من حذف حساب «${user.full_name || 'المستخدم'}»؟${isTeacher ? ' تنبيه: هذا الحساب له دور معلم.' : ''} لن يمكن التراجع عن هذا الإجراء.`,
+    confirmText: 'نعم، حذف الحساب',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', user.id);
+
+        if (error) throw error;
+
+        allProfiles = allProfiles.filter(u => u.id !== user.id);
+        Toast.success('تم حذف حساب المستخدم بنجاح');
+        renderTable();
+      } catch (err) {
+        console.error('Delete user error:', err);
+        Toast.error('تعذر حذف الحساب: ' + err.message);
+      }
+    }
+  });
 }

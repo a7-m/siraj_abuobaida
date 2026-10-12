@@ -4,6 +4,8 @@
  */
 
 import { supabase } from '../services/supabase.js';
+import { Toast } from '../utils/toast.js';
+import { showConfirmModal } from './teacher-nav.js';
 
 let currentChallenges = [];
 let challengeCategories = [];
@@ -66,7 +68,7 @@ export async function loadCategoriesAndChallenges() {
     await loadChallenges();
   } catch (err) {
     console.error('Error loading challenges system:', err);
-    window.Toast?.error('تعذر تحميل بيانات التحديات. تحقق من الاتصال وحاول مرة أخرى.');
+    Toast.error('تعذر تحميل بيانات التحديات. تحقق من الاتصال وحاول مرة أخرى.');
   }
 }
 
@@ -172,18 +174,24 @@ function renderChallengesTable() {
   }).join('');
 
   // Table listeners
-  tbody.querySelectorAll('.btn-edit-chal').forEach(btn => {
+  const editButtons = tbody.querySelectorAll('.btn-edit-chal');
+  const toggleButtons = tbody.querySelectorAll('.btn-toggle-chal-status');
+  const deleteButtons = tbody.querySelectorAll('.btn-delete-chal');
+  
+  console.log(`[teacher-challenges] Binding ${editButtons.length} edit, ${toggleButtons.length} toggle, ${deleteButtons.length} delete buttons`);
+  
+  editButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const ch = currentChallenges.find(c => c.id === btn.dataset.id);
       if (ch) openChallengeEditor(ch);
     });
   });
 
-  tbody.querySelectorAll('.btn-toggle-chal-status').forEach(btn => {
+  toggleButtons.forEach(btn => {
     btn.addEventListener('click', () => toggleChallengeStatus(btn.dataset.id, btn.dataset.status));
   });
 
-  tbody.querySelectorAll('.btn-delete-chal').forEach(btn => {
+  deleteButtons.forEach(btn => {
     btn.addEventListener('click', () => deleteChallenge(btn.dataset.id));
   });
 }
@@ -231,7 +239,7 @@ function openChallengeEditor(ch = null) {
 async function saveChallenge() {
   const title = (document.getElementById('chal-title').value || '').trim();
   if (!title) {
-    window.Toast?.error('يرجى إدخال عنوان البرنامج');
+    Toast.error('يرجى إدخال عنوان البرنامج');
     return;
   }
 
@@ -254,7 +262,7 @@ async function saveChallenge() {
 
   if (status === 'active') {
     if (!editingChallengeId) {
-      window.Toast?.error('احفظ البرنامج كمسودة أولاً، ثم أضف مرحلة وأسئلتها قبل تفعيله.');
+      Toast.error('احفظ البرنامج كمسودة أولاً، ثم أضف مرحلة وأسئلتها قبل تفعيله.');
       return;
     }
     if (!await isChallengeReadyToPublish(editingChallengeId)) return;
@@ -273,7 +281,7 @@ async function saveChallenge() {
       if (error) throw error;
       if (!data) throw new Error('Challenge update was not confirmed');
       currentChallenges = currentChallenges.map(ch => ch.id === data.id ? { ...ch, ...payload } : ch);
-      window.Toast?.success('تم تحديث البرنامج بنجاح');
+      Toast.success('تم تحديث البرنامج بنجاح');
     } else {
       const { data, error } = await supabase
         .from('challenges')
@@ -284,13 +292,13 @@ async function saveChallenge() {
       if (!data?.id) throw new Error('Challenge creation was not confirmed');
       editingChallengeId = data.id;
       currentChallenges = [data, ...currentChallenges];
-      window.Toast?.success('تم حفظ البرنامج كمسودة. أضف المراحل والأسئلة ثم فعّله.');
+      Toast.success('تم حفظ البرنامج كمسودة. أضف المراحل والأسئلة ثم فعّله.');
       document.getElementById('chal-levels-panel').style.display = 'block';
       await loadChallengeLevels(data.id);
     }
   } catch (err) {
     console.error('Error saving challenge:', err);
-    window.Toast?.error('تعذر حفظ البرنامج. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
+    Toast.error('تعذر حفظ البرنامج. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
   } finally {
     if (saveButton) saveButton.disabled = false;
   }
@@ -309,13 +317,13 @@ async function isChallengeReadyToPublish(challengeId) {
       const availablePoints = questions.reduce((sum, link) => sum + (link.questions?.points || 1), 0);
       return questions.length === 0 || (level.passing_score || 1) > availablePoints;
     })) {
-      window.Toast?.error('لا يمكن تفعيل البرنامج قبل إضافة سؤال واحد على الأقل لكل مرحلة وضبط درجة اجتياز مناسبة.');
+      Toast.error('لا يمكن تفعيل البرنامج قبل إضافة سؤال واحد على الأقل لكل مرحلة وضبط درجة اجتياز مناسبة.');
       return false;
     }
     return true;
   } catch (err) {
     console.error('Error validating challenge before publishing:', err);
-    window.Toast?.error('تعذر التحقق من اكتمال المراحل. لم يتم تفعيل البرنامج؛ حاول مرة أخرى.');
+    Toast.error('تعذر التحقق من اكتمال المراحل. لم يتم تفعيل البرنامج؛ حاول مرة أخرى.');
     return false;
   }
 }
@@ -333,11 +341,11 @@ async function toggleChallengeStatus(id, currentStatus) {
     if (error) throw error;
     if (!data) throw new Error('Challenge status update was not confirmed');
     currentChallenges = currentChallenges.map(ch => ch.id === id ? { ...ch, status: newStatus } : ch);
-    window.Toast?.success(`تم تغيير حالة البرنامج إلى ${newStatus === 'active' ? 'نشط' : 'مسودة'}`);
+    Toast.success(`تم تغيير حالة البرنامج إلى ${newStatus === 'active' ? 'نشط' : 'مسودة'}`);
     await loadChallenges();
   } catch (err) {
     console.error('Error changing challenge status:', err);
-    window.Toast?.error('تعذر تغيير حالة البرنامج. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
+    Toast.error('تعذر تغيير حالة البرنامج. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
   }
 }
 
@@ -345,25 +353,32 @@ async function deleteChallenge(id) {
   const hasProgress = await hasChallengeProgress(id);
   if (hasProgress === null) return;
   if (hasProgress) {
-    window.Toast?.error('لا يمكن حذف برنامج له نتائج طلاب محفوظة. غيّر حالته إلى مؤرشف للحفاظ على السجل.');
+    Toast.error('لا يمكن حذف برنامج له نتائج طلاب محفوظة. غيّر حالته إلى مؤرشف للحفاظ على السجل.');
     return;
   }
-  if (!confirm('هل أنت متأكد من حذف هذا البرنامج ومراحله؟ لن تُحذف أسئلة مستخدمة في أنشطة أخرى.')) return;
-  try {
-    const { data, error } = await supabase
-      .from('challenges')
-      .delete()
-      .eq('id', id)
-      .select('id')
-      .single();
-    if (error) throw error;
-    if (!data) throw new Error('Challenge deletion was not confirmed');
-    window.Toast?.success('تم حذف البرنامج بنجاح');
-    await loadChallenges();
-  } catch (err) {
-    console.error('Error deleting challenge:', err);
-    window.Toast?.error('تعذر حذف البرنامج. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
-  }
+  showConfirmModal({
+    title: 'حذف البرنامج',
+    message: 'هل أنت متأكد من حذف هذا البرنامج ومراحله؟ لن تُحذف أسئلة مستخدمة في أنشطة أخرى.',
+    confirmText: 'نعم، حذف البرنامج',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('challenges')
+          .delete()
+          .eq('id', id)
+          .select('id')
+          .single();
+        if (error) throw error;
+        if (!data) throw new Error('Challenge deletion was not confirmed');
+        Toast.success('تم حذف البرنامج بنجاح');
+        await loadChallenges();
+      } catch (err) {
+        console.error('Error deleting challenge:', err);
+        Toast.error('تعذر حذف البرنامج. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
+      }
+    }
+  });
 }
 
 async function hasChallengeProgress(challengeId) {
@@ -384,7 +399,7 @@ async function hasChallengeProgress(challengeId) {
     return (count || 0) > 0;
   } catch (err) {
     console.error('Error checking challenge progress before deletion:', err);
-    window.Toast?.error('تعذر التحقق من نتائج الطلاب؛ لم يتم حذف البرنامج.');
+    Toast.error('تعذر التحقق من نتائج الطلاب؛ لم يتم حذف البرنامج.');
     return null;
   }
 }
@@ -469,14 +484,19 @@ function renderLevelsList() {
     `;
   }).join('');
 
-  listEl.querySelectorAll('.btn-edit-level').forEach(btn => {
+  const editButtons = listEl.querySelectorAll('.btn-edit-level');
+  const deleteButtons = listEl.querySelectorAll('.btn-delete-level');
+  
+  console.log(`[teacher-challenges/levels] Binding ${editButtons.length} edit and ${deleteButtons.length} delete buttons`);
+  
+  editButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const lvl = currentLevels.find(l => l.id === btn.dataset.id);
       if (lvl) openLevelEditor(lvl);
     });
   });
 
-  listEl.querySelectorAll('.btn-delete-level').forEach(btn => {
+  deleteButtons.forEach(btn => {
     btn.addEventListener('click', () => deleteLevel(btn.dataset.id));
   });
 }
@@ -530,13 +550,13 @@ function closeLevelEditor() {
 
 async function saveLevel() {
   if (!editingChallengeId) {
-    window.Toast?.error('يرجى حفظ البرنامج أولاً');
+    Toast.error('يرجى حفظ البرنامج أولاً');
     return;
   }
 
   const title = (document.getElementById('level-title-input').value || '').trim();
   if (!title) {
-    window.Toast?.error('يرجى إدخال عنوان المرحلة');
+    Toast.error('يرجى إدخال عنوان المرحلة');
     return;
   }
 
@@ -544,7 +564,7 @@ async function saveLevel() {
   const passing_score = Number(document.getElementById('level-passing-score').value);
   if (!Number.isInteger(level_number) || level_number < 1 ||
       !Number.isInteger(passing_score) || passing_score < 1) {
-    window.Toast?.error('أدخل رقم مرحلة ودرجة اجتياز صحيحين أكبر من صفر');
+    Toast.error('أدخل رقم مرحلة ودرجة اجتياز صحيحين أكبر من صفر');
     return;
   }
   const paragraph = (document.getElementById('level-paragraph').value || '').trim() || null;
@@ -574,7 +594,7 @@ async function saveLevel() {
         .single();
       if (error) throw error;
       if (!data) throw new Error('Challenge level update was not confirmed');
-      window.Toast?.success('تم تعديل المرحلة بنجاح');
+      Toast.success('تم تعديل المرحلة بنجاح');
     } else {
       const { data, error } = await supabase
         .from('challenge_levels')
@@ -584,7 +604,7 @@ async function saveLevel() {
       if (error) throw error;
       if (!data?.id) throw new Error('Challenge level creation was not confirmed');
       editingLevelId = data.id;
-      window.Toast?.success('تمت إضافة المرحلة بنجاح. يمكنك الآن إضافة أسئلتها.');
+      Toast.success('تمت إضافة المرحلة بنجاح. يمكنك الآن إضافة أسئلتها.');
       document.getElementById('level-questions-panel').style.display = 'block';
       currentLevelQuestions = [];
       renderLevelQuestionsList();
@@ -593,7 +613,7 @@ async function saveLevel() {
     await loadChallengeLevels(editingChallengeId);
   } catch (err) {
     console.error('saveLevel error:', err);
-    window.Toast?.error('تعذر حفظ المرحلة. بقيت بياناتك في النموذج؛ تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
+    Toast.error('تعذر حفظ المرحلة. بقيت بياناتك في النموذج؛ تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
   } finally {
     if (saveButton) saveButton.disabled = false;
   }
@@ -603,29 +623,36 @@ async function deleteLevel(lvlId) {
   const hasProgress = await hasLevelProgress(lvlId);
   if (hasProgress === null) return;
   if (hasProgress) {
-    window.Toast?.error('لا يمكن حذف مرحلة لها نتائج محفوظة للطلاب. عدّل محتواها للحفاظ على سجل التقدم.');
+    Toast.error('لا يمكن حذف مرحلة لها نتائج محفوظة للطلاب. عدّل محتواها للحفاظ على سجل التقدم.');
     return;
   }
-  if (!confirm('هل أنت متأكد من حذف هذه المرحلة وروابط أسئلتها؟ لن تُحذف الأسئلة المشتركة أو نتائج الطلاب.')) return;
-  try {
-    if (document.getElementById('chal-status').value === 'active') {
-      await setChallengeToDraft(editingChallengeId);
-      document.getElementById('chal-status').value = 'draft';
+  showConfirmModal({
+    title: 'حذف المرحلة',
+    message: 'هل أنت متأكد من حذف هذه المرحلة وروابط أسئلتها؟ لن تُحذف الأسئلة المشتركة أو نتائج الطلاب.',
+    confirmText: 'نعم، حذف المرحلة',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        if (document.getElementById('chal-status').value === 'active') {
+          await setChallengeToDraft(editingChallengeId);
+          document.getElementById('chal-status').value = 'draft';
+        }
+        const { data, error } = await supabase
+          .from('challenge_levels')
+          .delete()
+          .eq('id', lvlId)
+          .select('id')
+          .single();
+        if (error) throw error;
+        if (!data) throw new Error('Challenge level deletion was not confirmed');
+        Toast.success('تم حذف المرحلة بنجاح');
+        await loadChallengeLevels(editingChallengeId);
+      } catch (err) {
+        console.error('Error deleting challenge level:', err);
+        Toast.error('تعذر حذف المرحلة. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
+      }
     }
-    const { data, error } = await supabase
-      .from('challenge_levels')
-      .delete()
-      .eq('id', lvlId)
-      .select('id')
-      .single();
-    if (error) throw error;
-    if (!data) throw new Error('Challenge level deletion was not confirmed');
-    window.Toast?.success('تم حذف المرحلة بنجاح');
-    await loadChallengeLevels(editingChallengeId);
-  } catch (err) {
-    console.error('Error deleting challenge level:', err);
-    window.Toast?.error('تعذر حذف المرحلة. تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
-  }
+  });
 }
 
 async function hasLevelProgress(levelId) {
@@ -638,7 +665,7 @@ async function hasLevelProgress(levelId) {
     return (count || 0) > 0;
   } catch (err) {
     console.error('Error checking challenge level progress:', err);
-    window.Toast?.error('تعذر التحقق من نتائج الطلاب؛ لم يتم حذف المرحلة.');
+    Toast.error('تعذر التحقق من نتائج الطلاب؛ لم يتم حذف المرحلة.');
     return null;
   }
 }
@@ -687,17 +714,24 @@ function renderLevelQuestionsList() {
     `;
   }).join('');
 
-  listEl.querySelectorAll('.btn-edit-lq').forEach(btn => {
+  const editButtons = listEl.querySelectorAll('.btn-edit-lq');
+  const deleteButtons = listEl.querySelectorAll('.btn-delete-lq');
+  const moveButtons = listEl.querySelectorAll('.btn-move-lq');
+  
+  console.log(`[teacher-challenges/level-questions] Binding ${editButtons.length} edit, ${deleteButtons.length} delete, ${moveButtons.length} move buttons`);
+  
+  editButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const q = currentLevelQuestions.find(item => item.id === btn.dataset.id);
       if (q) openLevelQuestionEditor(q);
     });
   });
 
-  listEl.querySelectorAll('.btn-delete-lq').forEach(btn => {
+  deleteButtons.forEach(btn => {
     btn.addEventListener('click', () => deleteLevelQuestion(btn.dataset.id));
   });
-  listEl.querySelectorAll('.btn-move-lq').forEach(btn => {
+  
+  moveButtons.forEach(btn => {
     btn.addEventListener('click', () => moveLevelQuestion(btn.dataset.id, Number(btn.dataset.direction)));
   });
 }
@@ -803,20 +837,20 @@ function renderLevelQuestionOptionsForm(type, metadata = {}, correctIndex = 0) {
 
 async function saveLevelQuestion() {
   if (!editingLevelId) {
-    window.Toast?.error('يرجى حفظ المرحلة أولاً');
+    Toast.error('يرجى حفظ المرحلة أولاً');
     return;
   }
 
   const text = (document.getElementById('lq-text').value || '').trim();
   if (!text) {
-    window.Toast?.error('يرجى إدخال نص السؤال');
+    Toast.error('يرجى إدخال نص السؤال');
     return;
   }
 
   const type = document.getElementById('lq-type').value;
   const points = Number(document.getElementById('lq-points').value);
   if (!Number.isInteger(points) || points < 1) {
-    window.Toast?.error('أدخل درجة صحيحة لا تقل عن نقطة واحدة');
+    Toast.error('أدخل درجة صحيحة لا تقل عن نقطة واحدة');
     return;
   }
   let metadata = {};
@@ -825,18 +859,18 @@ async function saveLevelQuestion() {
     const inputs = document.querySelectorAll('.lq-mcq-opt');
     const opts = Array.from(inputs).map(input => input.value.trim());
     if (opts.length < 2 || opts.some(option => !option)) {
-      window.Toast?.error('أدخل خيارين على الأقل، ولا تترك أي خيار فارغًا');
+      Toast.error('أدخل خيارين على الأقل، ولا تترك أي خيار فارغًا');
       return;
     }
     if (new Set(opts.map(option => option.toLocaleLowerCase())).size !== opts.length) {
-      window.Toast?.error('احذف خيارات الإجابة المكررة قبل الحفظ');
+      Toast.error('احذف خيارات الإجابة المكررة قبل الحفظ');
       return;
     }
     const selRadio = document.querySelector('input[name="lq-correct-mcq"]:checked');
     const selIdx = selRadio ? Number(selRadio.value) : -1;
     const correct_answer = selIdx >= 0 && inputs[selIdx] ? inputs[selIdx].value.trim() : '';
     if (!correct_answer) {
-      window.Toast?.error('حدد الإجابة الصحيحة قبل الحفظ');
+      Toast.error('حدد الإجابة الصحيحة قبل الحفظ');
       return;
     }
     metadata = { options: opts, correct_answer };
@@ -853,7 +887,7 @@ async function saveLevelQuestion() {
 
     if (questionId) {
       questionId = await updateQuestionWithoutChangingSharedUses(questionId, { type, text, points, metadata });
-      window.Toast?.success('تم تعديل السؤال بنجاح');
+      Toast.success('تم تعديل السؤال بنجاح');
     } else {
       const { data: qData, error: qErr } = await supabase
         .from('questions')
@@ -883,14 +917,14 @@ async function saveLevelQuestion() {
         throw clqErr;
       }
 
-      window.Toast?.success('تمت إضافة السؤال للمرحلة بنجاح');
+      Toast.success('تمت إضافة السؤال للمرحلة بنجاح');
     }
 
     closeLevelQuestionEditor();
     await loadChallengeLevels(editingChallengeId);
   } catch (err) {
     console.error('saveLevelQuestion error:', err);
-    window.Toast?.error('تعذر حفظ السؤال في هذه المرحلة. بقيت بياناتك في المحرر؛ تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
+    Toast.error('تعذر حفظ السؤال في هذه المرحلة. بقيت بياناتك في المحرر؛ تحقق من الاتصال والصلاحيات وحاول مرة أخرى.');
   } finally {
     if (saveButton) saveButton.disabled = false;
   }
@@ -961,28 +995,34 @@ async function deleteLevelQuestion(qId) {
   const warning = activeChallenge
     ? 'سيتم تحويل البرنامج إلى مسودة لحماية الطلاب. سيُزال السؤال من هذه المرحلة فقط، وستبقى النتائج والأسئلة المستخدمة في أنشطة أخرى محفوظة. هل تريد المتابعة؟'
     : 'سيُزال السؤال من هذه المرحلة فقط، وستبقى النتائج والأسئلة المستخدمة في أنشطة أخرى محفوظة. هل تريد المتابعة؟';
-  if (!confirm(warning)) return;
-  try {
-    if (activeChallenge) {
-      await setChallengeToDraft(editingChallengeId);
-      document.getElementById('chal-status').value = 'draft';
+  showConfirmModal({
+    title: 'حذف السؤال',
+    message: warning,
+    confirmText: 'نعم، حذف السؤال',
+    confirmClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        if (activeChallenge) {
+          await setChallengeToDraft(editingChallengeId);
+          document.getElementById('chal-status').value = 'draft';
+        }
+        const { data, error } = await supabase
+          .from('challenge_questions')
+          .delete()
+          .eq('challenge_level_id', editingLevelId)
+          .eq('question_id', qId)
+          .select('question_id')
+          .single();
+        if (error) throw error;
+        if (!data) throw new Error('Question removal was not confirmed');
+        Toast.success('تم حذف السؤال بنجاح');
+        await loadChallengeLevels(editingChallengeId);
+      } catch (err) {
+        console.error('Error removing challenge question:', err);
+        Toast.error('تعذر حذف السؤال من المرحلة. لم تُحذف بيانات السؤال أو النتائج.');
+      }
     }
-    const { data, error } = await supabase
-      .from('challenge_questions')
-      .delete()
-      .eq('challenge_level_id', editingLevelId)
-      .eq('question_id', qId)
-      .select('question_id')
-      .single();
-    if (error) throw error;
-    if (!data) throw new Error('Question removal was not confirmed');
-
-    window.Toast?.success('تم حذف السؤال بنجاح');
-    await loadChallengeLevels(editingChallengeId);
-  } catch (err) {
-    console.error('Error removing challenge question:', err);
-    window.Toast?.error('تعذر حذف السؤال من المرحلة. لم تُحذف بيانات السؤال أو النتائج.');
-  }
+  });
 }
 
 async function moveLevelQuestion(qId, direction) {
@@ -1023,10 +1063,10 @@ async function moveLevelQuestion(qId, direction) {
     [current.order_num, next.order_num] = [next.order_num, current.order_num];
     currentLevelQuestions.sort((a, b) => a.order_num - b.order_num);
     renderLevelQuestionsList();
-    window.Toast?.success('تم حفظ ترتيب الأسئلة');
+    Toast.success('تم حفظ ترتيب الأسئلة');
   } catch (err) {
     console.error('Error reordering challenge questions:', err);
-    window.Toast?.error('تعذر حفظ ترتيب الأسئلة. حاول مرة أخرى.');
+    Toast.error('تعذر حفظ ترتيب الأسئلة. حاول مرة أخرى.');
   }
 }
 
