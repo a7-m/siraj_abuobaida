@@ -1,0 +1,45 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "إنشاء صفحة teacher-classes.html مع واجهة إدارة الصفوف والشعب CRUD كاملة وتحديث navigation",
+  "status": "completed",
+  "steps": [
+    "إنشاء c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\teacher-classes.html - صفحة HTML كاملة مع هيكل يطابق teacher-users.html: header مع hamburger menu وtheme toggle، جدول لعرض الصفوف والشعب، modals للإضافة والتعديل، filters للبحث والتصفية، وpagination. استخدم نفس الـ CSS classes (.td-layout, .td-sidebar, .td-main, .td-table-wrapper). العنوان: 'إدارة شعب المدرسة'. يجب أن يكون RTL بالكامل ويدعم الثيمين.",
+    "إنشاء c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\scripts\\teacher-classes.js - سكريبت كامل يتبع نمط teacher-users.js: استدعاء initTeacherAdmin('classes') في DOMContentLoaded، تحميل البيانات من school_sections و school_grades (إن وجد)، renderTable مع pagination، openAddModal و openEditModal، saveGrade/saveSection مع Supabase upsert، deleteGrade/deleteSection مع showConfirmModal، search/filter functionality. يجب منع حذف صف أو شعبة مرتبطة بطلاب (فحص profiles.grade و profiles.section قبل الحذف).",
+    "تعديل c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\src\\scripts\\teacher-nav.js - إضافة entry جديد إلى ADMIN_PAGES array: { key: 'classes', href: 'teacher-classes.html', title: 'إدارة شعب المدرسة', icon: '🏫' }. أدخله بعد 'users' وقبل 'media' للحفاظ على الترتيب المنطقي.",
+    "تصميم UI: جدول يعرض grade (الصف)، section_name (الشعبة)، is_active (حالة التفعيل)، عدد الطلاب (COUNT من profiles WHERE grade=X AND section=Y)، created_at، والإجراءات (تعديل/حذف). Filters: dropdown للصف (all/10/11/12)، search box لاسم الشعبة، toggle للعرض النشطة فقط/الكل. Modal الإضافة: حقول grade (dropdown: العاشر/الحادي عشر/الثاني عشر)، section_name (input text)، is_active (checkbox). Modal التعديل: نفس الحقول مع pre-fill. زر 'تبديل الحالة' في الجدول لتفعيل/تعطيل الشعبة بدون فتح modal.",
+    "إضافة دالة getStudentCount(grade, section) async في teacher-classes.js تستعلم profiles table وتعيد عدد الطلاب. استخدم في renderTable لعرض الأعداد بجوار كل شعبة. عند محاولة الحذف، إذا كان العدد > 0، اعرض رسالة Toast.warning تمنع الحذف وتطلب من المعلم نقل الطلاب أولاً أو حذف ارتباطاتهم.",
+    "معالجة البنية الحالية: school_sections موجود مع أعمدة (id, grade, section_name, is_active, sort_order, created_at). لا حاجة لجدول school_grades منفصل - الصفوف محفوظة كنصوص ('العاشر', 'الحادي عشر', 'الثاني عشر'). profiles.grade و profiles.section نصوص أيضاً. لذلك، لا داعي لـ migration جديد أو FK constraints - البنية الحالية كافية. يمكن إضافة validation في الـ JS للتأكد من أن grade واحد من القيم المسموحة."
+  ],
+  "acceptance_criteria": [
+    "صفحة teacher-classes.html تفتح بنجاح وتعرض sidebar + header + content area",
+    "المعلمون فقط يستطيعون الوصول (auth check via initTeacherAdmin)",
+    "جدول الشعب يعرض جميع الصفوف والشعب من school_sections مع عدد الطلاب لكل شعبة",
+    "Filters تعمل: dropdown الصف يفلتر النتائج، search box يبحث في section_name",
+    "إضافة صف/شعبة جديدة: modal تفتح، حفظ يعمل، Toast success يظهر، الجدول يتحدث",
+    "تعديل شعبة: modal تفتح مع البيانات الحالية، حفظ يعمل، Supabase يُحدّث",
+    "حذف شعبة: showConfirmModal يظهر، إذا لا توجد طلاب، الحذف ينجح، إذا توجد طلاب، Toast.warning يمنع الحذف",
+    "زر تبديل الحالة (is_active) يعمل inline بدون modal",
+    "Pagination يعمل إذا كان عدد الشعب > pageSize",
+    "الصفحة متجاوبة على الجوال والكمبيوتر",
+    "الثيمين (light/dark) يعملان بنجاح",
+    "RTL layout صحيح في جميع العناصر",
+    "Navigation sidebar يعرض 'إدارة شعب المدرسة' مع أيقونة 🏫 ويربط إلى teacher-classes.html"
+  ],
+  "verification": [
+    "فتح c:\\Users\\win 11\\Desktop\\siraj_abuobaida\\teacher-classes.html في المتصفح",
+    "تسجيل دخول كمعلم (يجب أن يكون profiles.role='teacher')",
+    "التحقق من عرض جميع الشعب في الجدول مع أعدادها",
+    "إضافة شعبة جديدة وتأكيد ظهورها في الجدول",
+    "تعديل شعبة موجودة وتأكيد حفظ التغييرات",
+    "محاولة حذف شعبة مرتبطة بطلاب والتأكد من منع الحذف",
+    "حذف شعبة غير مرتبطة بطلاب والتأكد من نجاح الحذف",
+    "اختبار الفلاتر: تصفية حسب الصف، البحث بالشعبة",
+    "تبديل is_active والتأكد من تحديث الحالة",
+    "فتح الصفحة على جوال (responsive test) والتأكد من عمل hamburger menu",
+    "تبديل الثيم (light/dark) والتأكد من تحديث الألوان",
+    "التحقق من ظهور 'إدارة شعب المدرسة' في sidebar navigation"
+  ],
+  "blocked_reason": null,
+  "findings": "✅ جميع المتطلبات تم تنفيذها بنجاح:\n\n1. تم إنشاء teacher-classes.html مع تصميم RTL كامل ومتوافق مع الهاتف والحاسوب\n2. تم إنشاء teacher-classes.js مع جميع عمليات CRUD للشعب الدراسية\n3. تم تحديث teacher-nav.js بإضافة 'إدارة شعب المدرسة' في الموقع الصحيح (بعد users وقبل media)\n4. واجهة المستخدم تحتوي على:\n   - جدول يعرض الصف، اسم الشعبة، عدد الطلاب، الحالة، وتاريخ الإنشاء\n   - فلاتر للبحث والتصفية حسب الصف وحالة التفعيل\n   - زر تبديل حالة التفعيل inline بدون modal\n   - modals للإضافة والتعديل مع جميع الحقول المطلوبة\n   - pagination عند وجود أكثر من 15 شعبة\n5. منطق منع الحذف:\n   - يتم حساب عدد الطلاب لكل شعبة من جدول profiles\n   - عند محاولة حذف شعبة مرتبطة بطلاب، يظهر modal تحذير يمنع الحذف\n   - الرسالة توضح عدد الطلاب وتطلب نقلهم أولاً\n6. التصميم:\n   - يدعم الثيم الفاتح والداكن\n   - RTL بالكامل\n   - متجاوب مع جميع أحجام الشاشات\n   - يتبع نفس patterns الموجودة في teacher-users.html\n\n📝 ملاحظات:\n- البنية الحالية لـ school_sections كافية ولا تحتاج تعديل\n- profiles.grade و profiles.section نصوص تتطابق مع school_sections.grade و school_sections.section_name\n- الـ unique constraint (grade, section_name) موجود ويمنع التكرار\n- RLS policies موجودة: المعلمون فقط يستطيعون إدارة الشعب\n\n✅ الكود جاهز للاختبار اليدوي"
+}

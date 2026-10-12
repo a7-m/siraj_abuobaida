@@ -1,0 +1,11 @@
+{
+  "task_id": "task-school-classes-management",
+  "task_description": "بناء نظام إدارة شعب المدرسة الكامل: صفحة teacher-classes.html جديدة مع إدارة الصفوف والشعب CRUD، ربط الطلاب بالشعب، وتحديث navigation وقاعدة البيانات",
+  "status": "completed",
+  "feature_order": [
+    "FEAT-001",
+    "FEAT-002",
+    "FEAT-003"
+  ],
+  "blocked_reason": null
+}
