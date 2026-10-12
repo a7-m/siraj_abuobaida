@@ -75,7 +75,8 @@ function setupEvents() {
     });
   }
 
-  const triggerLogout = () => {
+  const triggerLogout = (e) => {
+    if (e) e.preventDefault();
     showConfirmModal({
       title: 'تسجيل الخروج',
       message: 'هل أنت متأكد من رغبتك في تسجيل الخروج من لوحة المعلم؟',

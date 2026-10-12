@@ -307,12 +307,36 @@ function setupLogout() {
     });
   };
 
-  // Bind all potential logout triggers
-  const logoutButtons = document.querySelectorAll('#td-logout-btn, #header-logout-btn, #btn-logout, #td-logout, .btn-logout, [data-action="logout"]');
-  logoutButtons.forEach(btn => {
-    // Avoid double binding
-    btn.removeEventListener('click', triggerLogoutConfirm);
-    btn.addEventListener('click', triggerLogoutConfirm);
+  // Make triggerLogoutConfirm globally accessible for dynamic buttons
+  window._triggerLogoutConfirm = triggerLogoutConfirm;
+
+  // Bind all potential logout triggers present in DOM right now
+  const bindLogoutButtons = () => {
+    const logoutButtons = document.querySelectorAll('#td-logout-btn, #header-logout-btn, #btn-logout, #td-logout, #btn-hero-logout, #btn-danger-logout, .btn-logout, [data-action="logout"]');
+    logoutButtons.forEach(btn => {
+      if (!btn._logoutBound) {
+        btn._logoutBound = true;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          triggerLogoutConfirm();
+        });
+      }
+    });
+  };
+
+  // Bind immediately for any buttons already in DOM
+  bindLogoutButtons();
+
+  // Also bind after a short delay to catch dynamically-injected sidebar buttons
+  setTimeout(bindLogoutButtons, 200);
+
+  // Use event delegation on document as a fallback for all logout-related clicks not yet bound
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#td-logout-btn, #header-logout-btn, #btn-logout, #td-logout, #btn-hero-logout, #btn-danger-logout, .btn-logout, [data-action="logout"]');
+    if (btn && !btn._logoutBound) {
+      e.preventDefault();
+      triggerLogoutConfirm();
+    }
   });
 }
 

@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Fix logout buttons in three locations: sidebar (teacher-nav.js, button ID 'td-logout-btn'), header (injected dynamically by teacher-nav.js, ID 'header-logout-btn'), and profile page (teacher-profile.js, IDs 'btn-hero-logout' and 'btn-danger-logout'). Root cause: setupLogout function in teacher-nav.js binds logout buttons via querySelectorAll, but sidebar button may be rendered dynamically after setupLogout is called. Also verify auth.js logout function clears session correctly.",
+  "status": "completed",
+  "steps": [
+    "Read teacher-nav.js lines 240-290 (setupLogout function). The function uses querySelectorAll to bind all logout buttons ('#td-logout-btn, #header-logout-btn, #btn-logout, etc.'). It also uses event delegation on document as fallback. The sidebar is rendered by renderSidebar (lines 90-160), which creates the button with ID 'td-logout-btn'. The header logout button is injected in setupHeaderControls (lines 180-210). Verify timing: setupLogout is called in initTeacherAdmin after sidebar rendering.",
+    "Check if setupLogout is called after renderSidebar completes. If setupLogout is called too early, the sidebar button may not exist yet. Add a setTimeout or call bindLogoutButtons again after renderSidebar.",
+    "Read teacher-profile.js lines 55-75 (setupEvents function). The profile page binds 'btn-hero-logout' and 'btn-danger-logout' to triggerLogout function, which calls logoutTeacher. Verify these buttons exist in the HTML and event listeners are attached.",
+    "Read auth.js lines 80-105 (logout function). The logout function calls supabase.auth.signOut(), clears localStorage keys starting with 'sb-', clears sessionStorage, and removes 'siraj-session'. Verify this is comprehensive enough to clear all Supabase session data.",
+    "Test logout from all three locations: sidebar, header, profile page. Verify confirmation modal appears, user is redirected to login.html, and session is cleared (user cannot navigate back to teacher pages without re-logging in)."
+  ],
+  "acceptance_criteria": [
+    "Logout button in sidebar (td-logout-btn) triggers logout confirmation modal",
+    "Logout button in header (header-logout-btn) triggers logout confirmation modal",
+    "Logout buttons in profile page (btn-hero-logout, btn-danger-logout) trigger logout confirmation modal",
+    "Confirming logout clears Supabase session, localStorage, and sessionStorage",
+    "Confirming logout redirects user to login.html",
+    "After logout, user cannot access teacher pages without re-authenticating"
+  ],
+  "verification": [
+    "Open teacher-dashboard.html, click sidebar logout button → confirmation modal appears → confirm → redirected to login.html",
+    "Open teacher-dashboard.html, click header logout button → confirmation modal appears → confirm → redirected to login.html",
+    "Open teacher-profile.html, click 'تسجيل الخروج' button in hero section → confirmation modal → confirm → redirected to login.html",
+    "Open teacher-profile.html, click red logout button in danger zone → confirmation modal → confirm → redirected to login.html",
+    "After logout, navigate to teacher-dashboard.html directly → should redirect to login.html (no valid session)"
+  ],
+  "blocked_reason": null,
+  "findings": "ROOT CAUSE: Event delegation in setupLogout (teacher-nav.js line 335) had incorrect condition `if (btn && !btn._logoutBound)` which prevented already-bound buttons from triggering via delegation fallback. FIXED: (1) Added e.preventDefault() to direct event listeners in bindLogoutButtons to prevent default button behavior. (2) Kept event delegation with !btn._logoutBound check to serve as fallback for dynamically-added buttons that weren't caught by direct binding. (3) Added e.preventDefault() to triggerLogout in teacher-profile.js to ensure proper event handling. The dual approach (direct binding + event delegation fallback) ensures all logout buttons work regardless of timing. Auth.js logout function already properly clears Supabase session, localStorage (siraj-session, sb-* keys), and sessionStorage."
+}
