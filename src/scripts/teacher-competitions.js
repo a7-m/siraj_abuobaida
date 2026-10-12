@@ -382,7 +382,8 @@ async function toggleCompetitionStatus(id, currentStatus) {
     window.Toast?.success(`تم تغيير حالة المسابقة إلى ${newStatus === 'active' ? 'نشطة' : 'مسودة'}`);
     loadCompetitions();
   } catch (err) {
-    window.Toast?.error('تعذر تغيير حالة المسابقة');
+    console.error('Error toggling competition status:', err);
+    window.Toast?.error(`تعذر تغيير حالة المسابقة: ${err.message}`);
   }
 }
 
@@ -397,7 +398,8 @@ async function deleteCompetition(id) {
     window.Toast?.success('تم حذف المسابقة بنجاح');
     loadCompetitions();
   } catch (err) {
-    window.Toast?.error('تعذر حذف المسابقة');
+    console.error('Error deleting competition:', err);
+    window.Toast?.error(`تعذر حذف المسابقة: ${err.message}`);
   }
 }
 
@@ -668,20 +670,30 @@ async function saveQuestion() {
 async function deleteQuestion(qId) {
   if (!confirm('هل أنت متأكد من حذف هذا السؤال من المسابقة؟')) return;
   try {
-    // Delete link
-    await supabase
+    // Delete link from competition_questions (question will cascade delete)
+    const { error: linkError } = await supabase
       .from('competition_questions')
       .delete()
       .eq('competition_id', editingCompetitionId)
       .eq('question_id', qId);
 
-    // Delete question record
-    await supabase.from('questions').delete().eq('id', qId);
+    if (linkError) throw linkError;
+
+    // Delete question record if it's not used elsewhere
+    const { error: questionError } = await supabase
+      .from('questions')
+      .delete()
+      .eq('id', qId);
+
+    if (questionError) {
+      console.warn('Question may be used elsewhere:', questionError);
+    }
 
     window.Toast?.success('تم حذف السؤال بنجاح');
     loadCompetitionQuestions(editingCompetitionId);
   } catch (err) {
-    window.Toast?.error('تعذر حذف السؤال');
+    console.error('Error deleting question:', err);
+    window.Toast?.error(`تعذر حذف السؤال: ${err.message}`);
   }
 }
 
