@@ -250,15 +250,47 @@ function resetCoverPreview(url) {
   }
 }
 
-function handleCoverUpload(e) {
+async function handleCoverUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    resetCoverPreview(event.target.result);
-  };
-  reader.readAsDataURL(file);
+  // Validate file type and size
+  if (!file.type.startsWith('image/')) {
+    window.Toast?.error('يرجى اختيار صورة');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) { // 5MB
+    window.Toast?.error('حجم الصورة يجب أن لا يتجاوز 5MB');
+    return;
+  }
+
+  try {
+    // Generate unique filename
+    const timestamp = Date.now();
+    const filename = `competition-covers/${timestamp}-${file.name}`;
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('public_assets')
+      .upload(filename, file, { upsert: false });
+
+    if (error) throw error;
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('public_assets')
+      .getPublicUrl(filename);
+
+    if (urlData?.publicUrl) {
+      resetCoverPreview(urlData.publicUrl);
+      // Store the Storage path for later reference
+      window.currentCoverPath = filename;
+      window.Toast?.success('تم تحميل الصورة بنجاح');
+    }
+  } catch (err) {
+    console.error('Error uploading cover:', err);
+    window.Toast?.error(`تعذر تحميل الصورة: ${err.message}`);
+  }
 }
 
 async function saveCompetition() {
@@ -288,8 +320,12 @@ async function saveCompetition() {
     unit: document.getElementById('comp-track-unit').value || 'سؤال'
   };
 
+  // Get cover URL - use Storage URL or existing database URL
   const coverPreview = document.getElementById('comp-cover-preview');
-  const cover_image_url = (coverPreview && coverPreview.style.display !== 'none') ? coverPreview.src : null;
+  let cover_image_url = null;
+  if (coverPreview && coverPreview.style.display !== 'none' && coverPreview.src) {
+    cover_image_url = coverPreview.src;
+  }
 
   const payload = {
     title,
@@ -327,6 +363,8 @@ async function saveCompetition() {
       document.getElementById('comp-questions-panel').style.display = 'block';
       loadCompetitionQuestions(data.id);
     }
+    // Clear cover path after successful save
+    window.currentCoverPath = null;
   } catch (err) {
     console.error('Error saving competition:', err);
     window.Toast?.error(`حدث خطأ أثناء الحفظ: ${err.message}`);
