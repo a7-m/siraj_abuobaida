@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>إدارة شعب المدرسة | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إدارة الصفوف والشعب في مدرسة أبو عبيدة - إضافة، تعديل، وحذف الشعب الدراسية.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <style>
+    /* Teacher Classes Page Specific Styles */
+    
+    /* Responsive table improvements */
+    @media (max-width: 768px) {
+      .td-table th, .td-table td {
+        padding: 0.75rem 0.75rem;
+        font-size: 0.875rem;
+      }
+      
+      /* Hide less critical columns on mobile */
+      .td-table th:nth-child(5),
+      .td-table td:nth-child(5) {
+        display: none; /* Hide created_at on mobile */
+      }
+      
+      /* Make action buttons more compact */
+      .td-table .btn-sm {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.8rem;
+      }
+      
+      /* Stack action buttons vertically on very small screens */
+      .td-table td .flex {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      /* Even more compact on very small screens */
+      .td-table th, .td-table td {
+        padding: 0.5rem 0.5rem;
+        font-size: 0.8rem;
+      }
+      
+      /* Convert some text buttons to icon-only */
+      .btn-view-students {
+        padding: 0.35rem 0.5rem;
+      }
+      
+      .btn-view-students::before {
+        content: '👥';
+        margin-left: 0;
+      }
+      
+      /* Hide button text on smallest screens, keep icons */
+      @supports (-webkit-line-clamp: 1) {
+        .td-table .btn-sm {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 70px;
+        }
+      }
+    }
+    
+    /* Filter controls responsive */
+    @media (max-width: 768px) {
+      #section-search {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      
+      .flex.gap-2[style*="margin-bottom"] {
+        flex-direction: column;
+        align-items: stretch !important;
+      }
+      
+      #filter-grade {
+        width: 100% !important;
+      }
+    }
+    
+    /* Modal improvements for mobile */
+    @media (max-width: 768px) {
+      .modal-content {
+        max-width: 95vw !important;
+        margin: 1rem;
+      }
+      
+      #students-list-modal .modal-content {
+        padding: 1rem !important;
+      }
+      
+      /* Make students table more compact */
+      #students-list-modal .td-table th,
+      #students-list-modal .td-table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+      }
+      
+      /* Hide email column on mobile in students modal */
+      #students-list-modal .td-table th:nth-child(3),
+      #students-list-modal .td-table td:nth-child(3) {
+        display: none;
+      }
+    }
+  </style>
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">🏫 إدارة شعب المدرسة</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+          <button id="header-logout-btn" class="btn btn-outline-danger btn-sm header-logout-btn" title="تسجيل الخروج">
+            🚪 خروج
+          </button>
+        </div>
+      </header>
+      
+      <div class="td-content">
+        <!-- List View -->
+        <div id="classes-list-view">
+          <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="margin: 0 0 0.25rem;">الصفوف والشعب الدراسية</h3>
+              <p style="margin: 0; color: var(--color-text-muted); font-size: 0.88rem;">
+                عرض جميع شعب المدرسة، إضافة شعب جديدة، تعديل البيانات، وإدارة حالة التفعيل.
+              </p>
+            </div>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <button id="btn-add-section" class="btn btn-primary">
+                ➕ إضافة شعبة جديدة
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="flex gap-2" style="margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <input type="text" id="section-search" class="form-control" placeholder="🔍 بحث باسم الشعبة..." style="width: 220px;">
+            <select id="filter-grade" class="form-control" style="width: auto;">
+              <option value="all">جميع الصفوف</option>
+              <option value="العاشر">الصف العاشر</option>
+              <option value="الحادي عشر">الصف الحادي عشر</option>
+              <option value="الثاني عشر">الصف الثاني عشر</option>
+            </select>
+            <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--color-bg-alt); border-radius: var(--radius-md); cursor: pointer;">
+              <input type="checkbox" id="filter-active" checked style="cursor: pointer;">
+              <span>الشعب النشطة فقط</span>
+            </label>
+            <button id="btn-clear-filters" class="btn btn-outline btn-sm" style="display: none;">
+              🔄 مسح الفلاتر
+            </button>
+          </div>
+          
+          <div class="td-table-wrapper">
+            <table class="td-table">
+              <thead>
+                <tr>
+                  <th>الصف</th>
+                  <th>اسم الشعبة</th>
+                  <th>عدد الطلاب</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="sections-table-body">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">جاري تحميل الشعب الدراسية...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="sections-pagination"></div>
+        </div>
+
+        <!-- Add/Edit Section Modal -->
+        <div id="section-modal" class="modal">
+          <div class="modal-content card" style="max-width: 500px; padding: 2rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+              <h3 id="section-modal-title" style="margin: 0; font-size: 1.2rem;">إضافة شعبة جديدة</h3>
+              <button id="btn-close-section-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="section-grade">الصف الدراسي *</label>
+              <select id="section-grade" class="form-control">
+                <option value="">-- اختر الصف --</option>
+                <option value="العاشر">الصف العاشر</option>
+                <option value="الحادي عشر">الصف الحادي عشر</option>
+                <option value="الثاني عشر">الصف الثاني عشر</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="section-name">اسم الشعبة *</label>
+              <input type="text" id="section-name" class="form-control" placeholder="مثال: 1">
+              <small style="color: var(--color-text-muted); font-size: 0.85rem;">اسم الشعبة (عادةً رقم أو حرف مثل 1، 2، أ، ب، إلخ)</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="section-sort-order">ترتيب العرض</label>
+              <input type="number" id="section-sort-order" class="form-control" value="1" min="0">
+              <small style="color: var(--color-text-muted); font-size: 0.85rem;">يستخدم لترتيب الشعب عند العرض (الأصغر يظهر أولاً)</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+              <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                <input type="checkbox" id="section-is-active" checked style="width: 18px; height: 18px; cursor: pointer;">
+                <span class="form-label" style="margin: 0;">الشعبة نشطة ومفعّلة</span>
+              </label>
+              <small style="color: var(--color-text-muted); font-size: 0.85rem; margin-right: 1.75rem;">
+                إلغاء التفعيل يخفي الشعبة من قوائم الاختيار للطلاب
+              </small>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-section-modal" class="btn btn-outline">إلغاء</button>
+              <button id="btn-save-section" class="btn btn-primary">💾 حفظ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students List Modal -->
+        <div id="students-list-modal" class="modal">
+          <div class="modal-content card" style="max-width: 900px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+              <h3 id="students-modal-title" style="margin: 0; font-size: 1.2rem;">👥 طلاب الصف</h3>
+              <button id="btn-close-students-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <div class="flex justify-between items-center" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="color: var(--color-text-muted); font-size: 0.9rem;">
+                <span id="students-count-display">عدد الطلاب: 0</span>
+              </div>
+              <div class="flex gap-2">
+                <button id="btn-transfer-selected" class="btn btn-primary btn-sm" style="display: none;">
+                  🔄 نقل المحددين
+                </button>
+              </div>
+            </div>
+
+            <div class="td-table-wrapper">
+              <table class="td-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">
+                      <input type="checkbox" id="select-all-students" style="cursor: pointer; width: 18px; height: 18px;">
+                    </th>
+                    <th>الاسم الكامل</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>تاريخ الانضمام</th>
+                    <th>الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body">
+                  <tr><td colspan="5" style="text-align: center; padding: 2rem;">جاري تحميل الطلاب...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transfer Student Modal -->
+        <div id="transfer-student-modal" class="modal">
+          <div class="modal-content card" style="max-width: 500px; padding: 2rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+              <h3 id="transfer-modal-title" style="margin: 0; font-size: 1.2rem;">🔄 نقل طالب</h3>
+              <button id="btn-close-transfer-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--color-bg-alt); border-radius: var(--radius-md);">
+              <div style="color: var(--color-text-muted); font-size: 0.88rem; margin-bottom: 0.25rem;">نقل من:</div>
+              <div id="transfer-from-display" style="font-weight: 600; font-size: 1rem;">الصف - الشعبة</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="transfer-new-grade">إلى الصف الجديد *</label>
+              <select id="transfer-new-grade" class="form-control">
+                <option value="">-- اختر الصف --</option>
+                <option value="العاشر">الصف العاشر</option>
+                <option value="الحادي عشر">الصف الحادي عشر</option>
+                <option value="الثاني عشر">الصف الثاني عشر</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+              <label class="form-label" for="transfer-new-section">إلى الشعبة الجديدة *</label>
+              <select id="transfer-new-section" class="form-control" disabled>
+                <option value="">-- اختر الصف أولاً --</option>
+              </select>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-transfer-modal" class="btn btn-outline">إلغاء</button>
+              <button id="btn-confirm-transfer" class="btn btn-primary">✓ تأكيد النقل</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cannot Delete Modal -->
+        <div id="cannot-delete-modal" class="modal">
+          <div class="modal-content card" style="max-width: 500px; padding: 2rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+              <h3 style="margin: 0; font-size: 1.2rem;">⚠️ لا يمكن حذف الشعبة</h3>
+              <button id="btn-close-cannot-delete-modal" class="btn-icon" style="font-size: 1.5rem;">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <p id="cannot-delete-message" style="margin-bottom: 1rem; line-height: 1.6;">
+                لا يمكن حذف الشعبة لأنها مرتبطة بطلاب.
+              </p>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button id="btn-cancel-cannot-delete" class="btn btn-outline">إلغاء</button>
+              <button id="btn-view-students-from-delete" class="btn btn-primary">👥 عرض الطلاب</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/scripts/teacher-classes.js"></script>
+</body>
+</html>

@@ -18,6 +18,7 @@ export const ADMIN_PAGES = [
   { key: 'research', href: 'teacher-research.html', title: 'البحث العلمي والتحكيم', icon: '🔬' },
   { key: 'participants', href: 'teacher-participants.html', title: 'سجل المشاركين', icon: '👥' },
   { key: 'users', href: 'teacher-users.html', title: 'إدارة المستخدمين والطلاب', icon: '🎓' },
+  { key: 'classes', href: 'teacher-classes.html', title: 'إدارة شعب المدرسة', icon: '🏫' },
   { key: 'media', href: 'teacher-media.html', title: 'الملفات والوسائط', icon: '📁' },
   { key: 'profile', href: 'teacher-profile.html', title: 'الملف الشخصي', icon: '👤' }
 ];
