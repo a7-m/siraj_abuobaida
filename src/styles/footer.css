@@ -1,0 +1,94 @@
+/**
+ * Footer Component Styles
+ * ────────────────────────────────────────────────────────────────────────
+ * تنسيقات التذييل الرسمي لمنصة سراج
+ * تصميم بسيط وأنيق يناسب منصة تعليمية مدرسية
+ */
+
+.siraj-footer {
+  position: relative;
+  width: 100%;
+  margin-top: auto;
+  padding: 2rem 1.5rem;
+  background-color: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border-light);
+  z-index: 1;
+}
+
+.siraj-footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.siraj-footer-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.siraj-footer-names {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  line-height: 1.5;
+}
+
+.siraj-footer-supervision {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* توافق مع الشاشات الصغيرة */
+@media (max-width: 768px) {
+  .siraj-footer {
+    padding: 1.5rem 1rem;
+  }
+  
+  .siraj-footer-label {
+    font-size: 0.8rem;
+  }
+  
+  .siraj-footer-names {
+    font-size: 1rem;
+  }
+  
+  .siraj-footer-supervision {
+    font-size: 0.8rem;
+  }
+}
+
+/* التوافق مع الصفحات الطويلة والقصيرة */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content,
+.td-content,
+main {
+  flex: 1;
+}
+
+/* ضمان عدم تداخل التذييل مع المحتوى */
+.siraj-footer {
+  margin-top: 3rem;
+}
+
+/* تأكد من ظهور التذييل في جميع الوضعيات */
+[data-theme="dark"] .siraj-footer {
+  background-color: var(--color-bg-secondary);
+  border-top-color: var(--color-border-light);
+}
+
+[data-theme="dark"] .siraj-footer-names {
+  color: var(--color-accent);
+}

@@ -5,6 +5,8 @@ import ThemeManager from './theme.js';
 import { authService } from '../services/auth.js';
 import { Toast } from '../utils/toast.js';
 import { initDotGrid, shouldEnableDotGrid } from './dotgrid.js';
+import { initPageTransitions } from './page-transitions.js';
+import { initFooter } from './footer.js';
 
 // Attach Toast to window for easy access in inline HTML scripts
 window.Toast = Toast;
@@ -15,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (shouldEnableDotGrid()) {
     initDotGrid();
   }
+
+  // تهيئة انتقالات الصفحات
+  initPageTransitions();
+
+  // تهيئة التذييل الرسمي
+  initFooter();
   
   const hamburgerBtn = document.getElementById('hamburger-btn');
   const mobileMenu = document.getElementById('mobile-menu');

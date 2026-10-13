@@ -1,0 +1,65 @@
+/**
+ * Page Transitions CSS
+ * ────────────────────────────────────────────────────────────────────────
+ * تنسيقات انتقالات الصفحات السلسة
+ * مصممة لتكون سريعة، هادئة، ومناسبة لمنصة تعليمية
+ */
+
+/* View Transition API Animations */
+@media (prefers-reduced-motion: no-preference) {
+  /* الانتقال الافتراضي للصفحات */
+  ::view-transition-old(root) {
+    animation: fade-out 220ms ease-out;
+  }
+
+  ::view-transition-new(root) {
+    animation: fade-in 220ms ease-in;
+  }
+
+  /* حركات التلاشي */
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* تأثير إضافي خفيف للانتقال */
+  ::view-transition-old(root) {
+    transform: translateY(0);
+  }
+
+  ::view-transition-new(root) {
+    animation: slide-in-fade 220ms ease-out;
+  }
+
+  @keyframes slide-in-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* احتياطي للمتصفحات غير الداعمة */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
