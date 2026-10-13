@@ -227,8 +227,8 @@ class DevelopController {
 
     this.renderLevelsList();
 
-    // Mandatorily prompt student identity review on page entry
-    studentIdentity.requireVerification({ activityName: 'برنامج طوّر نفسك' });
+    // Silently verify student identity on page entry (won't show modal if data exists)
+    await studentIdentity.requireVerification({ activityName: 'برنامج طوّر نفسك' });
   }
 
   // ── Data Loading ───────────────────────────────────────────

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار إصلاح هوية الطالب</title>
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <style>
+    .test-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+    }
+    .test-section {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+    }
+    .test-btn {
+      margin: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--color-accent);
+      background: var(--color-accent);
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .test-btn:hover {
+      opacity: 0.9;
+    }
+    .test-btn-secondary {
+      background: transparent;
+      color: var(--color-accent);
+    }
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 6px;
+      background: var(--color-bg);
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1 style="text-align: center; margin-bottom: 2rem;">🧪 اختبار إصلاح هوية الطالب</h1>
+    
+    <div class="test-section">
+      <h2>1. فحص البيانات المحفوظة</h2>
+      <button class="test-btn" onclick="checkStoredIdentity()">فحص localStorage</button>
+      <div id="result-stored" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>2. اختبار requireVerification (لن يظهر Modal إذا كانت البيانات موجودة)</h2>
+      <button class="test-btn" onclick="testRequireVerification()">اختبار requireVerification</button>
+      <button class="test-btn test-btn-secondary" onclick="testRequireVerificationForce()">إجبار عرض Modal</button>
+      <div id="result-verify" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>3. مسح البيانات (للاختبار فقط)</h2>
+      <button class="test-btn test-btn-secondary" onclick="clearIdentity()">مسح جميع البيانات المحفوظة</button>
+      <div id="result-clear" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>4. اختبار سيناريوهات مختلفة</h2>
+      <button class="test-btn" onclick="testScenario1()">سيناريو 1: طالب جديد (بدون بيانات)</button>
+      <button class="test-btn" onclick="testScenario2()">سيناريو 2: طالب عائد (بيانات محفوظة)</button>
+      <button class="test-btn" onclick="testScenario3()">سيناريو 3: تحديث الصفحة</button>
+      <div id="result-scenario" class="result" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { studentIdentity } from './src/utils/student-identity.js';
+
+    window.checkStoredIdentity = function() {
+      const stored = studentIdentity.getStoredIdentity();
+      const result = document.getElementById('result-stored');
+      result.style.display = 'block';
+      result.textContent = JSON.stringify(stored, null, 2);
+    };
+
+    window.testRequireVerification = async function() {
+      const result = document.getElementById('result-verify');
+      result.style.display = 'block';
+      result.textContent = 'جاري الاختبار... (إذا لم يظهر Modal، فالإصلاح نجح!)';
+      
+      const identity = await studentIdentity.requireVerification({ 
+        activityName: 'اختبار تجريبي' 
+      });
+      
+      result.textContent = 'النتيجة:\n' + JSON.stringify(identity, null, 2);
+    };
+
+    window.testRequireVerificationForce = async function() {
+      const result = document.getElementById('result-verify');
+      result.style.display = 'block';
+      result.textContent = 'جاري الاختبار... (يجب أن يظهر Modal)';
+      
+      const identity = await studentIdentity.requireVerification({ 
+        activityName: 'اختبار إجباري',
+        forcePrompt: true 
+      });
+      
+      result.textContent = 'النتيجة:\n' + JSON.stringify(identity, null, 2);
+    };
+
+    window.clearIdentity = function() {
+      localStorage.removeItem('siraj_verified_student');
+      localStorage.removeItem('siraj_guest_info');
+      studentIdentity._currentVerified = null;
+      
+      const result = document.getElementById('result-clear');
+      result.style.display = 'block';
+      result.textContent = '✅ تم مسح جميع البيانات المحفوظة';
+    };
+
+    window.testScenario1 = async function() {
+      const result = document.getElementById('result-scenario');
+      result.style.display = 'block';
+      result.textContent = 'سيناريو 1: مسح البيانات وإعادة الاختبار...';
+      
+      // Clear data first
+      localStorage.removeItem('siraj_verified_student');
+      localStorage.removeItem('siraj_guest_info');
+      studentIdentity._currentVerified = null;
+      
+      result.textContent += '\n✅ تم مسح البيانات\n⏳ اختبار requireVerification...';
+      
+      const identity = await studentIdentity.requireVerification({ 
+        activityName: 'سيناريو طالب جديد' 
+      });
+      
+      result.textContent += '\n✅ تم إدخال البيانات بنجاح!\n' + JSON.stringify(identity, null, 2);
+    };
+
+    window.testScenario2 = async function() {
+      const result = document.getElementById('result-scenario');
+      result.style.display = 'block';
+      result.textContent = 'سيناريو 2: اختبار مع بيانات محفوظة مسبقاً...';
+      
+      const identity = await studentIdentity.requireVerification({ 
+        activityName: 'سيناريو طالب عائد' 
+      });
+      
+      result.textContent = 'النتيجة: ' + 
+        (studentIdentity._currentVerified ? 
+          '✅ تم استخدام البيانات المحفوظة (لم يظهر Modal)' : 
+          '❌ ظهر Modal (المشكلة لم تُحل)') +
+        '\n\nالبيانات:\n' + JSON.stringify(identity, null, 2);
+    };
+
+    window.testScenario3 = function() {
+      const result = document.getElementById('result-scenario');
+      result.style.display = 'block';
+      result.textContent = '⏳ سيتم تحديث الصفحة خلال 3 ثوانٍ...';
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    };
+
+    // Auto-test on load
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('🧪 صفحة اختبار جاهزة');
+      console.log('📊 فحص البيانات المحفوظة...');
+      checkStoredIdentity();
+    });
+  </script>
+</body>
+</html>

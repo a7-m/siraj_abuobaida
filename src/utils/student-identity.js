@@ -190,35 +190,36 @@ export const studentIdentity = {
     // Level 2: Check localStorage (persists across page reloads)
     const storedIdentity = this.getStoredIdentity();
     
+    // For BOTH logged-in AND guest users: check if localStorage has valid, complete data
+    const isLocalStorageComplete = !!(
+      storedIdentity.name && 
+      storedIdentity.grade && 
+      storedIdentity.section &&
+      storedIdentity.verifiedAt
+    );
+
+    if (isLocalStorageComplete && !forcePrompt) {
+      // localStorage has complete data, use it directly!
+      const verifiedIdentity = {
+        name: storedIdentity.name,
+        schoolType: storedIdentity.schoolType || 'abu_obaida',
+        schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
+        grade: storedIdentity.grade,
+        section: storedIdentity.section,
+        sessionId: storedIdentity.sessionId || generateUUID(),
+        verifiedAt: storedIdentity.verifiedAt,
+        email: user?.email,
+        isRegistered: !!user
+      };
+
+      // Cache it for this session
+      this._currentVerified = verifiedIdentity;
+      
+      console.log('✅ Identity from localStorage (no modal needed)');
+      return verifiedIdentity;
+    }
+    
     if (user && !forcePrompt) {
-      // For logged-in users: check if localStorage has valid, complete data
-      const isLocalStorageComplete = !!(
-        storedIdentity.name && 
-        storedIdentity.grade && 
-        storedIdentity.section &&
-        storedIdentity.verifiedAt
-      );
-
-      if (isLocalStorageComplete) {
-        // localStorage has complete data, use it directly!
-        const verifiedIdentity = {
-          name: storedIdentity.name,
-          schoolType: storedIdentity.schoolType || 'abu_obaida',
-          schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
-          grade: storedIdentity.grade,
-          section: storedIdentity.section,
-          sessionId: storedIdentity.sessionId || generateUUID(),
-          verifiedAt: storedIdentity.verifiedAt,
-          email: user.email,
-          isRegistered: true
-        };
-
-        // Cache it for this session
-        this._currentVerified = verifiedIdentity;
-        
-        console.log('✅ Identity from localStorage (no API call needed)');
-        return verifiedIdentity;
-      }
 
       // Level 3: localStorage incomplete or missing, fetch from Supabase
       console.log('⚠️ localStorage incomplete, fetching from Supabase...');
@@ -283,11 +284,11 @@ export const studentIdentity = {
       }
     }
 
-    // Show modal if:
-    // 1. User is guest (not logged in)
-    // 2. User is logged in but profile incomplete
+    // Show modal ONLY if:
+    // 1. User is guest AND localStorage is incomplete
+    // 2. User is logged in AND profile incomplete in both localStorage AND Supabase
     // 3. forcePrompt=true
-    console.log('⚠️ Showing verification modal');
+    console.log('⚠️ Showing verification modal - data incomplete');
     return new Promise((resolve) => {
       this._renderModal({
         activityName,

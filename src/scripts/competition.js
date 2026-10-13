@@ -586,8 +586,8 @@ class CompetitionController {
     await this._loadAll();
     this.renderList();
 
-    // Mandatorily prompt student identity review on page entry
-    studentIdentity.requireVerification({ activityName: 'مسابقة السراج' });
+    // Silently verify student identity on page entry (won't show modal if data exists)
+    await studentIdentity.requireVerification({ activityName: 'مسابقة السراج' });
   }
 
   // ── Data ─────────────────────────────────────────────────
