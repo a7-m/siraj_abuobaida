@@ -1,22 +1,167 @@
 /**
- * Page Transitions CSS
+ * Advanced Page Transitions System — سراج مدرسة أبو عبيدة
  * ────────────────────────────────────────────────────────────────────────
- * تنسيقات انتقالات الصفحات السلسة
- * مصممة لتكون سريعة، هادئة، ومناسبة لمنصة تعليمية
+ * نظام انتقالات متقدم وموحّد مستوحى من سلاسة تطبيقات Apple
+ * 
+ * Features:
+ * • انتقالات جانبية ذكية تتبع ترتيب التنقل
+ * • انتقالات رأسية للنماذج واللوحات المنبثقة
+ * • دعم الثيم الفاتح والداكن
+ * • يحترم إعدادات تقليل الحركة
+ * • متوافق مع الأجهزة المحمولة وسطح المكتب
  */
 
-/* View Transition API Animations */
+/* ═══════════════════════════════════════════════════════════════
+   1. الانتقالات الجانبية للصفحات الرئيسية
+   ═══════════════════════════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: no-preference) {
-  /* الانتقال الافتراضي للصفحات */
-  ::view-transition-old(root) {
-    animation: fade-out 220ms ease-out;
-  }
-
+  
+  /* الانتقال الافتراضي - تلاشي بسيط */
+  ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation: fade-in 220ms ease-in;
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* حركات التلاشي */
+  /* انتقال للأمام (إلى صفحة تالية في الترتيب) - من اليمين لليسار */
+  html[data-transition="forward"] {
+    ::view-transition-old(root) {
+      animation-name: slide-out-to-left;
+    }
+    ::view-transition-new(root) {
+      animation-name: slide-in-from-right;
+    }
+  }
+
+  /* انتقال للخلف (إلى صفحة سابقة في الترتيب) - من اليسار لليمين */
+  html[data-transition="backward"] {
+    ::view-transition-old(root) {
+      animation-name: slide-out-to-right;
+    }
+    ::view-transition-new(root) {
+      animation-name: slide-in-from-left;
+    }
+  }
+
+  /* انتقال رأسي لتسجيل الدخول والنماذج - من الأسفل للأعلى */
+  html[data-transition="modal-up"] {
+    ::view-transition-old(root) {
+      animation-name: fade-out-stay;
+      animation-duration: 280ms;
+    }
+    ::view-transition-new(root) {
+      animation-name: slide-up-from-bottom;
+      animation-duration: 320ms;
+    }
+  }
+
+  /* انتقال رأسي عكسي - من الأعلى للأسفل */
+  html[data-transition="modal-down"] {
+    ::view-transition-old(root) {
+      animation-name: slide-down-to-bottom;
+      animation-duration: 280ms;
+    }
+    ::view-transition-new(root) {
+      animation-name: fade-in-stay;
+      animation-duration: 280ms;
+    }
+  }
+
+  /* انتقال محايد للحالات الأخرى */
+  html[data-transition="neutral"] {
+    ::view-transition-old(root) {
+      animation-name: fade-out;
+    }
+    ::view-transition-new(root) {
+      animation-name: fade-in;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     2. Keyframes - الحركات الجانبية
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* انزلاق إلى اليسار */
+  @keyframes slide-out-to-left {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(-20%);
+      opacity: 0;
+    }
+  }
+
+  /* انزلاق من اليمين */
+  @keyframes slide-in-from-right {
+    from {
+      transform: translateX(20%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* انزلاق إلى اليمين */
+  @keyframes slide-out-to-right {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(20%);
+      opacity: 0;
+    }
+  }
+
+  /* انزلاق من اليسار */
+  @keyframes slide-in-from-left {
+    from {
+      transform: translateX(-20%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     3. Keyframes - الحركات الرأسية
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* انزلاق من الأسفل للأعلى (للوحات المنبثقة) */
+  @keyframes slide-up-from-bottom {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* انزلاق من الأعلى للأسفل (إغلاق اللوحات) */
+  @keyframes slide-down-to-bottom {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     4. Keyframes - التلاشي
+     ═══════════════════════════════════════════════════════════════ */
+
   @keyframes fade-out {
     from {
       opacity: 1;
@@ -35,31 +180,127 @@
     }
   }
 
-  /* تأثير إضافي خفيف للانتقال */
-  ::view-transition-old(root) {
-    transform: translateY(0);
-  }
-
-  ::view-transition-new(root) {
-    animation: slide-in-fade 220ms ease-out;
-  }
-
-  @keyframes slide-in-fade {
+  /* تلاشي مع الثبات (للصفحة الخلفية) */
+  @keyframes fade-out-stay {
     from {
-      opacity: 0;
-      transform: translateY(8px);
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0.3;
+      transform: scale(0.98);
+    }
+  }
+
+  @keyframes fade-in-stay {
+    from {
+      opacity: 0.3;
+      transform: scale(0.98);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: scale(1);
     }
   }
 }
 
-/* احتياطي للمتصفحات غير الداعمة */
+/* ═══════════════════════════════════════════════════════════════
+   5. دعم الأجهزة المحمولة
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* تقليل نسبة الحركة الجانبية على الشاشات الصغيرة */
+    @keyframes slide-out-to-left {
+      to {
+        transform: translateX(-15%);
+      }
+    }
+
+    @keyframes slide-in-from-right {
+      from {
+        transform: translateX(15%);
+      }
+    }
+
+    @keyframes slide-out-to-right {
+      to {
+        transform: translateX(15%);
+      }
+    }
+
+    @keyframes slide-in-from-left {
+      from {
+        transform: translateX(-15%);
+      }
+    }
+
+    /* تسريع الانتقالات قليلاً على الجوال */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 250ms;
+    }
+
+    html[data-transition="modal-up"] ::view-transition-new(root) {
+      animation-duration: 280ms;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6. دعم تقليل الحركة (Accessibility)
+   ═══════════════════════════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: reduce) {
+  /* إلغاء جميع الحركات واستبدالها بانتقال تلاشي سريع */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none !important;
+  }
+
+  ::view-transition-old(root) {
+    animation: simple-fade-out 150ms ease-out !important;
+  }
+
+  ::view-transition-new(root) {
+    animation: simple-fade-in 150ms ease-in !important;
+  }
+
+  @keyframes simple-fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes simple-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   7. تأثيرات إضافية للتحسين البصري
+   ═══════════════════════════════════════════════════════════════ */
+
+/* تحسين جودة العرض أثناء الحركة */
+::view-transition-old(root),
+::view-transition-new(root) {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* منع التمزق البصري */
+::view-transition-image-pair(root) {
+  isolation: isolate;
+}
+
+/* تحسين الأداء على الأجهزة المحمولة */
+@media (hover: none) and (pointer: coarse) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    will-change: transform, opacity;
   }
 }

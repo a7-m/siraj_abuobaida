@@ -1085,3 +1085,349 @@ select:focus {
 
 
 
+
+/* ═══════════════════════════════════════════════════════════════
+   Student Identity Modal - Enhanced Animations
+   ═══════════════════════════════════════════════════════════════ */
+
+.siraj-identity-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  overflow-y: auto;
+  
+  /* انتقال سلس عند الظهور */
+  animation: modal-backdrop-fade-in 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.siraj-identity-backdrop.si-closing {
+  animation: modal-backdrop-fade-out 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-backdrop-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.siraj-identity-modal {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  
+  /* حركة الانزلاق من الأسفل */
+  animation: modal-slide-up 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center bottom;
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.siraj-identity-backdrop.si-closing .siraj-identity-modal {
+  animation: modal-slide-down 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.si-modal-header {
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.si-icon-badge {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 12px rgba(11, 83, 69, 0.2);
+}
+
+.si-header-text h2 {
+  font-size: 1.5rem;
+  color: var(--color-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.si-header-text p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.si-form {
+  padding: 2rem;
+}
+
+.si-field {
+  margin-bottom: 1.25rem;
+}
+
+.si-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.si-req {
+  color: var(--color-danger, #dc2626);
+}
+
+.si-input,
+.si-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.si-input:focus,
+.si-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(11, 83, 69, 0.1);
+}
+
+.si-radio-pills {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.si-radio-pill {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+
+.si-radio-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.si-radio-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-bg);
+  transition: all 0.2s;
+  font-weight: 600;
+  gap: 0.5rem;
+}
+
+.si-radio-pill.active {
+  border-color: var(--color-accent);
+  background-color: rgba(11, 83, 69, 0.05);
+  color: var(--color-accent);
+}
+
+.si-radio-pill:hover {
+  border-color: var(--color-accent);
+}
+
+.si-pill-dot {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.si-radio-pill.active .si-pill-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 50%;
+  display: block;
+}
+
+.si-branch-box {
+  padding: 1.25rem;
+  background-color: rgba(11, 83, 69, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  margin-top: 1rem;
+}
+
+.si-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.si-field-hint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.si-account-notice {
+  background-color: rgba(79, 70, 229, 0.05);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.si-notice-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.si-notice-row a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.si-actions {
+  margin-top: 2rem;
+}
+
+.si-submit-btn {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.si-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(11, 83, 69, 0.25);
+}
+
+.si-btn-arrow {
+  transition: transform 0.2s;
+}
+
+.si-submit-btn:hover .si-btn-arrow {
+  transform: translateX(-3px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .siraj-identity-modal {
+    max-height: 95vh;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    align-self: flex-end;
+  }
+
+  .si-modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .si-form {
+    padding: 1.5rem;
+  }
+
+  .si-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .si-radio-pills {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .siraj-identity-backdrop,
+  .siraj-identity-modal,
+  .siraj-identity-backdrop.si-closing,
+  .siraj-identity-backdrop.si-closing .siraj-identity-modal {
+    animation: none !important;
+  }
+
+  .siraj-identity-backdrop {
+    opacity: 1;
+  }
+
+  .siraj-identity-modal {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .si-submit-btn:hover {
+    transform: none;
+  }
+
+  .si-submit-btn:hover .si-btn-arrow {
+    transform: none;
+  }
+}

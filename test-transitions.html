@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار الانتقالات | سراج</title>
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/page-transitions.css">
+  <style>
+    .test-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 2rem;
+    }
+    .test-section {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-lg);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .test-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .test-link {
+      padding: 1rem;
+      background: var(--color-bg);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      text-align: center;
+      text-decoration: none;
+      color: var(--color-text);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .test-link:hover {
+      border-color: var(--color-accent);
+      background: rgba(11, 83, 69, 0.05);
+    }
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-left: 0.5rem;
+    }
+    .status-ok {
+      background: #22c55e;
+    }
+    .status-warning {
+      background: #f59e0b;
+    }
+  </style>
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <header class="header">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="index.html" class="logo">
+        <img src="./src/assets/images/siraj-logo.png" alt="شعار سراج">
+      </a>
+      <h3 style="color: var(--color-text);">اختبار نظام الانتقالات</h3>
+      <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
+    </div>
+  </header>
+
+  <main class="test-container">
+    <div class="test-section">
+      <h2 style="color: var(--color-accent); margin-bottom: 0.5rem;">
+        حالة النظام
+        <span id="system-status" class="status-indicator status-ok"></span>
+      </h2>
+      <p style="color: var(--color-text-muted);">
+        View Transitions API: <strong id="vt-support">—</strong><br>
+        Reduced Motion: <strong id="reduced-motion">—</strong><br>
+        Current Page: <strong id="current-page">—</strong>
+      </p>
+    </div>
+
+    <div class="test-section">
+      <h2 style="color: var(--color-accent); margin-bottom: 0.5rem;">
+        🔄 اختبار الانتقالات الجانبية
+      </h2>
+      <p style="color: var(--color-text-muted); margin-bottom: 1rem;">
+        الانتقال بين الصفحات الرئيسية بالترتيب:<br>
+        نبذة (0) → طوّر نفسك (1) → مسابقة السراج (2) → البحث العلمي (3) → الهوية الوطنية (4) → لوحة التحكم (5)
+      </p>
+      <div class="test-links">
+        <a href="index.html" class="test-link">نبذة (0)</a>
+        <a href="develop.html" class="test-link">طوّر نفسك (1)</a>
+        <a href="competition.html" class="test-link">مسابقة السراج (2)</a>
+        <a href="research.html" class="test-link">البحث العلمي (3)</a>
+        <a href="identity.html" class="test-link">الهوية الوطنية (4)</a>
+        <a href="dashboard.html" class="test-link">لوحة التحكم (5)</a>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2 style="color: var(--color-accent); margin-bottom: 0.5rem;">
+        ↕️ اختبار الانتقالات الرأسية
+      </h2>
+      <p style="color: var(--color-text-muted); margin-bottom: 1rem;">
+        صفحات النماذج التي يجب أن تظهر من الأسفل للأعلى
+      </p>
+      <div class="test-links">
+        <a href="login.html" class="test-link">تسجيل الدخول ↑</a>
+        <a href="signup.html" class="test-link">إنشاء حساب ↑</a>
+        <a href="complete-profile.html" class="test-link">إكمال الملف ↑</a>
+        <a href="forgot-password.html" class="test-link">نسيت كلمة المرور ↑</a>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2 style="color: var(--color-accent); margin-bottom: 0.5rem;">
+        🧪 اختبارات إضافية
+      </h2>
+      <div class="test-links">
+        <button class="test-link" onclick="testBackButton()" style="border: none; cursor: pointer;">
+          اختبار زر الرجوع
+        </button>
+        <button class="test-link" onclick="testSamePage()" style="border: none; cursor: pointer;">
+          الضغط على الصفحة الحالية
+        </button>
+        <button class="test-link" onclick="testExternalLink()" style="border: none; cursor: pointer;">
+          اختبار رابط خارجي
+        </button>
+        <a href="https://google.com" target="_blank" class="test-link">
+          فتح في تبويب جديد
+        </a>
+        <a href="mailto:test@example.com" class="test-link">
+          رابط mailto:
+        </a>
+        <a href="tel:+96812345678" class="test-link">
+          رابط tel:
+        </a>
+      </div>
+    </div>
+
+    <div class="test-section" style="background: rgba(79, 70, 229, 0.05); border-color: rgba(79, 70, 229, 0.3);">
+      <h3 style="color: var(--color-primary); margin-bottom: 1rem;">📝 ملاحظات الاختبار</h3>
+      <ul style="list-style: disc; padding-right: 1.5rem; color: var(--color-text); line-height: 1.8;">
+        <li><strong>الانتقال للأمام:</strong> يجب أن تنزلق الصفحة الجديدة من اليمين إلى اليسار</li>
+        <li><strong>الانتقال للخلف:</strong> يجب أن تنزلق الصفحة الجديدة من اليسار إلى اليمين</li>
+        <li><strong>النماذج:</strong> يجب أن تظهر من الأسفل للأعلى</li>
+        <li><strong>زر الرجوع:</strong> يجب أن يعمل بشكل صحيح مع الاتجاه المناسب</li>
+        <li><strong>نفس الصفحة:</strong> لا يجب أن يحدث انتقال عند النقر على رابط الصفحة الحالية</li>
+        <li><strong>الروابط الخاصة:</strong> يجب أن تعمل بشكل طبيعي دون اعتراض</li>
+      </ul>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initPageTransitions } from './src/scripts/page-transitions.js';
+    import './src/scripts/main.js';
+
+    // Initialize transitions
+    initPageTransitions();
+
+    // Display system info
+    const vtSupport = 'startViewTransition' in document;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+    document.getElementById('vt-support').textContent = vtSupport ? 'مدعوم ✓' : 'غير مدعوم ✗';
+    document.getElementById('reduced-motion').textContent = reducedMotion ? 'مفعّل' : 'غير مفعّل';
+    document.getElementById('current-page').textContent = currentPage;
+
+    // Update status indicator
+    const statusEl = document.getElementById('system-status');
+    if (vtSupport) {
+      statusEl.className = 'status-indicator status-ok';
+    } else {
+      statusEl.className = 'status-indicator status-warning';
+    }
+
+    // Test functions
+    window.testBackButton = () => {
+      alert('انتقل إلى أي صفحة أخرى، ثم اضغط زر الرجوع في المتصفح للاختبار.');
+    };
+
+    window.testSamePage = () => {
+      window.location.href = 'test-transitions.html';
+    };
+
+    window.testExternalLink = () => {
+      alert('سيتم فتح رابط خارجي في نفس التبويب (بدون انتقال)');
+      window.location.href = 'https://example.com';
+    };
+  </script>
+</body>
+</html>
