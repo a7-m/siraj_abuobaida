@@ -49,7 +49,9 @@ class AuthService {
         data: {
           full_name: userData.fullName,
           grade: userData.grade,
-          section: userData.section
+          section: userData.section,
+          school_type: userData.schoolType || 'abu_obaida',
+          school_name: userData.schoolName || (userData.schoolType === 'other' ? 'مدرسة أخرى' : 'مدرسة أبو عبيدة')
         }
       }
     });

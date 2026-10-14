@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>هوية المدرسة | سراج – مدرسة أبو عبيدة</title>
-  <meta name="description" content="تعرّف على هوية وقيم مدرسة أبو عبيدة ورؤيتها التعليمية من خلال منصة سراج التفاعلية الرائدة في تطوير التعليم.">
-  <meta name="keywords" content="هوية المدرسة، رؤية، قيم، سراج، مدرسة أبو عبيدة، تعليم">
+  <title>الهوية الوطنية | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="تعرّف على صفحات ومحتوى الهوية الوطنية وقيم مدرسة أبو عبيدة ورؤيتها التعليمية والتراثية العمانية عبر منصة سراج.">
+  <meta name="keywords" content="الهوية الوطنية، سلطنة عمان، تراث، مدرسة أبو عبيدة، سراج، منصة تعليمية">
   <meta name="author" content="سراج – مدرسة أبو عبيدة">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#4F46E5">
-  <meta property="og:title" content="هوية المدرسة | سراج – مدرسة أبو عبيدة">
-  <meta property="og:description" content="تعرّف على هوية وقيم مدرسة أبو عبيدة ورؤيتها التعليمية من خلال منصة سراج التفاعلية الرائدة في تطوير التعليم.">
+  <meta property="og:title" content="الهوية الوطنية | سراج – مدرسة أبو عبيدة">
+  <meta property="og:description" content="استكشف صفحات ومقالات الهوية الوطنية العمانية التي ينشئها معلمو مدرسة أبو عبيدة.">
   <meta property="og:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
   <meta property="og:url" content="https://a7-m.github.io/siraj_abuobaida/identity.html">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ar_SA">
   <meta property="og:site_name" content="سراج – مدرسة أبو عبيدة">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="هوية المدرسة | سراج – مدرسة أبو عبيدة">
-  <meta name="twitter:description" content="تعرّف على هوية وقيم مدرسة أبو عبيدة ورؤيتها التعليمية من خلال منصة سراج التفاعلية الرائدة في تطوير التعليم.">
+  <meta name="twitter:title" content="الهوية الوطنية | سراج – مدرسة أبو عبيدة">
+  <meta name="twitter:description" content="استكشف صفحات ومقالات الهوية الوطنية العمانية التي ينشئها معلمو مدرسة أبو عبيدة.">
   <meta name="twitter:image" content="https://a7-m.github.io/siraj_abuobaida/src/assets/images/siraj-logo.png">
 
   <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
@@ -26,7 +26,272 @@
   <link rel="stylesheet" href="./src/styles/global.css">
   <link rel="stylesheet" href="./src/styles/layout.css">
   <link rel="stylesheet" href="./src/styles/components.css">
-  <link rel="stylesheet" href="./src/styles/dotgrid.css">`n  <link rel="stylesheet" href="./src/styles/page-transitions.css">`n  <link rel="stylesheet" href="./src/styles/footer.css">
+  <link rel="stylesheet" href="./src/styles/dotgrid.css">
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       NATIONAL IDENTITY SECTION STYLES
+       ═══════════════════════════════════════════════ */
+    .identity-hero {
+      text-align: center;
+      padding: 3rem 1.5rem 2.5rem;
+      position: relative;
+      margin-bottom: 2rem;
+      border-radius: var(--border-radius-xl, 24px);
+      background: linear-gradient(135deg, rgba(18, 117, 71, 0.08) 0%, rgba(217, 119, 6, 0.05) 100%);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .identity-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      background: rgba(18, 117, 71, 0.12);
+      color: var(--color-primary);
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .identity-hero-title {
+      font-size: clamp(1.8rem, 4vw, 2.75rem);
+      color: var(--color-accent);
+      margin-bottom: 0.85rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .identity-hero-desc {
+      color: var(--color-text-muted);
+      max-width: 720px;
+      margin: 0 auto 1.75rem;
+      line-height: 1.8;
+      font-size: 1.05rem;
+    }
+
+    .identity-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 1rem 1.25rem;
+      background: var(--color-bg-secondary);
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .identity-search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 450px;
+    }
+
+    .identity-search-input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.5rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .identity-search-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(18, 117, 71, 0.12);
+    }
+
+    .identity-search-clear {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      font-size: 1.2rem;
+      display: none;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .identity-search-clear:hover {
+      color: var(--color-danger, #ef4444);
+    }
+
+    .identity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.75rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .id-page-card {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0 !important;
+      border: 1px solid var(--color-border-light);
+      background: var(--color-bg-secondary);
+      border-radius: var(--border-radius-lg);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                  box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                  border-color 0.2s ease;
+    }
+
+    .id-page-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-primary);
+    }
+
+    .id-card-cover-wrap {
+      width: 100%;
+      height: 190px;
+      overflow: hidden;
+      background: var(--color-bg-alt, rgba(0, 0, 0, 0.04));
+      position: relative;
+    }
+
+    .id-card-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .id-page-card:hover .id-card-cover {
+      transform: scale(1.05);
+    }
+
+    .id-card-fallback-cover {
+      width: 100%;
+      height: 170px;
+      background: linear-gradient(135deg, rgba(18, 117, 71, 0.15) 0%, rgba(217, 119, 6, 0.12) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .id-card-fallback-emblem {
+      font-size: 3rem;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+
+    .id-card-fallback-tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    [data-theme="dark"] .id-card-fallback-tag {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .id-card-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .id-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .id-card-tag {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .id-card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-accent);
+      margin: 0 0 0.6rem;
+      line-height: 1.4;
+    }
+
+    .id-card-title a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .id-card-title a:hover {
+      color: var(--color-primary);
+    }
+
+    .id-card-snippet {
+      color: var(--color-text-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin: 0 0 1.25rem;
+      flex: 1;
+    }
+
+    .id-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--color-border-light);
+    }
+
+    .id-card-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-weight: 600;
+    }
+
+    .id-card-btn .btn-arrow {
+      transition: transform 0.2s ease;
+    }
+
+    .id-page-card:hover .id-card-btn .btn-arrow {
+      transform: translateX(-4px);
+    }
+
+    .identity-loading {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--color-text-muted);
+    }
+
+    .identity-empty-state {
+      text-align: center;
+      padding: 4rem 1.5rem;
+      background: var(--color-bg-secondary);
+      border-radius: var(--border-radius-xl, 24px);
+      border: 1px dashed var(--color-border);
+      max-width: 600px;
+      margin: 2rem auto 3rem;
+    }
+  </style>
+
   <script>
     (function () {
       const savedTheme = localStorage.getItem('siraj-theme');
@@ -49,7 +314,7 @@
         <a href="dashboard.html" class="nav-link auth-required">لوحة التحكم</a>
       </nav>
       <div class="flex items-center gap-2">
-        <button id="theme-toggle" class="btn-icon theme-toggle-btn"></button>
+        <button id="theme-toggle" class="btn-icon theme-toggle-btn" aria-label="تبديل الثيم"></button>
         <a href="login.html" class="btn btn-primary d-none-mobile guest-only">تسجيل الدخول</a>
         <button id="hamburger-btn" class="hamburger">&#9776;</button>
       </div>
@@ -71,19 +336,75 @@
   </div>
 
   <main class="main-content container">
-    <h2 style="text-align: center; color: var(--color-accent); margin-bottom: 3rem;">الهوية الوطنية العمانية</h2>
-
-    <section class="empty-state dotgrid-hero">
-      <div class="empty-state-icon" style="font-size: 4rem; color: var(--color-gold);">🇴🇲</div>
-      <h3>مكتبة الهوية الوطنية</h3>
-      <p style="color: var(--color-text-muted); max-width: 600px;">
-        جاري العمل على تجهيز محتوى غني من الفيديوهات، المقالات، التفاعليات، والبطاقات المعرفية التي ترسخ قيمنا وتستعرض تاريخ وتراث سلطنة عمان العريق.
+    <!-- Hero Banner -->
+    <section class="identity-hero dotgrid-hero">
+      <div class="identity-hero-badge">
+        <span>🇴🇲</span>
+        <span>تراث وهوية وأصالة</span>
+      </div>
+      <h1 class="identity-hero-title">صفحات الهوية الوطنية العمانية</h1>
+      <p class="identity-hero-desc">
+        مكتبة معرفية وتفاعلية متجددة ينشئها معلمو مدرسة أبو عبيدة لترسيخ قيم الهوية الوطنية، واستعراض تاريخ سلطنة عمان العريق، ومواكبة الفعاليات والأنشطة التربوية الملهمة.
       </p>
-      <button class="btn btn-outline" style="margin-top: 1rem; pointer-events: none;">سيتم الافتتاح قريباً</button>
+      
+      <!-- Teacher Shortcut Control (visible only to teachers) -->
+      <div id="teacher-controls" style="display: none; justify-content: center; gap: 0.75rem; margin-top: 1rem;">
+        <a href="teacher-content.html" class="btn btn-primary">
+          <span>✏️ إدارة وإنشاء الصفحات</span>
+        </a>
+      </div>
     </section>
 
+    <!-- Toolbar: Search & Counters -->
+    <div class="identity-toolbar">
+      <div class="identity-search-wrap">
+        <input 
+          type="text" 
+          id="identity-search-input" 
+          class="identity-search-input" 
+          placeholder="🔍 ابحث في عناوين ومحتوى الصفحات..."
+          aria-label="البحث في الصفحات"
+        >
+        <button id="identity-search-clear" class="identity-search-clear" aria-label="مسح البحث">&times;</button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="identity-count-badge" class="badge" style="background: rgba(18, 117, 71, 0.1); color: var(--color-primary); font-weight: 700; padding: 0.4rem 0.85rem;">
+          جاري التحميل...
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="identity-loading" class="identity-loading">
+      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⏳</div>
+      <p>جاري تحميل صفحات الهوية الوطنية...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="identity-error" class="identity-empty-state" style="display: none;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem; color: #ef4444;">⚠️</div>
+      <h3 style="color: var(--color-accent); margin-bottom: 0.5rem;">تعذر تحميل الصفحات</h3>
+      <p id="identity-error-msg" style="color: var(--color-text-muted); margin-bottom: 1.5rem;">
+        حدث خطأ أثناء جلب الصفحات من الخادم.
+      </p>
+      <button onclick="location.reload()" class="btn btn-outline">إعادة المحاولة</button>
+    </div>
+
+    <!-- Empty State -->
+    <div id="identity-empty" class="identity-empty-state" style="display: none;">
+      <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">🇴🇲</div>
+      <h3 style="color: var(--color-accent); margin-bottom: 0.5rem;">لا توجد صفحات منشورة حالياً</h3>
+      <p style="color: var(--color-text-muted); margin-bottom: 1.5rem; line-height: 1.7;">
+        لم يتم نشر أي صفحات في الهوية الوطنية حتى الآن، أو لا توجد نتائج تطابق بحثك. يقوم المعلمون بإعداد محتوى جديد قريباً!
+      </p>
+    </div>
+
+    <!-- Dynamic Pages Grid -->
+    <section id="identity-pages-grid" class="identity-grid" aria-label="قائمة صفحات الهوية الوطنية"></section>
   </main>
 
-  <script type="module" src="./src/scripts/main.js"></script>
+  <footer class="footer"><div class="container"><p>&copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</p></div></footer>
+  <script type="module" src="./src/scripts/identity.js"></script>
 </body>
 </html>

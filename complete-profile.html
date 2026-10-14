@@ -233,10 +233,7 @@
                 <span class="required-mark">*</span>
               </label>
               <select id="ao-grade" class="form-control" required>
-                <option value="" disabled selected>اختر الصف</option>
-                <option value="العاشر">العاشر</option>
-                <option value="الحادي عشر">الحادي عشر</option>
-                <option value="الثاني عشر">الثاني عشر</option>
+                <option value="" disabled selected>جاري تحميل الصفوف من المدرسة...</option>
               </select>
             </div>
             
@@ -249,7 +246,7 @@
                 <option value="" disabled selected>اختر الصف أولاً...</option>
               </select>
               <div class="form-hint">
-                🏛️ الشعب المتاحة يتم تحديثها تلقائياً حسب الصف المختار من إدارة المدرسة.
+                🏛️ الشعب والصفوف المتاحة يتم تحديثها تلقائياً من قاعدة بيانات مدرسة أبو عبيدة.
               </div>
             </div>
           </div>
@@ -324,74 +321,61 @@
     import { authService } from './src/services/auth.js';
     import { supabase } from './src/services/supabase.js';
     import { Toast } from './src/utils/toast.js';
+    import { getSchoolClasses, formatGradeLabel, formatSectionLabel } from './src/services/school-classes.js';
     import './src/scripts/main.js';
 
     let currentUserId = null;
     let redirectTo = 'dashboard.html'; // Default redirect
+    let schoolClasses = null;
 
-    // Cache for sections
-    const sectionsCache = {};
+    async function populateAoGrades(selectedGrade = null) {
+      const gradeSelect = document.getElementById('ao-grade');
+      if (!gradeSelect) return;
 
-    // Default fallback sections
-    const DEFAULT_SECTIONS = {
-      'العاشر': ['1', '2', '3', '4', '5', '6'],
-      'الحادي عشر': ['1', '2', '3', '4', '5'],
-      'الثاني عشر': ['1', '2', '3', '4']
-    };
+      schoolClasses = await getSchoolClasses();
+      const grades = schoolClasses.grades || [];
 
-    async function loadSectionsForGrade(grade) {
-      if (!grade) return [];
-      
-      // Check cache first
-      if (sectionsCache[grade]) {
-        return sectionsCache[grade];
+      if (grades.length === 0) {
+        gradeSelect.innerHTML = '<option value="" disabled selected>لا توجد صفوف مسجلة</option>';
+        return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('school_sections')
-          .select('section_name')
-          .eq('grade', grade)
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
+      gradeSelect.innerHTML = '<option value="" disabled selected>اختر الصف</option>' +
+        grades.map(g => `<option value="${g}" ${String(selectedGrade) === String(g) ? 'selected' : ''}>${formatGradeLabel(g)}</option>`).join('');
 
-        if (!error && data && data.length > 0) {
-          const sections = data.map(d => String(d.section_name));
-          sectionsCache[grade] = sections;
-          return sections;
-        }
-      } catch (e) {
-        console.warn('Failed to load sections from DB, using fallback:', e);
+      if (selectedGrade && grades.includes(String(selectedGrade))) {
+        gradeSelect.value = String(selectedGrade);
       }
-
-      // Fallback
-      const fallback = DEFAULT_SECTIONS[grade] || ['1', '2', '3', '4'];
-      sectionsCache[grade] = fallback;
-      return fallback;
     }
 
     async function updateAoSections(selectedGrade, currentSection = null) {
       const sectionSelect = document.getElementById('ao-section');
+      if (!sectionSelect) return;
       sectionSelect.disabled = true;
       sectionSelect.innerHTML = '<option value="" disabled selected>جاري التحميل...</option>';
 
-      const sections = await loadSectionsForGrade(selectedGrade);
+      if (!schoolClasses) {
+        schoolClasses = await getSchoolClasses();
+      }
+
+      const sections = schoolClasses.sectionsByGrade[selectedGrade] || [];
       
       if (!sections || sections.length === 0) {
-        sectionSelect.innerHTML = '<option value="1">1</option>';
-        sectionSelect.disabled = false;
+        sectionSelect.innerHTML = '<option value="" disabled selected>لا توجد شعب مفعلة لهذا الصف</option>';
+        sectionSelect.disabled = true;
         return;
       }
 
-      sectionSelect.innerHTML = sections.map(s => 
-        `<option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>شعبة ${s}</option>`
-      ).join('');
+      sectionSelect.innerHTML = '<option value="" disabled selected>اختر الشعبة</option>' +
+        sections.map(s => 
+          `<option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>${formatSectionLabel(s)}</option>`
+        ).join('');
 
       sectionSelect.disabled = false;
 
-      // If current section not in list, select first
-      if (currentSection && !sections.includes(String(currentSection))) {
-        sectionSelect.value = sections[0];
+      // If current section in list, select it
+      if (currentSection && sections.includes(String(currentSection))) {
+        sectionSelect.value = String(currentSection);
       }
     }
 
@@ -430,6 +414,9 @@
       }
       currentUserId = session.user.id;
 
+      // Load school classes from database
+      await populateAoGrades();
+
       // Check if profile already complete
       try {
         const { data: profile, error } = await supabase
@@ -458,7 +445,7 @@
           } else {
             // Abu Obaida (default)
             if (profile.grade) {
-              aoGradeSelect.value = profile.grade;
+              await populateAoGrades(profile.grade);
               await updateAoSections(profile.grade, profile.section);
             }
           }
@@ -529,7 +516,7 @@
             }
 
             // Validate section belongs to grade
-            const validSections = await loadSectionsForGrade(grade);
+            const validSections = schoolClasses?.sectionsByGrade?.[grade] || [];
             if (validSections.length > 0 && !validSections.includes(String(section))) {
               Toast.error('الشعبة المختارة لا تنتمي للصف المحدد');
               submitBtn.disabled = false;

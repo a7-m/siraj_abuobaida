@@ -13,6 +13,7 @@
 import { authService } from '../services/auth.js';
 import { supabase } from '../services/supabase.js';
 import { Toast } from './toast.js';
+import { getSchoolClasses, formatGradeLabel, formatSectionLabel } from '../services/school-classes.js';
 
 const STORAGE_KEY = 'siraj_verified_student';
 const LEGACY_STORAGE_KEY = 'siraj_guest_info';
@@ -30,6 +31,7 @@ function generateUUID() {
 
 // Fallback sections in case network is down
 const DEFAULT_SECTIONS = {
+  '10': ['10/1', '10/2', '10/3', '10/4', '10/5', '10/6', '10/7', '10/8', '10/9', '10/10', '10/11'],
   'العاشر': ['1', '2', '3', '4', '5', '6'],
   'الحادي عشر': ['1', '2', '3', '4', '5'],
   'الثاني عشر': ['1', '2', '3', '4']
@@ -68,8 +70,8 @@ export const studentIdentity = {
       name: '',
       schoolType: 'abu_obaida',
       schoolName: 'مدرسة أبو عبيدة',
-      grade: 'العاشر',
-      section: '1',
+      grade: '10',
+      section: '10/1',
       sessionId: generateUUID(),
       verifiedAt: null
     };
@@ -86,31 +88,22 @@ export const studentIdentity = {
    */
   async getSectionsForGrade(grade) {
     if (!grade) return [];
-    if (this._sectionsCache[grade]) {
-      return this._sectionsCache[grade];
-    }
-
     try {
-      if (supabase) {
-        const { data, error } = await supabase
-          .from('school_sections')
-          .select('section_name')
-          .eq('grade', grade)
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
-
-        if (!error && data && data.length > 0) {
-          const list = data.map(d => String(d.section_name));
-          this._sectionsCache[grade] = list;
-          return list;
-        }
+      const classes = await getSchoolClasses();
+      if (classes.sectionsByGrade?.[grade]) {
+        return classes.sectionsByGrade[grade];
       }
+      if (grade === 'العاشر' && classes.sectionsByGrade?.['10']) return classes.sectionsByGrade['10'];
+      if (grade === '10' && classes.sectionsByGrade?.['العاشر']) return classes.sectionsByGrade['العاشر'];
+      if (grade === 'الحادي عشر' && classes.sectionsByGrade?.['11']) return classes.sectionsByGrade['11'];
+      if (grade === '11' && classes.sectionsByGrade?.['الحادي عشر']) return classes.sectionsByGrade['الحادي عشر'];
+      if (grade === 'الثاني عشر' && classes.sectionsByGrade?.['12']) return classes.sectionsByGrade['12'];
+      if (grade === '12' && classes.sectionsByGrade?.['الثاني عشر']) return classes.sectionsByGrade['الثاني عشر'];
     } catch (e) {
-      console.warn('Failed to load sections from DB, using fallback:', e);
+      console.warn('Failed to load sections via service:', e);
     }
 
     const fallback = DEFAULT_SECTIONS[grade] || ['1', '2', '3', '4'];
-    this._sectionsCache[grade] = fallback;
     return fallback;
   },
 
@@ -302,7 +295,7 @@ export const studentIdentity = {
     });
   },
 
-  _renderModal({ activityName, prefilled, user, onConfirm }) {
+  async _renderModal({ activityName, prefilled, user, onConfirm }) {
     // Remove any existing identity modal
     document.querySelector('.siraj-identity-backdrop')?.remove();
 
@@ -312,8 +305,22 @@ export const studentIdentity = {
     backdrop.setAttribute('aria-modal', 'true');
     backdrop.setAttribute('aria-labelledby', 'si-modal-title');
 
+    const schoolClasses = await getSchoolClasses();
     const isAbuObaida = prefilled.schoolType !== 'other';
-    const abuObaidaGrades = ['العاشر', 'الحادي عشر', 'الثاني عشر'];
+    const abuObaidaGrades = schoolClasses.grades?.length > 0 ? schoolClasses.grades : ['10', '11', '12'];
+    
+    // Match prefilled grade with DB grades (handling 'العاشر' <-> '10' etc.)
+    let selectedAoGrade = prefilled.grade;
+    if (!abuObaidaGrades.includes(selectedAoGrade)) {
+      if (selectedAoGrade === 'العاشر' && abuObaidaGrades.includes('10')) selectedAoGrade = '10';
+      else if (selectedAoGrade === '10' && abuObaidaGrades.includes('العاشر')) selectedAoGrade = 'العاشر';
+      else if (selectedAoGrade === 'الحادي عشر' && abuObaidaGrades.includes('11')) selectedAoGrade = '11';
+      else if (selectedAoGrade === '11' && abuObaidaGrades.includes('الحادي عشر')) selectedAoGrade = 'الحادي عشر';
+      else if (selectedAoGrade === 'الثاني عشر' && abuObaidaGrades.includes('12')) selectedAoGrade = '12';
+      else if (selectedAoGrade === '12' && abuObaidaGrades.includes('الثاني عشر')) selectedAoGrade = 'الثاني عشر';
+      else selectedAoGrade = abuObaidaGrades[0] || '10';
+    }
+
     const otherGrades = [
       'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس',
       'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'
@@ -376,7 +383,7 @@ export const studentIdentity = {
                 </label>
                 <select id="si-ao-grade" class="si-select">
                   ${abuObaidaGrades.map(g => `
-                    <option value="${g}" ${prefilled.grade === g ? 'selected' : ''}>الصف ${g}</option>
+                    <option value="${g}" ${selectedAoGrade === g ? 'selected' : ''}>${formatGradeLabel(g)}</option>
                   `).join('')}
                 </select>
               </div>
@@ -495,7 +502,7 @@ export const studentIdentity = {
       }
 
       aoSectionSelect.innerHTML = sections.map(s => `
-        <option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>شعبة ${s}</option>
+        <option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>${formatSectionLabel(s)}</option>
       `).join('');
 
       // If previous section not valid for this grade, pick first one

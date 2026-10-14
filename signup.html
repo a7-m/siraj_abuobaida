@@ -178,31 +178,75 @@
           <input type="email" id="email" class="form-control" placeholder="student@example.com" required dir="ltr" style="text-align: right;">
         </div>
 
-        <div class="grid grid-2">
-          <div class="form-group">
-            <label for="grade">الصف الدراسي</label>
-            <select id="grade" class="form-control" required>
-              <option value="" disabled selected>اختر الصف</option>
-              <option value="الخامس">الخامس</option>
-              <option value="السادس">السادس</option>
-              <option value="السابع">السابع</option>
-              <option value="الثامن">الثامن</option>
-              <option value="التاسع">التاسع</option>
-              <option value="العاشر">العاشر</option>
-              <option value="الحادي عشر">الحادي عشر</option>
-              <option value="الثاني عشر">الثاني عشر</option>
-            </select>
+        <!-- School Type Selection -->
+        <div class="form-group">
+          <label>المدرسة المنتمي إليها <span style="color: var(--color-danger, #ef4444);">*</span></label>
+          <div class="radio-pills" style="display: flex; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <div class="radio-pill" style="flex: 1; position: relative;">
+              <input type="radio" name="signup_school_type" id="signup_school_abu_obaida" value="abu_obaida" checked style="position: absolute; opacity: 0; pointer-events: none;">
+              <label for="signup_school_abu_obaida" id="label-school-ao" style="display: flex; align-items: center; justify-content: center; padding: 0.75rem 1rem; border: 2px solid var(--color-primary); border-radius: var(--border-radius); background: rgba(18, 117, 71, 0.08); color: var(--color-primary); cursor: pointer; font-weight: 600;">
+                مدرسة أبو عبيدة
+              </label>
+            </div>
+            <div class="radio-pill" style="flex: 1; position: relative;">
+              <input type="radio" name="signup_school_type" id="signup_school_other" value="other" style="position: absolute; opacity: 0; pointer-events: none;">
+              <label for="signup_school_other" id="label-school-other" style="display: flex; align-items: center; justify-content: center; padding: 0.75rem 1rem; border: 2px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); cursor: pointer; font-weight: 600;">
+                مدرسة أخرى
+              </label>
+            </div>
           </div>
+        </div>
+
+        <!-- Abu Obaida Section (Default) -->
+        <div id="signup-abu-obaida-section">
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="ao-grade">الصف الدراسي <span style="color: var(--color-danger, #ef4444);">*</span></label>
+              <select id="ao-grade" class="form-control" required>
+                <option value="" disabled selected>جاري تحميل الصفوف من المدرسة...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ao-section">الشعبة الدراسية <span style="color: var(--color-danger, #ef4444);">*</span></label>
+              <select id="ao-section" class="form-control" required disabled>
+                <option value="" disabled selected>اختر الصف أولاً...</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-hint" style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+            🏛️ الصفوف والشعب المتاحة يتم جلبها تلقائياً ومباشرة من قاعدة بيانات مدرسة أبو عبيدة.
+          </div>
+        </div>
+
+        <!-- Other School Section (Conditional) -->
+        <div id="signup-other-school-section" style="display: none;">
           <div class="form-group">
-            <label for="section">الشعبة (المتوقع أو الحالية)</label>
-            <select id="section" class="form-control" required>
-              <option value="" disabled selected>اختر الشعبة</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
+            <label for="other-school-name">اسم المدرسة <span style="color: var(--color-danger, #ef4444);">*</span></label>
+            <input type="text" id="other-school-name" class="form-control" placeholder="أدخل اسم مدرستك كاملة..." minlength="2">
+          </div>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="other-grade">الصف الدراسي (1 - 12) <span style="color: var(--color-danger, #ef4444);">*</span></label>
+              <select id="other-grade" class="form-control">
+                <option value="" disabled selected>اختر الصف</option>
+                <option value="الأول">الصف الأول</option>
+                <option value="الثاني">الصف الثاني</option>
+                <option value="الثالث">الصف الثالث</option>
+                <option value="الرابع">الصف الرابع</option>
+                <option value="الخامس">الصف الخامس</option>
+                <option value="السادس">الصف السادس</option>
+                <option value="السابع">الصف السابع</option>
+                <option value="الثامن">الصف الثامن</option>
+                <option value="التاسع">الصف التاسع</option>
+                <option value="العاشر">الصف العاشر</option>
+                <option value="الحادي عشر">الصف الحادي عشر</option>
+                <option value="الثاني عشر">الصف الثاني عشر</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="other-section">رقم الشعبة <span style="color: var(--color-danger, #ef4444);">*</span></label>
+              <input type="number" id="other-section" class="form-control" placeholder="مثال: 1" min="1" max="50" step="1">
+            </div>
           </div>
         </div>
 
@@ -244,9 +288,11 @@
 
   <script type="module">
     import { authService } from './src/services/auth.js';
+    import { supabase } from './src/services/supabase.js';
+    import { getSchoolClasses, formatGradeLabel, formatSectionLabel } from './src/services/school-classes.js';
     import './src/scripts/main.js';
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       // Redirect if logged in already (User Requirement 9: prevent arbitrary viewing)
       if (authService.isLoggedIn()) {
         window.location.replace('dashboard.html');
@@ -260,7 +306,123 @@
       const form = document.getElementById('signup-form');
       const submitBtn = document.getElementById('submit-btn');
 
-      // Toggles
+      // School type elements
+      const radioAo = document.getElementById('signup_school_abu_obaida');
+      const radioOther = document.getElementById('signup_school_other');
+      const labelAo = document.getElementById('label-school-ao');
+      const labelOther = document.getElementById('label-school-other');
+      const sectionAo = document.getElementById('signup-abu-obaida-section');
+      const sectionOther = document.getElementById('signup-other-school-section');
+
+      // Abu Obaida inputs
+      const aoGradeSelect = document.getElementById('ao-grade');
+      const aoSectionSelect = document.getElementById('ao-section');
+
+      // Other school inputs
+      const otherSchoolName = document.getElementById('other-school-name');
+      const otherGradeSelect = document.getElementById('other-grade');
+      const otherSectionInput = document.getElementById('other-section');
+
+      let schoolClasses = null;
+
+      // Populate Abu Obaida classes from DB
+      async function populateAoClasses() {
+        try {
+          schoolClasses = await getSchoolClasses();
+          const grades = schoolClasses.grades || [];
+
+          if (grades.length === 0) {
+            aoGradeSelect.innerHTML = '<option value="" disabled selected>لا توجد صفوف مسجلة</option>';
+            return;
+          }
+
+          aoGradeSelect.innerHTML = '<option value="" disabled selected>اختر الصف</option>' +
+            grades.map(g => `<option value="${g}">${formatGradeLabel(g)}</option>`).join('');
+
+          // Auto-select first grade if available
+          if (grades.length > 0) {
+            aoGradeSelect.value = grades[0];
+            updateAoSections(grades[0]);
+          }
+        } catch (e) {
+          console.error('Error loading school classes:', e);
+        }
+      }
+
+      function updateAoSections(grade) {
+        if (!schoolClasses) return;
+        const sections = schoolClasses.sectionsByGrade[grade] || [];
+        
+        if (sections.length === 0) {
+          aoSectionSelect.innerHTML = '<option value="" disabled selected>لا توجد شعب مفعلة لهذا الصف</option>';
+          aoSectionSelect.disabled = true;
+          return;
+        }
+
+        aoSectionSelect.innerHTML = '<option value="" disabled selected>اختر الشعبة</option>' +
+          sections.map(s => `<option value="${s}">${formatSectionLabel(s)}</option>`).join('');
+
+        aoSectionSelect.disabled = false;
+        // Pre-select first section
+        if (sections.length > 0) {
+          aoSectionSelect.value = sections[0];
+        }
+      }
+
+      aoGradeSelect.addEventListener('change', () => {
+        updateAoSections(aoGradeSelect.value);
+      });
+
+      // Toggle School Type
+      function toggleSchool(isAbuObaida) {
+        if (isAbuObaida) {
+          radioAo.checked = true;
+          labelAo.style.borderColor = 'var(--color-primary)';
+          labelAo.style.background = 'rgba(18, 117, 71, 0.08)';
+          labelAo.style.color = 'var(--color-primary)';
+
+          labelOther.style.borderColor = 'var(--color-border)';
+          labelOther.style.background = 'var(--color-bg)';
+          labelOther.style.color = 'inherit';
+
+          sectionAo.style.display = 'block';
+          sectionOther.style.display = 'none';
+
+          aoGradeSelect.required = true;
+          aoSectionSelect.required = true;
+          otherSchoolName.required = false;
+          otherGradeSelect.required = false;
+          otherSectionInput.required = false;
+        } else {
+          radioOther.checked = true;
+          labelOther.style.borderColor = 'var(--color-primary)';
+          labelOther.style.background = 'rgba(18, 117, 71, 0.08)';
+          labelOther.style.color = 'var(--color-primary)';
+
+          labelAo.style.borderColor = 'var(--color-border)';
+          labelAo.style.background = 'var(--color-bg)';
+          labelAo.style.color = 'inherit';
+
+          sectionAo.style.display = 'none';
+          sectionOther.style.display = 'block';
+
+          aoGradeSelect.required = false;
+          aoSectionSelect.required = false;
+          otherSchoolName.required = true;
+          otherGradeSelect.required = true;
+          otherSectionInput.required = true;
+
+          setTimeout(() => otherSchoolName.focus(), 80);
+        }
+      }
+
+      radioAo.addEventListener('change', () => toggleSchool(true));
+      radioOther.addEventListener('change', () => toggleSchool(false));
+
+      // Initial load of classes
+      await populateAoClasses();
+
+      // Toggles password visibility
       const setupToggle = (btn, input) => {
         btn.addEventListener('click', () => {
           const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -296,10 +458,57 @@
           return;
         }
 
+        const isAo = radioAo.checked;
+        let gradeVal = '';
+        let sectionVal = '';
+        let schoolType = 'abu_obaida';
+        let schoolName = 'مدرسة أبو عبيدة';
+
+        if (isAo) {
+          gradeVal = aoGradeSelect.value;
+          sectionVal = aoSectionSelect.value;
+
+          if (!gradeVal || !sectionVal) {
+            window.Toast.error('يرجى اختيار الصف والشعبة الدراسية لمدرسة أبو عبيدة.');
+            return;
+          }
+
+          // Validation
+          const validSections = schoolClasses?.sectionsByGrade?.[gradeVal] || [];
+          if (validSections.length > 0 && !validSections.includes(String(sectionVal))) {
+            window.Toast.error('الشعبة المختارة لا تنتمي للصف المحدد.');
+            return;
+          }
+        } else {
+          schoolType = 'other';
+          schoolName = otherSchoolName.value.trim();
+          gradeVal = otherGradeSelect.value;
+          const sNum = parseInt(otherSectionInput.value, 10);
+
+          if (!schoolName || schoolName.length < 2) {
+            window.Toast.error('يرجى كتابة اسم مدرستك بشكل صحيح.');
+            otherSchoolName.focus();
+            return;
+          }
+          if (!gradeVal) {
+            window.Toast.error('يرجى اختيار الصف الدراسي.');
+            otherGradeSelect.focus();
+            return;
+          }
+          if (isNaN(sNum) || sNum <= 0) {
+            window.Toast.error('يرجى إدخال رقم شعبة صحيح (عدد موجب).');
+            otherSectionInput.focus();
+            return;
+          }
+          sectionVal = String(sNum);
+        }
+
         const payload = {
           fullName: document.getElementById('fullName').value.trim(),
-          grade: document.getElementById('grade').value,
-          section: document.getElementById('section').value,
+          grade: gradeVal,
+          section: sectionVal,
+          schoolType: schoolType,
+          schoolName: schoolName
         };
 
         const email = document.getElementById('email').value.trim();
@@ -308,8 +517,24 @@
         submitBtn.textContent = 'جاري الإنشاء...';
 
         try {
-          // This calls the Supabase backend. If email confirmation is off, user is instantly logged in!
-          await authService.signup(email, pwd, payload);
+          const signUpRes = await authService.signup(email, pwd, payload);
+
+          // Guarantee profile update in Supabase if session or user was returned
+          if (signUpRes?.user && supabase) {
+            try {
+              await supabase.from('profiles').update({
+                full_name: payload.fullName,
+                grade: payload.grade,
+                section: payload.section,
+                school_type: payload.schoolType,
+                school_name: payload.schoolName,
+                last_verified_at: new Date().toISOString()
+              }).eq('id', signUpRes.user.id);
+            } catch (errSync) {
+              console.warn('Could not sync profile post-signup:', errSync);
+            }
+          }
+
           window.Toast.success('تم إنشاء الحساب بنجاح! جاري الانطلاق...');
           setTimeout(() => { window.location.replace('dashboard.html'); }, 1500);
         } catch (error) {

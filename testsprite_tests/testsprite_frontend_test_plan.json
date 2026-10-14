@@ -1,0 +1,1920 @@
+[
+  {
+    "id": "TC001",
+    "title": "Student login opens the dashboard",
+    "description": "A returning student can sign in with valid credentials and reach the dashboard.",
+    "category": "Student Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the student dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Complete student profile and reach the dashboard",
+    "description": "A new student can log in, finish the required profile details, and arrive at an updated dashboard.",
+    "category": "Student Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile completion page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the school field with a valid school name"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid grade"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid section"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the student dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated profile information is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Student registration creates a new account",
+    "description": "A new student can submit the registration form with valid details and continue to the next onboarding step.",
+    "category": "Student Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the full name field with a new student name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a new student email"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Select a grade level"
+      },
+      {
+        "type": "action",
+        "description": "Select a section number"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile completion screen or the student dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Log out from the student dashboard",
+    "description": "A logged-in student can end the session from the dashboard and return to a signed-out state.",
+    "category": "Student Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the student dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Log out of the account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is signed out"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Student completes profile and reaches the dashboard",
+    "description": "A logged-in student can save school, grade, and section details and continue to the dashboard.",
+    "category": "Complete Student Profile",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /complete-profile.html"
+      },
+      {
+        "type": "action",
+        "description": "Choose Abu Obaida School or another school"
+      },
+      {
+        "type": "action",
+        "description": "Select a grade"
+      },
+      {
+        "type": "action",
+        "description": "Select a class section"
+      },
+      {
+        "type": "action",
+        "description": "Save and continue"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the student dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Open the teacher dashboard and view school overview",
+    "description": "A teacher can access the administration dashboard and see the school-level overview that anchors the management area.",
+    "category": "Teacher Dashboard and Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the teacher dashboard link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the teacher dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify school statistics are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Teacher access is gated from the teacher dashboard",
+    "description": "A non-teacher user cannot open teacher administration pages and is redirected or blocked from access.",
+    "category": "Teacher Access Gating",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /teacher-dashboard.html"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to the teacher dashboard is blocked or redirected away from the protected page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Edit the student profile from the dashboard",
+    "description": "A logged-in student can update profile details from the dashboard and see the changes reflected afterward.",
+    "category": "Student Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the student dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile editor"
+      },
+      {
+        "type": "action",
+        "description": "Update the school or grade and section with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated profile information is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile editor closes after saving"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Move from the teacher dashboard to class management",
+    "description": "A teacher can use the dashboard to open class management and view class rosters.",
+    "category": "Teacher Dashboard and Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the teacher dashboard link"
+      },
+      {
+        "type": "action",
+        "description": "Click the class management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify class rosters are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Review student research projects",
+    "description": "Verifies that a teacher can open the research review area and see student project submissions ready for evaluation.",
+    "category": "Teacher Research Review and Grading",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher username field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /teacher-research.html"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify student research project submissions are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify grading controls are available for a submission"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Move from the teacher dashboard to competition management",
+    "description": "A teacher can open competition management from the dashboard and review competition items.",
+    "category": "Teacher Dashboard and Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the teacher dashboard link"
+      },
+      {
+        "type": "action",
+        "description": "Click the competition management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition management content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Teacher can open class roster management and see student actions",
+    "description": "A teacher can view a class roster and access the management options for students in that class.",
+    "category": "Teacher Class and Student Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the class management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify class rosters are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify student management actions are available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Assign a grade to a research submission",
+    "description": "Verifies that a teacher can evaluate a research project and save a grade for a student submission.",
+    "category": "Teacher Research Review and Grading",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher username field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /teacher-research.html"
+      },
+      {
+        "type": "action",
+        "description": "Open a student research project submission"
+      },
+      {
+        "type": "action",
+        "description": "Assign a grade to the submission"
+      },
+      {
+        "type": "action",
+        "description": "Save the review"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the reviewed submission is updated with a saved grade"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Student registration requires all fields",
+    "description": "The registration form prevents submission until the required student details are provided.",
+    "category": "Student Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup.html"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form without entering any details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are displayed for the required registration fields"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Open the competitions page from the student dashboard",
+    "description": "A logged-in student can navigate from the dashboard to the competitions area.",
+    "category": "Student Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the student dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the competitions page from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the competitions page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition content is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "View user accounts",
+    "description": "Verifies that a teacher can open the user management area and see existing user accounts.",
+    "category": "Teacher User Account Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher username field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /teacher-users.html"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user accounts are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account management actions are available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Open the research page from the student dashboard",
+    "description": "A logged-in student can navigate from the dashboard to the research area.",
+    "category": "Student Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the student dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the research page from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the research page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify research content is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Open the development page from the student dashboard",
+    "description": "A logged-in student can navigate from the dashboard to the development content area.",
+    "category": "Student Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the student dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the development page from the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the development page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify development content is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Teacher can open competition management and review items",
+    "description": "A teacher can enter competition management and see the competition list or related items needed for administration.",
+    "category": "Teacher Competitions Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the competition management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition management content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition items are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Manage a user account record",
+    "description": "Verifies that a teacher can update an existing user account from the user management area.",
+    "category": "Teacher User Account Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher username field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the teacher password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /teacher-users.html"
+      },
+      {
+        "type": "action",
+        "description": "Open a user account record"
+      },
+      {
+        "type": "action",
+        "description": "Change an account setting"
+      },
+      {
+        "type": "action",
+        "description": "Save the account changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user account record reflects the saved changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Student login shows an invalid credentials message",
+    "description": "The login form blocks access when the student enters incorrect credentials.",
+    "category": "Student Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with an unregistered student email"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with an incorrect password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an invalid credentials alert is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Switch between light and dark theme",
+    "description": "A visitor can toggle the site theme and see the visual mode change across the page.",
+    "category": "Theme Switching",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /index.html"
+      },
+      {
+        "type": "action",
+        "description": "Click the theme toggle"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the visual theme changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new theme remains visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Teacher access to the student participants area from the dashboard",
+    "description": "A teacher can navigate from the dashboard into the student participants area and view the participant directory.",
+    "category": "Teacher Dashboard and Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the teacher dashboard link"
+      },
+      {
+        "type": "action",
+        "description": "Click the student participants link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the student participants directory is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Teacher can review student roster details within a class",
+    "description": "A teacher can open a class roster and see the listed students for that class.",
+    "category": "Teacher Class and Student Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the class management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify class rosters are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify student names are displayed in the roster"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Student registration rejects duplicate email",
+    "description": "A student cannot create an account using an email that has already been registered.",
+    "category": "Student Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the full name field with a student name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with an email already used for registration"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Select a grade level"
+      },
+      {
+        "type": "action",
+        "description": "Select a section number"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a duplicate account validation message is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "Keep the selected theme while moving to a public page",
+    "description": "A visitor can change the theme on the home page and continue seeing the same theme on another public page.",
+    "category": "Theme Switching",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /index.html"
+      },
+      {
+        "type": "action",
+        "description": "Click the theme toggle"
+      },
+      {
+        "type": "action",
+        "description": "Open the competitions page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the competitions page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected theme is still applied"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "Teacher access to submissions and follow-up review areas",
+    "description": "A teacher can move from the dashboard into submission-related management areas used to review student work.",
+    "category": "Teacher Dashboard and Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the teacher dashboard link"
+      },
+      {
+        "type": "action",
+        "description": "Click the research review link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify research review content is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC028",
+    "title": "Add a question to the teacher question bank",
+    "description": "Verifies that a teacher can create a new question and see it appear in the question bank.",
+    "category": "Teacher Question Bank Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the question bank page"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new question"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the question content with a unique valid question"
+      },
+      {
+        "type": "action",
+        "description": "Save the new question"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new question is displayed in the question bank"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Browse competition stages and challenge prompts",
+    "description": "A visitor can explore the competitions page, review the stages, and inspect the challenge content.",
+    "category": "Competitions and Challenges",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /competition.html"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the competition stages section"
+      },
+      {
+        "type": "action",
+        "description": "Interact with a challenge card"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition stages are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify challenge prompts are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Browse self-development activities",
+    "description": "A visitor can open the development page and view the available enrichment activities and learning options.",
+    "category": "Self-Development Activities",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /develop.html"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the enrichment activities section"
+      },
+      {
+        "type": "action",
+        "description": "Click an enrichment activity"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify enrichment activity details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify learning options are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Add a book review entry",
+    "description": "Verifies that a teacher can create a new book review entry and see it listed in reading activities.",
+    "category": "Teacher Reading Activities Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the reading activities page"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new book review entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the book review details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Save the new book review entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new book review entry is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Browse research categories and guidance",
+    "description": "A visitor can open the research portal, explore research categories, and view submission guidance and templates.",
+    "category": "Student Research Portal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /research.html"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the research categories section"
+      },
+      {
+        "type": "action",
+        "description": "Click a research category"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to view submission instructions"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to view available templates"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify research guidance content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify template information is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Teacher can access competition administration options",
+    "description": "A teacher can open the competition hub and see the available administration options for managing contests.",
+    "category": "Teacher Competitions Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the competition management link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition management options are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Create a new content item",
+    "description": "A teacher can create a new educational content item and see it appear in the content list.",
+    "category": "Teacher Content Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the content management page"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new content item"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the title field with Content Item Alpha"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the description field with a valid content description"
+      },
+      {
+        "type": "action",
+        "description": "Submit the content form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new content item is displayed in the content list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "View and update teacher profile settings",
+    "description": "Verifies that a teacher can open their profile page, review their details, and save profile changes successfully.",
+    "category": "Teacher Profile and Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the teacher profile page"
+      },
+      {
+        "type": "action",
+        "description": "Update a profile setting with a new valid value"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated profile details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Add a participant record",
+    "description": "A teacher can add a student participant record and see it appear in the participants directory.",
+    "category": "Teacher Participants Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the participants directory"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a participant record"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the student name field with Participant Alpha"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the participant details field with a valid participant description"
+      },
+      {
+        "type": "action",
+        "description": "Submit the participant form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new participant record is displayed in the directory"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Edit an existing question in the teacher question bank",
+    "description": "Verifies that a teacher can update an existing question and see the revised content saved.",
+    "category": "Teacher Question Bank Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the question bank page"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing question for editing"
+      },
+      {
+        "type": "action",
+        "description": "Change the question content to a new valid version"
+      },
+      {
+        "type": "action",
+        "description": "Save the question changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated question is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Student profile completion requires school and class details",
+    "description": "The profile completion form prevents progress until the required school and class information is provided.",
+    "category": "Complete Student Profile",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /complete-profile.html"
+      },
+      {
+        "type": "action",
+        "description": "Save and continue without selecting school, grade, or section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are displayed for the missing profile fields"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "View research submission instructions first",
+    "description": "A visitor can review the research submission instructions before selecting a template.",
+    "category": "Student Research Portal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /research.html"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to view submission instructions"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify submission guidance is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the template list is still accessible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Create a new media item",
+    "description": "A teacher can add a media item and see it appear in the media library.",
+    "category": "Teacher Media Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the media management page"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new media item"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the title field with Media Item Alpha"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the media URL field with a valid media URL"
+      },
+      {
+        "type": "action",
+        "description": "Submit the media form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new media item is displayed in the media library"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Remove a question from the teacher question bank",
+    "description": "Verifies that a teacher can delete a question and no longer see it in the question bank.",
+    "category": "Teacher Question Bank Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the question bank page"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing question's actions"
+      },
+      {
+        "type": "action",
+        "description": "Delete the question"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the deleted question is no longer displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "View teacher content entries",
+    "description": "A teacher can open the content management page and see the existing educational content entries.",
+    "category": "Teacher Content Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the content management page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify educational content entries are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC043",
+    "title": "Edit a book review entry",
+    "description": "Verifies that a teacher can update an existing book review entry and see the saved changes.",
+    "category": "Teacher Reading Activities Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the reading activities page"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing book review entry for editing"
+      },
+      {
+        "type": "action",
+        "description": "Change the book review details to new valid values"
+      },
+      {
+        "type": "action",
+        "description": "Save the book review changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated book review entry is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC044",
+    "title": "Run a teacher permission check",
+    "description": "Verifies that a visitor can run the permission diagnostic and receive a result summary for teacher access.",
+    "category": "Check Teacher Permissions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /check-teacher-permissions.html"
+      },
+      {
+        "type": "action",
+        "description": "Run the permission check"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a permission diagnostic result is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the result indicates teacher access status"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC045",
+    "title": "Browse national identity content",
+    "description": "A visitor can open the identity page and view educational content about national identity and cultural heritage.",
+    "category": "National Identity and Cultural Heritage Content",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /identity.html"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the national identity content section"
+      },
+      {
+        "type": "action",
+        "description": "Click a cultural heritage topic"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify national identity content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify cultural heritage learning materials are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC046",
+    "title": "View teacher participants directory",
+    "description": "A teacher can open the participants directory and see the student participants list.",
+    "category": "Teacher Participants Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the participants directory"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify student participants are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC047",
+    "title": "Open the teacher question bank",
+    "description": "Verifies that a logged-in teacher can access the question bank and see existing questions.",
+    "category": "Teacher Question Bank Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the question bank page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the question bank content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify existing questions are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC048",
+    "title": "View teacher media assets",
+    "description": "A teacher can open the media management page and see the existing media assets.",
+    "category": "Teacher Media Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the media management page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify media assets are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC049",
+    "title": "Remove a book review entry",
+    "description": "Verifies that a teacher can delete a book review entry and no longer see it in the list.",
+    "category": "Teacher Reading Activities Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login.html"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the reading activities page"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing book review entry's actions"
+      },
+      {
+        "type": "action",
+        "description": "Delete the book review entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the deleted book review entry is no longer displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC050",
+    "title": "Check competition deadlines are visible",
+    "description": "A visitor can view the competition deadlines and confirm that submission timing information is available.",
+    "category": "Competitions and Challenges",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /competition.html"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the submission timing section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify submission deadline information is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify competition timing details are visible"
+      }
+    ],
+    "priority": "Medium"
+  }
+]

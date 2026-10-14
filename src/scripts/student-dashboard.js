@@ -13,6 +13,7 @@
 import { authService } from '../services/auth.js';
 import { supabase } from '../services/supabase.js';
 import { Toast } from '../utils/toast.js';
+import { getSchoolClasses, formatGradeLabel, formatSectionLabel } from '../services/school-classes.js';
 
 class StudentDashboardController {
   constructor() {
@@ -585,6 +586,22 @@ class StudentDashboardController {
   }
 
   async openEditProfile() {
+    // Fetch school classes dynamically from database
+    const schoolClasses = await getSchoolClasses();
+    const abuObaidaGrades = schoolClasses.grades?.length > 0 ? schoolClasses.grades : ['10', '11', '12'];
+
+    // Match profile grade with dynamic grades (e.g. 'العاشر' <-> '10')
+    let matchedAoGrade = this.profile.grade;
+    if (!abuObaidaGrades.includes(matchedAoGrade)) {
+      if (matchedAoGrade === 'العاشر' && abuObaidaGrades.includes('10')) matchedAoGrade = '10';
+      else if (matchedAoGrade === '10' && abuObaidaGrades.includes('العاشر')) matchedAoGrade = 'العاشر';
+      else if (matchedAoGrade === 'الحادي عشر' && abuObaidaGrades.includes('11')) matchedAoGrade = '11';
+      else if (matchedAoGrade === '11' && abuObaidaGrades.includes('الحادي عشر')) matchedAoGrade = 'الحادي عشر';
+      else if (matchedAoGrade === 'الثاني عشر' && abuObaidaGrades.includes('12')) matchedAoGrade = '12';
+      else if (matchedAoGrade === '12' && abuObaidaGrades.includes('الثاني عشر')) matchedAoGrade = 'الثاني عشر';
+      else matchedAoGrade = abuObaidaGrades[0] || '10';
+    }
+
     // Create modal for editing profile
     const modal = document.createElement('div');
     modal.className = 'profile-edit-modal-backdrop';
@@ -618,9 +635,9 @@ class StudentDashboardController {
               <label for="edit-ao-grade">الصف الدراسي</label>
               <select id="edit-ao-grade" class="form-control" required>
                 <option value="" disabled>اختر الصف</option>
-                <option value="العاشر" ${this.profile.grade === 'العاشر' ? 'selected' : ''}>العاشر</option>
-                <option value="الحادي عشر" ${this.profile.grade === 'الحادي عشر' ? 'selected' : ''}>الحادي عشر</option>
-                <option value="الثاني عشر" ${this.profile.grade === 'الثاني عشر' ? 'selected' : ''}>الثاني عشر</option>
+                ${abuObaidaGrades.map(g => 
+                  `<option value="${g}" ${matchedAoGrade === g ? 'selected' : ''}>${formatGradeLabel(g)}</option>`
+                ).join('')}
               </select>
             </div>
             
@@ -630,7 +647,7 @@ class StudentDashboardController {
                 <option value="" disabled>جاري التحميل...</option>
               </select>
               <div class="form-hint">
-                🏛️ الشعب المتاحة يتم تحديثها تلقائياً حسب الصف المختار.
+                🏛️ الشعب والصفوف المتاحة يتم تحديثها تلقائياً من قاعدة بيانات مدرسة أبو عبيدة.
               </div>
             </div>
           </div>
@@ -692,10 +709,10 @@ class StudentDashboardController {
     document.body.appendChild(modal);
 
     // Initialize edit form
-    await this.initEditForm(modal);
+    await this.initEditForm(modal, schoolClasses, matchedAoGrade);
   }
 
-  async initEditForm(modal) {
+  async initEditForm(modal, schoolClasses, matchedAoGrade) {
     const form = modal.querySelector('#edit-profile-form');
     const abuObaidaRadio = modal.querySelector('#edit_school_abu_obaida');
     const otherRadio = modal.querySelector('#edit_school_other');
@@ -708,60 +725,39 @@ class StudentDashboardController {
     const otherSectionInput = modal.querySelector('#edit-other-section');
     const saveBtn = modal.querySelector('#save-profile-btn');
 
-    // Sections cache
-    const sectionsCache = {};
-    const DEFAULT_SECTIONS = {
-      'العاشر': ['1', '2', '3', '4', '5', '6'],
-      'الحادي عشر': ['1', '2', '3', '4', '5'],
-      'الثاني عشر': ['1', '2', '3', '4']
-    };
-
-    const loadSectionsForGrade = async (grade) => {
-      if (!grade) return [];
-      if (sectionsCache[grade]) return sectionsCache[grade];
-
-      try {
-        const { data, error } = await supabase
-          .from('school_sections')
-          .select('section_name')
-          .eq('grade', grade)
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
-
-        if (!error && data && data.length > 0) {
-          const sections = data.map(d => String(d.section_name));
-          sectionsCache[grade] = sections;
-          return sections;
-        }
-      } catch (e) {
-        console.warn('Failed to load sections:', e);
-      }
-
-      const fallback = DEFAULT_SECTIONS[grade] || ['1', '2', '3', '4'];
-      sectionsCache[grade] = fallback;
-      return fallback;
-    };
+    if (!schoolClasses) {
+      schoolClasses = await getSchoolClasses();
+    }
 
     const updateAoSections = async (selectedGrade, currentSection = null) => {
       aoSectionSelect.disabled = true;
       aoSectionSelect.innerHTML = '<option value="" disabled>جاري التحميل...</option>';
 
-      const sections = await loadSectionsForGrade(selectedGrade);
+      const sections = schoolClasses.sectionsByGrade?.[selectedGrade] || [];
       
+      if (!sections || sections.length === 0) {
+        aoSectionSelect.innerHTML = '<option value="" disabled>لا توجد شعب مفعلة لهذا الصف</option>';
+        aoSectionSelect.disabled = true;
+        return;
+      }
+
       aoSectionSelect.innerHTML = sections.map(s => 
-        `<option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>شعبة ${s}</option>`
+        `<option value="${s}" ${String(currentSection) === String(s) ? 'selected' : ''}>${formatSectionLabel(s)}</option>`
       ).join('');
 
       aoSectionSelect.disabled = false;
 
-      if (currentSection && !sections.includes(String(currentSection))) {
+      if (currentSection && sections.includes(String(currentSection))) {
+        aoSectionSelect.value = String(currentSection);
+      } else if (sections.length > 0) {
         aoSectionSelect.value = sections[0];
       }
     };
 
     // Load initial sections if Abu Obaida
-    if (this.profile.school_type !== 'other' && this.profile.grade) {
-      await updateAoSections(this.profile.grade, this.profile.section);
+    if (this.profile.school_type !== 'other') {
+      const initialGrade = aoGradeSelect.value || matchedAoGrade || this.profile.grade;
+      await updateAoSections(initialGrade, this.profile.section);
     }
 
     // School type toggle
@@ -813,7 +809,7 @@ class StudentDashboardController {
             return;
           }
 
-          const validSections = await loadSectionsForGrade(grade);
+          const validSections = schoolClasses?.sectionsByGrade?.[grade] || [];
           if (validSections.length > 0 && !validSections.includes(String(section))) {
             Toast.error('الشعبة المختارة لا تنتمي للصف المحدد');
             saveBtn.disabled = false;
