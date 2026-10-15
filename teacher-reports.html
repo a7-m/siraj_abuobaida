@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>إنشاء تقرير أداء المنصة | سراج – مدرسة أبو عبيدة</title>
+  <meta name="description" content="إصدار تقارير إحصائية وتحليلية شاملة لأداء طلاب مدرسة أبو عبيدة في مسابقات السراج، تحديات القراءة والبحث العلمي.">
+  <link rel="icon" type="image/svg+xml" href="./src/assets/images/siraj-logo.png">
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/global.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/dotgrid.css">
+  <link rel="stylesheet" href="./src/styles/page-transitions.css">
+  <link rel="stylesheet" href="./src/styles/footer.css">
+  <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
+  <link rel="stylesheet" href="./src/styles/teacher-reports.css">
+
+  <!-- Chart.js for interactive analytics and printable charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('siraj-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body class="teacher-dashboard no-dotgrid" data-no-dotgrid="true">
+
+  <div class="td-layout">
+    <!-- Sidebar -->
+    <aside class="td-sidebar" id="td-sidebar">
+      <!-- Injected by teacher-nav.js -->
+    </aside>
+
+    <!-- Main Content -->
+    <main class="td-main">
+      <header class="td-header no-print">
+        <div class="flex items-center gap-2">
+          <button id="td-hamburger" class="td-hamburger" aria-label="القائمة">☰</button>
+          <h2 id="td-page-title" style="margin: 0; font-size: 1.25rem;">📑 إنشاء تقرير إحصائي شامل</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="btn-icon theme-toggle-btn" title="تبديل المظهر"></button>
+          <div class="badge" style="background: var(--color-primary); color: white;">
+            👨‍🏫 <span id="header-teacher-name">المعلم</span>
+          </div>
+          <button id="header-logout-btn" class="btn btn-outline-danger btn-sm header-logout-btn" title="تسجيل الخروج">
+            🚪 خروج
+          </button>
+        </div>
+      </header>
+
+      <div class="td-content">
+
+        <!-- Official Print Header (Only visible in Print / PDF Mode) -->
+        <div class="report-official-header">
+          <div class="official-header-flex">
+            <div class="official-titles">
+              <h1>سلطنة عُمان – وزارة التربية والتعليم</h1>
+              <h2>مدرسة أبو عبيدة بن الجراح للتعليم ما بعد الأساسي (10 – 12)</h2>
+              <p>منصة السراج التعليمية | التقرير الإحصائي والتحليلي للأداء الأكاديمي والأنشطة</p>
+            </div>
+            <div class="official-meta">
+              <div><strong>الفترة المحددة:</strong> <span id="print-date-range">--</span></div>
+              <div><strong>تاريخ الإصدار:</strong> <span id="print-generation-date">--</span></div>
+              <div><strong>المعلم المُعد للتقرير:</strong> <span id="print-teacher-name">--</span></div>
+              <div><strong>نوع النشاط:</strong> <span id="print-activity-type">كافة الأنشطة</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- On-Screen Page Header & Action Bar -->
+        <div class="flex justify-between items-center no-print" style="margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="margin: 0 0 0.35rem; font-size: 1.4rem;">مركز إصدار وتوليد التقارير 📊</h3>
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 0.92rem;">
+              تحليل شامل لأداء الطلاب والشُعب في المسابقات والقراءة والبحث العلمي، مع فلاتر زمنية وتصدير وطباعة رسمية.
+            </p>
+          </div>
+          <div class="flex gap-2" style="flex-wrap: wrap;">
+            <button id="btn-print-report" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+              🖨️ طباعة التقرير
+            </button>
+            <button id="btn-save-pdf" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+              📄 حفظ بصيغة PDF
+            </button>
+            <button id="btn-export-csv" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+              📥 تصدير الإحصائيات (CSV)
+            </button>
+            <button id="btn-refresh-report" class="btn btn-outline btn-sm" title="إعادة جلب أحدث البيانات">
+              🔄 تحديث
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Period Selection Panel -->
+        <div class="reports-filter-panel no-print">
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--color-text);">
+            ⏳ تحديد فترة التقرير:
+          </div>
+          <div class="reports-period-presets">
+            <button type="button" class="preset-btn" data-preset="7days">⚡ آخر 7 أيام</button>
+            <button type="button" class="preset-btn active" data-preset="30days">⚡ آخر 30 يومًا</button>
+            <button type="button" class="preset-btn" data-preset="this-month">⚡ الشهر الحالي</button>
+            <button type="button" class="preset-btn" data-preset="all">⚡ جميع الفترات</button>
+          </div>
+
+          <div class="reports-filter-grid">
+            <div class="reports-filter-group">
+              <label for="filter-start-date">📅 تاريخ البداية</label>
+              <input type="date" id="filter-start-date">
+            </div>
+
+            <div class="reports-filter-group">
+              <label for="filter-end-date">📅 تاريخ النهاية</label>
+              <input type="date" id="filter-end-date">
+            </div>
+
+            <div class="reports-filter-group">
+              <label for="filter-activity">🎯 نوع النشاط</label>
+              <select id="filter-activity">
+                <option value="all">كافة الأنشطة (شامل)</option>
+                <option value="competition">مسابقات السراج</option>
+                <option value="reading">تحديات القراءة (طوّر نفسك)</option>
+                <option value="research">البحث العلمي</option>
+              </select>
+            </div>
+
+            <div class="reports-filter-group">
+              <label for="filter-grade">🏫 الصف الدراسي</label>
+              <select id="filter-grade">
+                <option value="all">كافة الصفوف</option>
+                <option value="العاشر">الصف العاشر</option>
+                <option value="الحادي عشر">الصف الحادي عشر</option>
+                <option value="الثاني عشر">الصف الثاني عشر</option>
+              </select>
+            </div>
+
+            <div class="reports-filter-group">
+              <label for="filter-section">👥 الشعبة</label>
+              <select id="filter-section">
+                <option value="all">كافة الشعب</option>
+              </select>
+            </div>
+
+            <div class="reports-filter-group" style="justify-content: flex-end;">
+              <button id="btn-reset-filters" class="btn btn-outline btn-sm" style="height: 40px;">
+                🔄 إعادة ضبط الفلاتر
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Report Period Summary Bar -->
+        <div class="report-summary-bar">
+          <div class="report-summary-info">
+            <div class="report-summary-item">
+              <span>الفترة المعتمدة بالتقرير</span>
+              <span id="summary-period-text">آخر 30 يومًا</span>
+            </div>
+            <div class="report-summary-item">
+              <span>إجمالي السجلات المشمولة</span>
+              <span id="summary-records-count">0 سجل</span>
+            </div>
+            <div class="report-summary-item">
+              <span>الطلاب الفريدين</span>
+              <span id="summary-students-count">0 طالب</span>
+            </div>
+            <div class="report-summary-item">
+              <span>حالة التقرير</span>
+              <span style="color: var(--color-primary);">محدث ومطابق لقاعدة البيانات ✅</span>
+            </div>
+          </div>
+          <div class="no-print">
+            <span id="report-last-updated" style="font-size: 0.82rem; color: var(--color-text-muted);">
+              آخر تحديث: قبل قليل
+            </span>
+          </div>
+        </div>
+
+        <!-- Loading State Indicator -->
+        <div id="report-loading" style="display: none; text-align: center; padding: 3rem 1rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.75rem; animation: pulse 1s infinite;">⏳</div>
+          <h4 style="margin: 0 0 0.5rem;">جاري استخراج وتحليل بيانات التقرير...</h4>
+          <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">يتم مطابقة استعلامات Supabase وفق الفترة المحددة</p>
+        </div>
+
+        <!-- Error State Indicator -->
+        <div id="report-error" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: var(--border-radius-md); padding: 1.5rem; text-align: center; margin-bottom: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+          <h4 style="margin: 0 0 0.5rem; color: #dc2626;">حدث خطأ أثناء تحميل بيانات التقرير</h4>
+          <p id="report-error-msg" style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0 0 1rem;"></p>
+          <button id="btn-retry-loading" class="btn btn-outline-danger btn-sm">إعادة المحاولة</button>
+        </div>
+
+        <!-- Main Report Content (Visible when loaded) -->
+        <div id="report-body">
+
+          <!-- 1. Domain Metric KPI Cards (Section 2 Requirements) -->
+          <div class="report-domain-grid">
+            
+            <!-- Participants Domain Card -->
+            <div class="report-domain-card" style="--card-accent: #2563eb;">
+              <div class="domain-header">
+                <div class="domain-title-wrap">
+                  <span class="domain-icon">👥</span>
+                  <h4 class="domain-title">المشاركون والطلاب</h4>
+                </div>
+                <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: #2563eb;">حقيقي وفعلي</span>
+              </div>
+              <div class="domain-kpis">
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label" title="إجمالي المحاولات والمشاركات الموثقة">إجمالي المشاركات</div>
+                  <div class="domain-kpi-val" id="rep-total-participations">0</div>
+                  <div class="domain-kpi-sub">محاولة ونشاط</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label" title="عدد الطلاب الفريدين المشاركين">الطلاب الفعليون</div>
+                  <div class="domain-kpi-val" id="rep-unique-students" style="color: #2563eb;">0</div>
+                  <div class="domain-kpi-sub">شخص فريد</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label" title="المشاركون المسجلون بحسابات رسمية">الطلاب المسجلون</div>
+                  <div class="domain-kpi-val" id="rep-registered-students">0</div>
+                  <div class="domain-kpi-sub" id="rep-registered-sub">بحساب مدرسي</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label" title="المشاركون عبر نموذج الزائر">الزوار والضيوف</div>
+                  <div class="domain-kpi-val" id="rep-guest-participants">0</div>
+                  <div class="domain-kpi-sub">مشارك زائر</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reading Challenges Domain Card -->
+            <div class="report-domain-card" style="--card-accent: #059669;">
+              <div class="domain-header">
+                <div class="domain-title-wrap">
+                  <span class="domain-icon">📚</span>
+                  <h4 class="domain-title">تحديات القراءة (طوّر نفسك)</h4>
+                </div>
+                <span class="badge" style="background: rgba(5, 150, 105, 0.1); color: #059669;">المسار القرائي</span>
+              </div>
+              <div class="domain-kpis">
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">مشاركات القراءة</div>
+                  <div class="domain-kpi-val" id="rep-reading-participations">0</div>
+                  <div class="domain-kpi-sub">محاولة بالمستويات</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">الإنجازات المكتملة</div>
+                  <div class="domain-kpi-val" id="rep-reading-achievements" style="color: #059669;">0</div>
+                  <div class="domain-kpi-sub">مستوى تم اجتيازه</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">نسبة الإكمال</div>
+                  <div class="domain-kpi-val" id="rep-reading-completion-rate">0%</div>
+                  <div class="domain-kpi-sub">نسبة الاجتياز الكلي</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">متوسط النتائج</div>
+                  <div class="domain-kpi-val" id="rep-reading-avg-score">0</div>
+                  <div class="domain-kpi-sub">متوسط درجات القراءة</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Competitions Domain Card -->
+            <div class="report-domain-card" style="--card-accent: #7c3aed;">
+              <div class="domain-header">
+                <div class="domain-title-wrap">
+                  <span class="domain-icon">🏆</span>
+                  <h4 class="domain-title">مسابقات السراج</h4>
+                </div>
+                <span class="badge" style="background: rgba(124, 58, 237, 0.1); color: #7c3aed;">المسابقات الرسمية</span>
+              </div>
+              <div class="domain-kpis">
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">المشاركون بالمسابقات</div>
+                  <div class="domain-kpi-val" id="rep-comp-participants">0</div>
+                  <div class="domain-kpi-sub">طالب وزائر</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">إجمالي المحاولات</div>
+                  <div class="domain-kpi-val" id="rep-comp-attempts" style="color: #7c3aed;">0</div>
+                  <div class="domain-kpi-sub">محاولة مسجلة</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">نسبة الإكمال والتسليم</div>
+                  <div class="domain-kpi-val" id="rep-comp-completion-rate">0%</div>
+                  <div class="domain-kpi-sub">محاولات مكتملة</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">متوسط الدرجات</div>
+                  <div class="domain-kpi-val" id="rep-comp-avg-score">0</div>
+                  <div class="domain-kpi-sub">معدل درجات المحاولات</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scientific Research Domain Card -->
+            <div class="report-domain-card" style="--card-accent: #d97706;">
+              <div class="domain-header">
+                <div class="domain-title-wrap">
+                  <span class="domain-icon">🔬</span>
+                  <h4 class="domain-title">البحث العلمي والتحكيم</h4>
+                </div>
+                <span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #d97706;">التحكيم المدرسي</span>
+              </div>
+              <div class="domain-kpis">
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">الأبحاث المقدمة</div>
+                  <div class="domain-kpi-val" id="rep-research-submitted">0</div>
+                  <div class="domain-kpi-sub">بحث مرفوع بالمنصة</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">الأبحاث المقيّمة</div>
+                  <div class="domain-kpi-val" id="rep-research-evaluated" style="color: #d97706;">0</div>
+                  <div class="domain-kpi-sub">تم رصد درجاتها</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">أبحاث قيد التحكيم</div>
+                  <div class="domain-kpi-val" id="rep-research-pending">0</div>
+                  <div class="domain-kpi-sub">بانتظار رصد المعلم</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">متوسط التقييم</div>
+                  <div class="domain-kpi-val" id="rep-research-avg-score">--</div>
+                  <div class="domain-kpi-sub" id="rep-research-avg-note">من 100 درجة</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Educational Content Domain Card -->
+            <div class="report-domain-card" style="--card-accent: #0284c7;">
+              <div class="domain-header">
+                <div class="domain-title-wrap">
+                  <span class="domain-icon">📝</span>
+                  <h4 class="domain-title">المحتوى التعليمي والصفحات</h4>
+                </div>
+                <span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7;">المعرفة المتاحة</span>
+              </div>
+              <div class="domain-kpis">
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">الصفحات المنشورة</div>
+                  <div class="domain-kpi-val" id="rep-content-published">0</div>
+                  <div class="domain-kpi-sub">مقال وصفحة معتمدة</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">أضيفت خلال الفترة</div>
+                  <div class="domain-kpi-val" id="rep-content-period" style="color: #0284c7;">0</div>
+                  <div class="domain-kpi-sub">خلال المدى المختار</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">شعب المدرسة المهيأة</div>
+                  <div class="domain-kpi-val" id="rep-sections-count">0</div>
+                  <div class="domain-kpi-sub">شعبة بمدرسة أبو عبيدة</div>
+                </div>
+                <div class="domain-kpi-item">
+                  <div class="domain-kpi-label">بنك الأسئلة المتاح</div>
+                  <div class="domain-kpi-val" id="rep-questions-count">0</div>
+                  <div class="domain-kpi-sub">سؤال جاهز للاختبارات</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 2. Interactive Charts Section (Section 3 Requirements) -->
+          <div class="report-section-header">
+            <div>
+              <h4 class="report-section-title">📈 التحليلات والرسوم البيانية التفاعلية</h4>
+              <div class="report-section-desc">مخططات دقيقة تعكس المشاركات اليومية وتوزيع الأنشطة ونسب الإكمال حسب الفترة المختارة</div>
+            </div>
+          </div>
+
+          <div class="report-charts-grid">
+            <!-- Chart 1: Daily Timeline of Participations -->
+            <div class="report-chart-card">
+              <div class="chart-header">
+                <h5 class="chart-title"><span>📅</span> مسار المشاركات اليومية خلال الفترة</h5>
+                <span class="badge" style="background: var(--nav-hover-bg); color: var(--color-text-muted);">تفاعلي</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-timeline"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 2: Activity Types Breakdown Donut -->
+            <div class="report-chart-card">
+              <div class="chart-header">
+                <h5 class="chart-title"><span>🍩</span> توزيع النشاط والتفاعل حسب النوع</h5>
+                <span class="badge" style="background: var(--nav-hover-bg); color: var(--color-text-muted);">النسب المئوية</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-activity-donut"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 3: Activities Comparison (Attempts vs Completion vs Avg Score) -->
+            <div class="report-chart-card">
+              <div class="chart-header">
+                <h5 class="chart-title"><span>📊</span> مقارنة الأنشطة المختلفة ومؤشرات الأداء</h5>
+                <span class="badge" style="background: var(--nav-hover-bg); color: var(--color-text-muted);">مقارنة معيارية</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-comparison-bars"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 4: Grade and Section Participations Breakdown -->
+            <div class="report-chart-card">
+              <div class="chart-header">
+                <h5 class="chart-title"><span>🏫</span> تفاعل الصفوف والشُعب المدرسية</h5>
+                <span class="badge" style="background: var(--nav-hover-bg); color: var(--color-text-muted);">حسب الصف والشعبة</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-grade-bars"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Top 3 Sections Highlight (Podium) -->
+          <div class="report-section-header">
+            <div>
+              <h4 class="report-section-title">🏆 أفضل 3 شُعب مدرسية تفاعلاً ونتائج</h4>
+              <div class="report-section-desc">ترتيب الشُعب حسب متوسط نتائج المسابقات والتحديات وعدد المشاركات المسجلة</div>
+            </div>
+          </div>
+
+          <div class="podium-grid" id="top-sections-podium">
+            <!-- Injected dynamically via teacher-reports.js -->
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 2rem;">
+              جاري حساب ترتيب الشُعب...
+            </div>
+          </div>
+
+          <!-- 4. Top 10 Students Leaderboard -->
+          <div class="report-section-header">
+            <div>
+              <h4 class="report-section-title">🥇 قائمة أوائل الطلاب (أعلى 10 طلاب بالمنصة)</h4>
+              <div class="report-section-desc">ترتيب الطلاب وفق مجموع درجات المسابقات وتحديات القراءة خلال الفترة المحددة</div>
+            </div>
+            <span class="badge" style="background: var(--color-primary); color: white;">لوحة الشرف</span>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 2.5rem;">
+            <div class="td-table-wrapper" style="border: none; border-radius: 0;">
+              <table class="td-table">
+                <thead>
+                  <tr>
+                    <th style="width: 70px; text-align: center;">الترتيب</th>
+                    <th>اسم الطالب</th>
+                    <th>الصف والشعبة</th>
+                    <th>نوع المشارك</th>
+                    <th style="text-align: center;">مشاركات المسابقات</th>
+                    <th style="text-align: center;">إنجازات القراءة</th>
+                    <th style="text-align: center;">إجمالي النقاط والدرجات</th>
+                  </tr>
+                </thead>
+                <tbody id="top-students-table-body">
+                  <tr>
+                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
+                      جاري تحميل لوحة الشرف...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 5. Detailed Activity Log Table (Auditable & Exportable) -->
+          <div class="report-section-header no-print">
+            <div>
+              <h4 class="report-section-title">📑 سجل الأنشطة والمشاركات المشمولة في التقرير</h4>
+              <div class="report-section-desc">قائمة تفصيلية بجميع العمليات المندرجة تحت الفترة والفلاتر الحالية</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="filter-log-search" placeholder="🔍 بحث بالاسم أو النشاط..." style="padding: 0.4rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius-sm); font-size: 0.85rem; background: var(--color-bg-alt); color: var(--color-text);">
+            </div>
+          </div>
+
+          <div class="card no-print" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+            <div class="td-table-wrapper" style="border: none; border-radius: 0;">
+              <table class="td-table">
+                <thead>
+                  <tr>
+                    <th>تاريخ المشاركة</th>
+                    <th>اسم المشارك</th>
+                    <th>النوع</th>
+                    <th>الصف والشعبة</th>
+                    <th>نوع النشاط</th>
+                    <th>عنوان النشاط</th>
+                    <th style="text-align: center;">الحالة</th>
+                    <th style="text-align: center;">الدرجة</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-log-table-body">
+                  <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
+                      جاري تحميل سجل الأنشطة...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="audit-pagination" class="flex justify-between items-center" style="padding: 1rem 1.5rem; background: var(--color-bg-alt); border-top: 1px solid var(--color-border-light); font-size: 0.88rem;">
+              <div id="audit-page-info" style="color: var(--color-text-muted);">عرض 0 من 0 سجل</div>
+              <div class="flex gap-2">
+                <button id="btn-audit-prev" class="btn btn-outline btn-sm" disabled>السابق</button>
+                <button id="btn-audit-next" class="btn btn-outline btn-sm" disabled>التالي</button>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /#report-body -->
+
+        <!-- Official Print Footer (Shown in Print / PDF Mode) -->
+        <div class="report-print-footer print-only" style="display: none;">
+          <div>مدرسة أبو عبيدة بن الجراح للتعليم ما بعد الأساسي – محافظة مسقط | منصة السراج الرقمية</div>
+          <div>تم استخراج هذا التقرير آلياً عبر قاعدة بيانات Supabase وهو صالح للاعتماد الأكاديمي الداخلي.</div>
+        </div>
+
+      </div> <!-- /.td-content -->
+    </main>
+  </div>
+
+  <!-- Page Logic -->
+  <script type="module" src="./src/scripts/teacher-reports.js"></script>
+</body>
+</html>

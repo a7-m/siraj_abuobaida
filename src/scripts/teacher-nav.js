@@ -11,6 +11,7 @@ import { Toast } from '../utils/toast.js';
 
 export const ADMIN_PAGES = [
   { key: 'dashboard', href: 'teacher-dashboard.html', title: 'لوحة التحكم والإحصائيات', icon: '📊' },
+  { key: 'reports', href: 'teacher-reports.html', title: 'إنشاء التقارير', icon: '📑' },
   { key: 'content', href: 'teacher-content.html', title: 'الصفحات التعليمية', icon: '📝' },
   { key: 'reading', href: 'teacher-reading.html', title: 'تحديات القراءة (طوّر نفسك)', icon: '📚' },
   { key: 'competitions', href: 'teacher-competitions.html', title: 'مسابقات السراج', icon: '🏆' },
