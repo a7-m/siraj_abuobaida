@@ -222,6 +222,12 @@ class DevelopController {
     const { session } = await authService.getSessionAsync();
     this.user = session?.user || null;
 
+    // If not logged in, show login methods panel instead of identity form
+    if (!this.user) {
+      this.renderLoginModal('برنامج طوّر نفسك');
+      return;
+    }
+
     await this.loadChallengesData();
     await this.loadProgressData();
 
@@ -229,6 +235,171 @@ class DevelopController {
 
     // Silently verify student identity on page entry (won't show modal if data exists)
     await studentIdentity.requireVerification({ activityName: 'برنامج طوّر نفسك' });
+  }
+
+  // ── Render: Login Methods Panel (for unauthenticated visitors) ─
+  renderLoginModal(activityName = 'هذا النشاط') {
+    this.container.innerHTML = `
+      <div class="dev-login-wall" style="
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        min-height: 60vh; padding: 2rem 1rem;
+      ">
+        <div class="card" style="
+          width: 100%; max-width: 480px; padding: 2.5rem 2rem;
+          text-align: center; border: 1px solid var(--color-border);
+        ">
+          <!-- Icon & Title -->
+          <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">📖</div>
+          <h2 style="margin: 0 0 0.5rem; color: var(--color-text); font-size: 1.4rem;">${activityName}</h2>
+          <p style="color: var(--color-text-muted); font-size: 0.93rem; margin: 0 0 2rem;">
+            سجّل دخولك للوصول إلى مسار التعلم وحفظ تقدمك.
+          </p>
+
+          <!-- Email / Password Login -->
+          <form id="dlw-login-form" style="margin-bottom: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.75rem;">
+              <input
+                id="dlw-identifier"
+                type="text"
+                placeholder="البريد الإلكتروني أو اسم المستخدم"
+                autocomplete="username"
+                dir="ltr"
+                style="
+                  padding: 0.75rem 1rem; border: 1px solid var(--color-border);
+                  border-radius: var(--border-radius); background: var(--color-bg);
+                  color: var(--color-text); font-family: inherit; text-align: right;
+                  width: 100%; box-sizing: border-box;
+                "
+              >
+              <div style="position: relative;">
+                <input
+                  id="dlw-password"
+                  type="password"
+                  placeholder="كلمة المرور"
+                  autocomplete="current-password"
+                  dir="ltr"
+                  style="
+                    padding: 0.75rem 2.75rem 0.75rem 1rem; border: 1px solid var(--color-border);
+                    border-radius: var(--border-radius); background: var(--color-bg);
+                    color: var(--color-text); font-family: inherit; text-align: right;
+                    width: 100%; box-sizing: border-box;
+                  "
+                >
+                <button type="button" id="dlw-toggle-pwd" style="
+                  position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+                  background: none; border: none; cursor: pointer; font-size: 1.1rem;
+                  color: var(--color-text-muted); padding: 0;
+                " tabindex="-1" aria-label="إظهار/إخفاء كلمة المرور">👁️</button>
+              </div>
+            </div>
+            <div style="text-align: left; margin-bottom: 1rem;">
+              <a href="forgot-password.html" style="font-size: 0.82rem; color: var(--color-accent);">نسيت كلمة المرور؟</a>
+            </div>
+            <button id="dlw-login-btn" type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.75rem;">
+              دخول
+            </button>
+          </form>
+
+          <!-- Divider -->
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <hr style="flex: 1; border: none; border-top: 1px solid var(--color-border);">
+            <span style="font-size: 0.83rem; color: var(--color-text-muted); white-space: nowrap;">أو</span>
+            <hr style="flex: 1; border: none; border-top: 1px solid var(--color-border);">
+          </div>
+
+          <!-- Google Login -->
+          <button id="dlw-google-btn" type="button" class="btn btn-outline flex items-center justify-center gap-1" style="width: 100%; margin-bottom: 0.65rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+              <path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z"/>
+              <path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 000 10.76l3.98-3.09z"/>
+              <path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0 7.565 0 3.515 2.7 1.545 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+            </svg>
+            <span>الدخول باستخدام Google</span>
+          </button>
+
+          <!-- Quick Student (Guest) Login -->
+          <button id="dlw-guest-btn" type="button" class="btn btn-outline flex items-center justify-center gap-2" style="
+            width: 100%; margin-bottom: 1.25rem;
+            border: 1.5px dashed var(--color-primary); color: var(--color-primary);
+            font-weight: 700; background: rgba(79,70,229,0.04);
+          ">
+            <span style="font-size: 1.2rem;">🎓</span>
+            <span>الدخول السريع كطالب (بدون حساب)</span>
+          </button>
+
+          <!-- Sign up link -->
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">
+            ليس لديك حساب؟
+            <a href="signup.html?redirect=develop.html" style="color: var(--color-accent); font-weight: 600;">إنشاء حساب جديد</a>
+          </p>
+        </div>
+      </div>
+    `;
+
+    // ── Wire up login form ──────────────────────────────────────
+    const loginForm = this.container.querySelector('#dlw-login-form');
+    const loginBtn  = this.container.querySelector('#dlw-login-btn');
+    const togglePwd = this.container.querySelector('#dlw-toggle-pwd');
+    const pwdInput  = this.container.querySelector('#dlw-password');
+
+    if (togglePwd && pwdInput) {
+      togglePwd.addEventListener('click', () => {
+        const show = pwdInput.type === 'password';
+        pwdInput.type = show ? 'text' : 'password';
+        togglePwd.textContent = show ? '🙈' : '👁️';
+      });
+    }
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const identifier = this.container.querySelector('#dlw-identifier').value.trim();
+        const password   = this.container.querySelector('#dlw-password').value;
+        if (!identifier || !password) { Toast.warning('أدخل بيانات الدخول.'); return; }
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'جاري تسجيل الدخول...';
+        try {
+          await authService.login(identifier, password);
+          Toast.success('تم تسجيل الدخول! جاري التحديث...');
+          setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'دخول';
+          Toast.error(err.message?.includes('Invalid login') ? 'بيانات الدخول غير صحيحة.' : (err.message || 'حدث خطأ.'));
+        }
+      });
+    }
+
+    // ── Google Login ────────────────────────────────────────────
+    const googleBtn = this.container.querySelector('#dlw-google-btn');
+    if (googleBtn) {
+      googleBtn.addEventListener('click', async () => {
+        const orig = googleBtn.innerHTML;
+        googleBtn.disabled = true;
+        googleBtn.innerHTML = '<span>⏳</span><span> جاري التحويل إلى Google...</span>';
+        try {
+          await authService.loginWithGoogle();
+        } catch (err) {
+          googleBtn.disabled = false;
+          googleBtn.innerHTML = orig;
+          Toast.error(err.message === 'FILE_PROTOCOL'
+            ? 'لتسجيل الدخول بجوجل، يرجى تشغيل الموقع عبر خادم محلي (مثل Live Server).'
+            : (err.message || 'تعذر الاتصال بخدمة Google.'));
+        }
+      });
+    }
+
+    // ── Guest (Quick Student) Login ─────────────────────────────
+    const guestBtn = this.container.querySelector('#dlw-guest-btn');
+    if (guestBtn) {
+      guestBtn.addEventListener('click', () => {
+        studentIdentity.showGuestLoginModal({
+          redirectUrl: 'develop.html',
+          onSuccess: () => {}
+        });
+      });
+    }
   }
 
   // ── Data Loading ───────────────────────────────────────────

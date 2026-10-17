@@ -74,7 +74,7 @@ async function loadProfiles() {
   const tbody = document.getElementById('users-table-body');
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">جاري تحميل سجل المستخدمين...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">جاري تحميل سجل المستخدمين...</td></tr>';
 
   try {
     const { data, error } = await supabase
@@ -87,7 +87,7 @@ async function loadProfiles() {
     renderTable();
   } catch (err) {
     console.error('Error fetching profiles:', err);
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">تعذر تحميل المستخدمين: ${escapeHtml(err.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 2rem;">تعذر تحميل المستخدمين: ${escapeHtml(err.message)}</td></tr>`;
   }
 }
 
@@ -105,7 +105,7 @@ function renderTable() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6">
+        <td colspan="7">
           <div class="td-empty-state">
             <div class="td-empty-icon">👥</div>
             <div class="td-empty-title">لا يوجد مستخدمون مطابقون</div>
@@ -138,6 +138,16 @@ function renderTable() {
 
     const gradeText = u.grade ? `الصف ${escapeHtml(String(u.grade))} ${u.section ? `- شعبة ${escapeHtml(String(u.section))}` : ''}` : '-';
 
+    // Resolve school name from DB columns (school_name / school_type)
+    let schoolDisplay = '-';
+    if (u.school_name && u.school_type === 'other') {
+      schoolDisplay = escapeHtml(u.school_name);
+    } else if (u.school_type === 'abu_obaida' || !u.school_type) {
+      schoolDisplay = 'أبو عبيدة';
+    } else if (u.school_name) {
+      schoolDisplay = escapeHtml(u.school_name);
+    }
+
     return `
       <tr>
         <td>
@@ -154,6 +164,9 @@ function renderTable() {
         <td>${roleBadge}</td>
         <td>
           <span style="font-size: 0.9rem;">${gradeText}</span>
+        </td>
+        <td>
+          <span style="font-size: 0.85rem; color: var(--color-text);">${schoolDisplay}</span>
         </td>
         <td>
           <strong style="color: var(--color-primary); font-size: 1rem;">${u.points || u.total_points || 0}</strong> نقطة
