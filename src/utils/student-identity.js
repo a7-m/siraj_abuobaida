@@ -181,7 +181,7 @@ export const studentIdentity = {
           let authSession = null;
           const cleanUsername = data.username.toLowerCase().replace(/[^a-z0-9_]/g, '_');
           const guestEmail = `guest_${cleanUsername}@guest.siraj.om`;
-          const guestPassword = `SirajGuest!_${cleanUsername}_2026`;
+          const guestPassword = data.password || `SirajGuest!_${cleanUsername}_2026`;
 
           // 1. Create or log in to Supabase account so status is logged in and profile exists in DB
           if (supabase) {
@@ -192,6 +192,15 @@ export const studentIdentity = {
               });
               if (!signInErr && signInData?.session) {
                 authSession = signInData.session;
+              } else if (signInErr && signInErr.message && signInErr.message.includes('Invalid login credentials')) {
+                // If user entered wrong password for an existing account with this username
+                try {
+                  const { data: registeredEmail } = await supabase.rpc('get_email_by_username', { p_username: cleanUsername });
+                  if (registeredEmail) {
+                    Toast.error('اسم المستخدم هذا مسجل مسبقاً، وكلمة المرور المدخلة غير صحيحة.');
+                    return;
+                  }
+                } catch (_) {}
               }
             } catch (_) {}
 
@@ -210,9 +219,13 @@ export const studentIdentity = {
                 });
                 if (signUpData?.session) {
                   authSession = signUpData.session;
+                } else if (signUpErr) {
+                  console.warn('Guest account signup attempt error:', signUpErr);
+                  Toast.error(signUpErr.message || 'تعذر تسجيل الدخول بهذا الاسم.');
+                  return;
                 }
               } catch (err) {
-                console.warn('Guest account signup attempt:', err);
+                console.warn('Guest account signup attempt exception:', err);
               }
             }
 
@@ -509,7 +522,7 @@ export const studentIdentity = {
               type="text" 
               id="si-username" 
               class="si-input" 
-              placeholder="${isRegisteredUser ? 'اختياري - مثال: ahmed_2026' : 'مثال: ahmed_2026 أو mohammed_om'}" 
+              placeholder="${isRegisteredUser ? 'اختياري - مثال: ahmed_2026' : 'مثال: ahmed_2026 (حروف إنجليزية وأرقام فقط)'}" 
               value="${this._escape(prefilled.username || '')}" 
               ${isRegisteredUser ? '' : 'required'}
               autocomplete="username"
@@ -518,11 +531,40 @@ export const studentIdentity = {
             >
             <div class="si-field-hint" style="margin-top: 0.35rem; font-size: 0.8rem; color: var(--color-text-muted);">
               ${isRegisteredUser
-                ? '💡 يمكنك تخصيص اسم مستخدم لحسابك (اختياري)، أو تركه فارغاً.'
-                : '💡 اختر اسم مستخدم فريد لتمييز مشاركاتك ومنع تداخل درجاتك مع طالب آخر يحمل نفس الاسم.'
+                ? '💡 اسم المستخدم بالإنجليزية والأرقام فقط (مثال: ahmed_2026) - اختياري لحسابك.'
+                : '💡 اكتب اسم المستخدم بالأحرف الإنجليزية والأرقام فقط (بدون حروف عربية أو مسافات) لتمييز نتائجك.'
               }
             </div>
           </div>
+
+          <!-- Password Field (Mandatory for Guest Login) -->
+          ${isLogin ? `
+            <div class="si-field">
+              <label for="si-password" class="si-label">
+                <span>كلمة المرور</span>
+                <span class="si-req">*</span>
+              </label>
+              <div class="si-password-wrapper" style="position: relative; display: flex; align-items: center;">
+                <input 
+                  type="password" 
+                  id="si-password" 
+                  class="si-input" 
+                  placeholder="أدخل كلمة مرور لحسابك (6 خانات على الأقل)" 
+                  required
+                  minlength="6"
+                  autocomplete="new-password"
+                  dir="ltr"
+                  style="text-align: right; width: 100%; padding-left: 2.75rem;"
+                >
+                <button type="button" id="si-toggle-pwd-btn" style="position: absolute; left: 0.75rem; background: none; border: none; cursor: pointer; font-size: 1.15rem; color: var(--color-text-muted);" tabindex="-1" aria-label="تبديل إظهار كلمة المرور">
+                  👁️
+                </button>
+              </div>
+              <div class="si-field-hint" style="margin-top: 0.35rem; font-size: 0.8rem; color: var(--color-text-muted);">
+                🔐 احفظ اسم المستخدم وكلمة المرور لتتمكن من تسجيل الدخول والمتابعة لاحقاً من أي جهاز.
+              </div>
+            </div>
+          ` : ''}
 
           <!-- School Type Selector -->
           <div class="si-field">
@@ -722,6 +764,34 @@ export const studentIdentity = {
       });
     });
 
+    // Password toggle for guest login
+    if (isLogin) {
+      const togglePwdBtn = backdrop.querySelector('#si-toggle-pwd-btn');
+      const pwdInput = backdrop.querySelector('#si-password');
+      if (togglePwdBtn && pwdInput) {
+        togglePwdBtn.addEventListener('click', () => {
+          if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            togglePwdBtn.textContent = '🙈';
+          } else {
+            pwdInput.type = 'password';
+            togglePwdBtn.textContent = '👁️';
+          }
+        });
+      }
+    }
+
+    // Real-time restriction: Prevent Arabic characters in username
+    if (usernameInput) {
+      usernameInput.addEventListener('input', () => {
+        const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+        if (arabicRegex.test(usernameInput.value)) {
+          usernameInput.value = usernameInput.value.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g, '');
+          Toast.warning('اسم المستخدم يجب أن يكون بالإنجليزية والأرقام فقط (لا يسمح بالحروف العربية).');
+        }
+      });
+    }
+
     setTimeout(() => {
       if (!nameInput.value) nameInput.focus();
       else if (!usernameInput.value) usernameInput.focus();
@@ -739,16 +809,50 @@ export const studentIdentity = {
       }
 
       const usernameVal = usernameInput.value.trim();
+      const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+      const validUsernameRegex = /^[a-zA-Z0-9_.-]+$/;
+
+      // Disallow Arabic characters strictly
+      if (arabicRegex.test(usernameVal)) {
+        Toast.error('اسم المستخدم يجب أن يتكون من أحرف وأرقام إنجليزية فقط (لا يسمح بالحروف العربية).');
+        usernameInput.focus();
+        return;
+      }
+
       if (!isRegisteredUser) {
         if (!usernameVal || usernameVal.length < 3) {
           Toast.error('يرجى إدخال اسم مستخدم فريد لا يقل عن 3 أحرف.');
           usernameInput.focus();
           return;
         }
-      } else {
-        if (usernameVal && usernameVal.length < 3) {
-          Toast.error('اسم المستخدم يجب أن لا يقل عن 3 أحرف إذا تم إدخاله.');
+        if (!validUsernameRegex.test(usernameVal)) {
+          Toast.error('اسم المستخدم يقبل فقط الحروف الإنجليزية والأرقام والرمز (_) بدون مسافات أو رموز خاصة.');
           usernameInput.focus();
+          return;
+        }
+      } else {
+        if (usernameVal) {
+          if (usernameVal.length < 3) {
+            Toast.error('اسم المستخدم يجب أن لا يقل عن 3 أحرف إذا تم إدخاله.');
+            usernameInput.focus();
+            return;
+          }
+          if (!validUsernameRegex.test(usernameVal)) {
+            Toast.error('اسم المستخدم يقبل فقط الحروف الإنجليزية والأرقام والرمز (_) بدون مسافات أو رموز خاصة.');
+            usernameInput.focus();
+            return;
+          }
+        }
+      }
+
+      // Validate password for guest login
+      let passwordVal = '';
+      if (isLogin) {
+        const pwdInput = backdrop.querySelector('#si-password');
+        passwordVal = pwdInput ? pwdInput.value : '';
+        if (!passwordVal || passwordVal.length < 6) {
+          Toast.error('يرجى إدخال كلمة مرور لا تقل عن 6 خانات.');
+          pwdInput?.focus();
           return;
         }
       }
@@ -776,6 +880,7 @@ export const studentIdentity = {
         verifiedData = {
           name: nameVal,
           username: usernameVal,
+          ...(isLogin && passwordVal ? { password: passwordVal } : {}),
           schoolType: 'abu_obaida',
           schoolName: 'مدرسة أبو عبيدة',
           grade: gradeVal,
@@ -801,6 +906,7 @@ export const studentIdentity = {
         verifiedData = {
           name: nameVal,
           username: usernameVal,
+          ...(isLogin && passwordVal ? { password: passwordVal } : {}),
           schoolType: 'other',
           schoolName: schoolNameVal,
           grade: gradeVal,

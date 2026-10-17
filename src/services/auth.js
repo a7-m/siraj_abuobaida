@@ -60,13 +60,35 @@ class AuthService {
     return data;
   }
 
-  async login(email, password) {
+  async login(identifier, password) {
     if (!supabase) {
       throw new Error('Supabase Configuration is missing. Please add URL and KEY.');
     }
+
+    let emailToUse = (identifier || '').trim();
+
+    // If identifier is a username (no @ symbol), resolve to corresponding email
+    if (emailToUse && !emailToUse.includes('@')) {
+      try {
+        const { data: resolvedEmail, error: rpcErr } = await supabase.rpc('get_email_by_username', {
+          p_username: emailToUse
+        });
+        if (!rpcErr && resolvedEmail) {
+          emailToUse = resolvedEmail;
+        } else {
+          // Fallback to deterministic guest email
+          const clean = emailToUse.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+          emailToUse = `guest_${clean}@guest.siraj.om`;
+        }
+      } catch (e) {
+        console.warn('Could not resolve username to email:', e);
+        const clean = emailToUse.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        emailToUse = `guest_${clean}@guest.siraj.om`;
+      }
+    }
     
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: emailToUse,
       password
     });
     

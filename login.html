@@ -79,13 +79,29 @@
 
       <form id="login-form" onsubmit="event.preventDefault(); window.mockLogin();">
         <div class="flex flex-col gap-1" style="margin-bottom: 1rem;">
-          <label style="font-weight: 600; font-size: 0.9rem;">البريد الإلكتروني</label>
-          <input type="email" required placeholder="name@example.com" style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text); font-family: inherit;">
+          <label for="login-identifier" style="font-weight: 600; font-size: 0.9rem;">البريد الإلكتروني أو اسم المستخدم</label>
+          <input 
+            id="login-identifier" 
+            type="text" 
+            required 
+            placeholder="name@example.com أو اسم المستخدم" 
+            autocomplete="username"
+            dir="ltr"
+            style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text); font-family: inherit; text-align: right;"
+          >
         </div>
 
         <div class="flex flex-col gap-1" style="margin-bottom: 0.5rem;">
-          <label style="font-weight: 600; font-size: 0.9rem;">كلمة المرور</label>
-          <input type="password" required placeholder="••••••••" style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text); font-family: inherit;">
+          <label for="login-password" style="font-weight: 600; font-size: 0.9rem;">كلمة المرور</label>
+          <input 
+            id="login-password" 
+            type="password" 
+            required 
+            placeholder="••••••••" 
+            autocomplete="current-password"
+            dir="ltr"
+            style="padding: 0.75rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); background: var(--color-bg); color: var(--color-text); font-family: inherit; text-align: right;"
+          >
         </div>
 
         <div style="text-align: left; margin-bottom: 1.5rem;">
@@ -135,18 +151,18 @@
     });
 
     window.mockLogin = async () => {
-      const emailInput = document.querySelector('input[type="email"]');
-      const passInput = document.querySelector('input[type="password"]');
+      const identifierInput = document.getElementById('login-identifier');
+      const passInput = document.getElementById('login-password');
       const btn = document.getElementById('login-btn');
       
-      const email = emailInput.value;
+      const identifier = identifierInput.value.trim();
       const pass = passInput.value;
 
       btn.innerText = 'جاري تسجيل الدخول...';
       btn.disabled = true;
       
       try {
-        const data = await authService.login(email, pass);
+        const data = await authService.login(identifier, pass);
         window.Toast.success('تم تسجيل الدخول بنجاح! جاري التوجيه...');
         
         let targetUrl = 'dashboard.html';
@@ -174,10 +190,10 @@
         btn.disabled = false;
         
         let errorMsg = 'حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.';
-        if (error.message.includes('missing')) {
+        if (error.message && error.message.includes('missing')) {
           errorMsg = 'المفاتيح غير موجودة. لم يتم تفعيل قاعدة البيانات بعد.';
-        } else if (error.message.includes('Invalid login credentials')) {
-          errorMsg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+        } else if (error.message && error.message.includes('Invalid login credentials')) {
+          errorMsg = 'البريد الإلكتروني / اسم المستخدم أو كلمة المرور غير صحيحة.';
         }
         window.Toast.error(errorMsg);
       }

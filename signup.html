@@ -281,6 +281,11 @@
           <span>التسجيل باستخدام Google</span>
         </button>
 
+        <button id="guest-login-btn" type="button" class="btn btn-outline flex items-center justify-center gap-2" style="width: 100%; margin-top: 0.75rem; border: 1.5px dashed var(--color-primary); color: var(--color-primary); font-weight: 700; padding: 0.75rem 1rem; border-radius: var(--border-radius); background: rgba(79, 70, 229, 0.04); transition: all 0.2s ease;">
+          <span style="font-size: 1.25rem;">🎓</span>
+          <span>الدخول السريع كطالب (بدون حساب)</span>
+        </button>
+
         <div class="auth-links">
           <span>لديك حساب بالفعل؟</span><a href="login.html">تسجيل الدخول هنا</a>
         </div>
@@ -291,6 +296,7 @@
   <script type="module">
     import { authService } from './src/services/auth.js';
     import { supabase } from './src/services/supabase.js';
+    import { studentIdentity } from './src/utils/student-identity.js';
     import { getSchoolClasses, formatGradeLabel, formatSectionLabel } from './src/services/school-classes.js';
     import './src/scripts/main.js';
 
@@ -298,6 +304,16 @@
       // Redirect if logged in already (User Requirement 9: prevent arbitrary viewing)
       if (authService.isLoggedIn()) {
         window.location.replace('dashboard.html');
+      }
+
+      // Guest login handler
+      const guestBtn = document.getElementById('guest-login-btn');
+      if (guestBtn) {
+        guestBtn.addEventListener('click', () => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectUrl = urlParams.get('redirect') || 'develop.html';
+          studentIdentity.showGuestLoginModal({ redirectUrl });
+        });
       }
 
       const pwdInput = document.getElementById('password');
