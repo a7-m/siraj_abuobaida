@@ -156,13 +156,19 @@
             const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).single();
             if (profile?.role === 'teacher') {
               targetUrl = 'teacher-dashboard.html';
+            } else {
+              // Synchronize local progress or prompt if conflict exists
+              try {
+                const { syncOrResolveProgressConflict } = await import('./src/utils/progress-sync.js');
+                await syncOrResolveProgressConflict(userId);
+              } catch (_) {}
             }
           }
         } catch (_) {}
 
         setTimeout(() => {
           window.location.href = targetUrl;
-        }, 800);
+        }, 600);
       } catch (error) {
         btn.innerText = 'دخول';
         btn.disabled = false;

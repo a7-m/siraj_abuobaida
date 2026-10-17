@@ -70,6 +70,14 @@ class StudentDashboardController {
         return;
       }
 
+      // Check and sync/resolve local progress if any exists
+      try {
+        const { syncOrResolveProgressConflict } = await import('../utils/progress-sync.js');
+        await syncOrResolveProgressConflict(this.user.id);
+      } catch (err) {
+        console.warn('Progress sync error in dashboard:', err);
+      }
+
       // Fetch all stats in parallel
       await Promise.all([
         this.fetchDevelopStats(),

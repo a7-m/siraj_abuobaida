@@ -291,6 +291,17 @@ class DevelopController {
 
     if (this.user && supabase) {
       try {
+        const { syncOrResolveProgressConflict } = await import('../utils/progress-sync.js');
+        const resolved = await syncOrResolveProgressConflict(this.user.id);
+        if (resolved && typeof resolved === 'object' && Object.keys(resolved).length > 0) {
+          this.progressMap = resolved;
+          return;
+        }
+      } catch (err) {
+        console.warn('Progress sync/conflict check error:', err);
+      }
+
+      try {
         const { data, error } = await supabase
           .from('student_progress')
           .select('challenge_level_id, status, score, completed_at')

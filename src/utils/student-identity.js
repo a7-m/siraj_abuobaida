@@ -164,6 +164,8 @@ export const studentIdentity = {
 
   /**
    * Dedicated guest login modal trigger (for login.html and quick access)
+   * Creates a real authenticated session and profile in Supabase database so
+   * state becomes officially logged in.
    */
   showGuestLoginModal({ redirectUrl = 'develop.html', onSuccess = null } = {}) {
     const stored = this.getStoredIdentity();
@@ -176,7 +178,83 @@ export const studentIdentity = {
         allowClose: true,
         onClose: () => resolve(null),
         onConfirm: async (data) => {
-          const saved = await this.saveIdentity(data);
+          let authSession = null;
+          const cleanUsername = data.username.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+          const guestEmail = `guest_${cleanUsername}@guest.siraj.om`;
+          const guestPassword = `SirajGuest!_${cleanUsername}_2026`;
+
+          // 1. Create or log in to Supabase account so status is logged in and profile exists in DB
+          if (supabase) {
+            try {
+              const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+                email: guestEmail,
+                password: guestPassword
+              });
+              if (!signInErr && signInData?.session) {
+                authSession = signInData.session;
+              }
+            } catch (_) {}
+
+            if (!authSession) {
+              try {
+                const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+                  email: guestEmail,
+                  password: guestPassword,
+                  options: {
+                    data: {
+                      full_name: data.name,
+                      username: data.username,
+                      role: 'student'
+                    }
+                  }
+                });
+                if (signUpData?.session) {
+                  authSession = signUpData.session;
+                }
+              } catch (err) {
+                console.warn('Guest account signup attempt:', err);
+              }
+            }
+
+            // 2. Update profiles in Supabase with complete student information
+            if (authSession?.user?.id) {
+              try {
+                await supabase
+                  .from('profiles')
+                  .update({
+                    full_name: data.name,
+                    username: data.username,
+                    grade: data.grade,
+                    section: data.section,
+                    school_type: data.schoolType,
+                    school_name: data.schoolName,
+                    last_verified_at: new Date().toISOString()
+                  })
+                  .eq('id', authSession.user.id);
+              } catch (err) {
+                console.warn('Error updating guest profile in DB:', err);
+              }
+            }
+          }
+
+          // 3. Save identity locally
+          const saved = await this.saveIdentity({
+            ...data,
+            email: guestEmail,
+            sessionId: authSession?.user?.id || stored.sessionId,
+            isRegistered: Boolean(authSession)
+          });
+
+          // 4. Synchronize local progress to account if any exists
+          if (authSession?.user?.id) {
+            try {
+              const { syncOrResolveProgressConflict } = await import('./progress-sync.js');
+              await syncOrResolveProgressConflict(authSession.user.id);
+            } catch (err) {
+              console.warn('Progress sync on guest login error:', err);
+            }
+          }
+
           Toast.success(`أهلاً بك يا ${saved.name}! تم تسجيل دخولك بنجاح.`);
           if (onSuccess) onSuccess(saved);
           if (redirectUrl) {
@@ -192,6 +270,8 @@ export const studentIdentity = {
 
   /**
    * Mandatory verification prompt before starting activity.
+   * If logged in and profile is complete: NO MODAL APPEARS.
+   * Username is optional for logged-in accounts.
    */
   async requireVerification({
     activityName = 'النشاط',
@@ -207,45 +287,42 @@ export const studentIdentity = {
     const { session } = await authService.getSessionAsync();
     const user = session?.user || null;
 
-    // Level 2: Check localStorage (persists across page reloads)
     const storedIdentity = this.getStoredIdentity();
-    
-    // For BOTH logged-in AND guest users: check if localStorage has valid, complete data
-    const isLocalStorageComplete = !!(
-      storedIdentity.name && 
-      storedIdentity.username &&
-      storedIdentity.grade && 
-      storedIdentity.section &&
-      storedIdentity.verifiedAt
-    );
 
-    if (isLocalStorageComplete && !forcePrompt) {
-      // localStorage has complete data, use it directly!
-      const verifiedIdentity = {
-        name: storedIdentity.name,
-        username: storedIdentity.username,
-        schoolType: storedIdentity.schoolType || 'abu_obaida',
-        schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
-        grade: storedIdentity.grade,
-        section: storedIdentity.section,
-        sessionId: storedIdentity.sessionId || generateUUID(),
-        verifiedAt: storedIdentity.verifiedAt,
-        email: user?.email,
-        isRegistered: !!user
-      };
-
-      // Cache it for this session
-      this._currentVerified = verifiedIdentity;
-      
-      console.log('✅ Identity from localStorage (no modal needed)');
-      return verifiedIdentity;
-    }
-    
+    // ─────────────────────────────────────────────────────────────
+    // For LOGGED-IN users (email, Google, or guest account):
+    // Data is complete if full_name, grade, and section are present.
+    // Username is optional for registered accounts.
+    // The modal MUST NOT appear if data is complete!
+    // ─────────────────────────────────────────────────────────────
     if (user && !forcePrompt) {
+      // 1. Check if localStorage already has complete data
+      const isLocalCompleteForUser = Boolean(
+        storedIdentity.name &&
+        storedIdentity.grade &&
+        storedIdentity.section &&
+        storedIdentity.verifiedAt
+      );
 
-      // Level 3: localStorage incomplete or missing, fetch from Supabase
-      console.log('⚠️ localStorage incomplete, fetching from Supabase...');
-      
+      if (isLocalCompleteForUser) {
+        const verifiedIdentity = {
+          name: storedIdentity.name,
+          username: storedIdentity.username || '',
+          schoolType: storedIdentity.schoolType || 'abu_obaida',
+          schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
+          grade: storedIdentity.grade,
+          section: storedIdentity.section,
+          sessionId: user.id,
+          verifiedAt: storedIdentity.verifiedAt,
+          email: user.email,
+          isRegistered: true
+        };
+        this._currentVerified = verifiedIdentity;
+        console.log('✅ Identity from localStorage for logged-in user (no modal needed)');
+        return verifiedIdentity;
+      }
+
+      // 2. Fetch from Supabase profiles
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -254,28 +331,22 @@ export const studentIdentity = {
           .single();
 
         if (!error && data) {
-          // Check if profile is complete (has all required fields)
-          const isComplete = !!(data.full_name && data.username && data.grade && data.section);
-          
-          if (isComplete) {
-            // Profile is complete! Build verified identity and save to localStorage
+          const isDbComplete = Boolean(data.full_name && data.grade && data.section);
+          if (isDbComplete) {
             const verifiedIdentity = {
               name: data.full_name,
-              username: data.username,
+              username: data.username || '',
               schoolType: data.school_type || 'abu_obaida',
               schoolName: data.school_type === 'other' ? (data.school_name || 'مدرسة أخرى') : 'مدرسة أبو عبيدة',
               grade: data.grade,
               section: data.section,
-              sessionId: storedIdentity.sessionId || generateUUID(),
+              sessionId: user.id,
               verifiedAt: data.last_verified_at || new Date().toISOString(),
               email: data.email || user.email,
               isRegistered: true
             };
 
-            // Cache it for this session
             this._currentVerified = verifiedIdentity;
-
-            // Save to localStorage for future visits
             try {
               localStorage.setItem(STORAGE_KEY, JSON.stringify(verifiedIdentity));
               localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({
@@ -285,15 +356,13 @@ export const studentIdentity = {
                 section: verifiedIdentity.section,
                 sessionId: verifiedIdentity.sessionId
               }));
-            } catch (e) {
-              console.warn('Failed to save to localStorage:', e);
-            }
+            } catch (_) {}
 
-            console.log('✅ Identity from Supabase (saved to localStorage)');
+            console.log('✅ Identity from Supabase for logged-in user (saved to localStorage, no modal needed)');
             return verifiedIdentity;
           }
 
-          // Profile incomplete, prepare prefilled data for modal
+          // If incomplete in DB, prepare prefilled
           if (data.full_name) storedIdentity.name = data.full_name;
           if (data.username) storedIdentity.username = data.username;
           if (data.grade) storedIdentity.grade = data.grade;
@@ -303,9 +372,40 @@ export const studentIdentity = {
           storedIdentity.email = data.email || user.email;
           storedIdentity.isRegistered = true;
         }
-      } catch (e) {
-        console.warn('Error fetching user profile from Supabase:', e);
-        // Continue to show modal with whatever data we have
+      } catch (err) {
+        console.warn('Error fetching Supabase profile in requireVerification:', err);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // For GUEST users (not logged in):
+    // Requires name, username, grade, section, verifiedAt
+    // ─────────────────────────────────────────────────────────────
+    if (!user && !forcePrompt) {
+      const isGuestComplete = Boolean(
+        storedIdentity.name &&
+        storedIdentity.username &&
+        storedIdentity.grade &&
+        storedIdentity.section &&
+        storedIdentity.verifiedAt
+      );
+
+      if (isGuestComplete) {
+        const verifiedIdentity = {
+          name: storedIdentity.name,
+          username: storedIdentity.username,
+          schoolType: storedIdentity.schoolType || 'abu_obaida',
+          schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
+          grade: storedIdentity.grade,
+          section: storedIdentity.section,
+          sessionId: storedIdentity.sessionId || generateUUID(),
+          verifiedAt: storedIdentity.verifiedAt,
+          email: null,
+          isRegistered: false
+        };
+        this._currentVerified = verifiedIdentity;
+        console.log('✅ Identity from localStorage for guest (no modal needed)');
+        return verifiedIdentity;
       }
     }
 
@@ -358,6 +458,7 @@ export const studentIdentity = {
       'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'
     ];
 
+    const isRegisteredUser = Boolean(user && user.id && !isLogin);
     const modalTitle = isLogin ? 'تسجيل الدخول كطالب (بدون حساب)' : 'تأكيد بيانات الطالب';
     const modalSubtitle = isLogin
       ? 'أدخل بياناتك للانضمام الفوري والمشاركة دون الحاجة لإنشاء حساب أو كلمة مرور'
@@ -398,25 +499,28 @@ export const studentIdentity = {
             >
           </div>
 
-          <!-- Username (Unique to prevent duplicate names) -->
+          <!-- Username (Optional for registered user, Mandatory for guest) -->
           <div class="si-field">
             <label for="si-username" class="si-label">
-              <span>اسم المستخدم (فريد لمنع تشابه الأسماء)</span>
-              <span class="si-req">*</span>
+              <span>اسم المستخدم ${isRegisteredUser ? '<span style="font-size:0.85em; font-weight:normal; opacity:0.75;">(اختياري)</span>' : '(فريد لمنع تشابه الأسماء)'}</span>
+              ${isRegisteredUser ? '' : '<span class="si-req">*</span>'}
             </label>
             <input 
               type="text" 
               id="si-username" 
               class="si-input" 
-              placeholder="مثال: ahmed_2026 أو mohammed_om" 
+              placeholder="${isRegisteredUser ? 'اختياري - مثال: ahmed_2026' : 'مثال: ahmed_2026 أو mohammed_om'}" 
               value="${this._escape(prefilled.username || '')}" 
-              required
+              ${isRegisteredUser ? '' : 'required'}
               autocomplete="username"
               dir="ltr"
               style="text-align: right;"
             >
             <div class="si-field-hint" style="margin-top: 0.35rem; font-size: 0.8rem; color: var(--color-text-muted);">
-              💡 اختر اسم مستخدم فريد لتمييز مشاركاتك ومنع تداخل درجاتك مع طالب آخر يحمل نفس الاسم.
+              ${isRegisteredUser
+                ? '💡 يمكنك تخصيص اسم مستخدم لحسابك (اختياري)، أو تركه فارغاً.'
+                : '💡 اختر اسم مستخدم فريد لتمييز مشاركاتك ومنع تداخل درجاتك مع طالب آخر يحمل نفس الاسم.'
+              }
             </div>
           </div>
 
@@ -635,10 +739,18 @@ export const studentIdentity = {
       }
 
       const usernameVal = usernameInput.value.trim();
-      if (!usernameVal || usernameVal.length < 3) {
-        Toast.error('يرجى إدخال اسم مستخدم صحيح لا يقل عن 3 أحرف لمنع تشابه الأسماء.');
-        usernameInput.focus();
-        return;
+      if (!isRegisteredUser) {
+        if (!usernameVal || usernameVal.length < 3) {
+          Toast.error('يرجى إدخال اسم مستخدم فريد لا يقل عن 3 أحرف.');
+          usernameInput.focus();
+          return;
+        }
+      } else {
+        if (usernameVal && usernameVal.length < 3) {
+          Toast.error('اسم المستخدم يجب أن لا يقل عن 3 أحرف إذا تم إدخاله.');
+          usernameInput.focus();
+          return;
+        }
       }
 
       const selectedType = backdrop.querySelector('input[name="si_school_type"]:checked').value;
