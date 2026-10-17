@@ -407,7 +407,7 @@ class DevelopController {
               guest_grade: iden.grade || null,
               guest_section: iden.section || null,
               guest_school_type: iden.schoolType || iden.school_type || 'abu_obaida',
-              guest_school_name: iden.schoolName || iden.school_name || (iden.schoolType === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+              guest_school_name: iden.schoolName || iden.school_name || (iden.schoolType === 'abu_obaida' ? 'مدرسة أبو عبيدة  ' : 'مدرسة أخرى'),
               status,
               score: bestScore,
               completed_at: new Date().toISOString()
@@ -425,7 +425,7 @@ class DevelopController {
               guest_grade: iden.grade || null,
               guest_section: iden.section || null,
               guest_school_type: iden.schoolType || iden.school_type || 'abu_obaida',
-              guest_school_name: iden.schoolName || iden.school_name || (iden.schoolType === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+              guest_school_name: iden.schoolName || iden.school_name || (iden.schoolType === 'abu_obaida' ? 'مدرسة أبو عبيدة  ' : 'مدرسة أخرى'),
               guest_session_id: sessionId,
               challenge_level_id: levelId,
               status,

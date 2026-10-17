@@ -1,6 +1,6 @@
 /**
  * Teacher Reports & Academic Analytics Module
- * منصة السراج – مدرسة أبو عبيدة بن الجراح
+ * منصة السراج – مدرسة أبو عبيدة  
  * Handles period filtering, KPI calculations from Supabase live data,
  * interactive Chart.js visualizations, top 10 students, top 3 sections,
  * and high-fidelity print, PDF & CSV export.
@@ -1340,7 +1340,7 @@ function exportFullReportCSV() {
 
   // Header Section
   csv += 'سلطنة عمان - وزارة التربية والتعليم\r\n';
-  csv += 'مدرسة أبو عبيدة بن الجراح للتعليم ما بعد الأساسي (10 - 12)\r\n';
+  csv += 'مدرسة أبو عبيدة   للتعليم ما بعد الأساسي (10 - 12)\r\n';
   csv += 'منصة السراج التعليمية - التقرير الإحصائي والتحليلي للأداء الأكاديمي\r\n';
   csv += `تاريخ ووقت إصدار التقرير:,${now.toLocaleString('ar-OM')}\r\n`;
   csv += `المعلم المسؤول:,${csvEscape(teacherName)}\r\n`;

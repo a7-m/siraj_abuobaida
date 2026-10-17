@@ -32,7 +32,7 @@ function populateProfileData() {
 
   const fullName = currentProfile.full_name || 'المعلم';
   const email = currentUser?.email || currentProfile.email || 'غير متوفر';
-  const school = currentProfile.school_name || 'مدرسة أبو عبيدة بن الجراح للتعليم ما بعد الأساسي (10-12)';
+  const school = currentProfile.school_name || 'مدرسة أبو عبيدة   للتعليم ما بعد الأساسي (10-12)';
 
   // Hero section
   const heroName = document.getElementById('prof-hero-name');
@@ -101,7 +101,7 @@ async function saveProfileDetails() {
   const saveBtn = document.getElementById('btn-save-profile');
 
   const newName = inputName?.value.trim();
-  const newSchool = inputSchool?.value.trim() || 'مدرسة أبو عبيدة بن الجراح';
+  const newSchool = inputSchool?.value.trim() || 'مدرسة أبو عبيدة  ';
 
   if (!newName) {
     Toast.error('يرجى إدخال اسم المعلم');

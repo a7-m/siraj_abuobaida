@@ -562,7 +562,7 @@ class StudentDashboardController {
         <span class="profile-label">المدرسة</span>
         <span class="profile-value">${
           this.profile.school_type === 'abu_obaida' 
-            ? 'مدرسة أبو عبيدة بن الجراح' 
+            ? 'مدرسة أبو عبيدة  ' 
             : this.escapeHtml(this.profile.school_name || 'مدرسة أخرى')
         }</span>
       </div>
