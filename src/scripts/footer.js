@@ -19,7 +19,8 @@ export function createFooter() {
     <div class="siraj-footer-content">
       <div class="siraj-footer-label">إعداد الطالبين</div>
       <div class="siraj-footer-names">لؤي الكندي وأحمد عصام</div>
-      <div class="siraj-footer-supervision">تحت إشراف مركز مصادر التعلم</div>
+      <div class="siraj-footer-supervision"> تحت إشراف د. شريف -- مركز مصادر التعلم </div>
+      <div class="siraj-footer-copy"> &copy; 2026 سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة.</div>
     </div>
   `;
   
