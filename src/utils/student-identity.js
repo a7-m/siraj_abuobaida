@@ -54,6 +54,7 @@ export const studentIdentity = {
         }
         return {
           name: parsed.name || parsed.full_name || '',
+          username: parsed.username || '',
           schoolType: parsed.schoolType || parsed.school_type || 'abu_obaida',
           schoolName: parsed.schoolName || parsed.school_name || 'مدرسة أبو عبيدة',
           grade: parsed.grade || '',
@@ -68,6 +69,7 @@ export const studentIdentity = {
 
     const initial = {
       name: '',
+      username: '',
       schoolType: 'abu_obaida',
       schoolName: 'مدرسة أبو عبيدة',
       grade: '10',
@@ -114,6 +116,7 @@ export const studentIdentity = {
     const current = this.getStoredIdentity();
     const updated = {
       name: (info.name || '').trim(),
+      username: (info.username || '').trim(),
       schoolType: info.schoolType === 'other' ? 'other' : 'abu_obaida',
       schoolName: info.schoolType === 'other' ? (info.schoolName || '').trim() : 'مدرسة أبو عبيدة',
       grade: (info.grade || '').trim(),
@@ -126,6 +129,7 @@ export const studentIdentity = {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({
         name: updated.name,
+        username: updated.username,
         grade: updated.grade,
         section: updated.section,
         sessionId: updated.sessionId
@@ -142,6 +146,7 @@ export const studentIdentity = {
           .from('profiles')
           .update({
             full_name: updated.name,
+            username: updated.username,
             grade: updated.grade,
             section: updated.section,
             school_type: updated.schoolType,
@@ -158,13 +163,35 @@ export const studentIdentity = {
   },
 
   /**
+   * Dedicated guest login modal trigger (for login.html and quick access)
+   */
+  showGuestLoginModal({ redirectUrl = 'develop.html', onSuccess = null } = {}) {
+    const stored = this.getStoredIdentity();
+    return new Promise((resolve) => {
+      this._renderModal({
+        activityName: 'المنصة',
+        prefilled: stored,
+        user: null,
+        isLogin: true,
+        allowClose: true,
+        onClose: () => resolve(null),
+        onConfirm: async (data) => {
+          const saved = await this.saveIdentity(data);
+          Toast.success(`أهلاً بك يا ${saved.name}! تم تسجيل دخولك بنجاح.`);
+          if (onSuccess) onSuccess(saved);
+          if (redirectUrl) {
+            setTimeout(() => {
+              window.location.href = redirectUrl;
+            }, 600);
+          }
+          resolve(saved);
+        }
+      });
+    });
+  },
+
+  /**
    * Mandatory verification prompt before starting activity.
-   * Uses smart multi-level caching:
-   * 1. Memory cache (_currentVerified) - fastest
-   * 2. localStorage - fast, persists across page reloads
-   * 3. Supabase - only if logged in and localStorage is stale/missing
-   * 
-   * IMPORTANT: Checks localStorage first for logged-in users to avoid unnecessary API calls.
    */
   async requireVerification({
     activityName = 'النشاط',
@@ -186,6 +213,7 @@ export const studentIdentity = {
     // For BOTH logged-in AND guest users: check if localStorage has valid, complete data
     const isLocalStorageComplete = !!(
       storedIdentity.name && 
+      storedIdentity.username &&
       storedIdentity.grade && 
       storedIdentity.section &&
       storedIdentity.verifiedAt
@@ -195,6 +223,7 @@ export const studentIdentity = {
       // localStorage has complete data, use it directly!
       const verifiedIdentity = {
         name: storedIdentity.name,
+        username: storedIdentity.username,
         schoolType: storedIdentity.schoolType || 'abu_obaida',
         schoolName: storedIdentity.schoolName || 'مدرسة أبو عبيدة',
         grade: storedIdentity.grade,
@@ -220,18 +249,19 @@ export const studentIdentity = {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, grade, section, school_type, school_name, email')
+          .select('full_name, username, grade, section, school_type, school_name, email, last_verified_at')
           .eq('id', user.id)
           .single();
 
         if (!error && data) {
           // Check if profile is complete (has all required fields)
-          const isComplete = !!(data.full_name && data.grade && data.section);
+          const isComplete = !!(data.full_name && data.username && data.grade && data.section);
           
           if (isComplete) {
             // Profile is complete! Build verified identity and save to localStorage
             const verifiedIdentity = {
               name: data.full_name,
+              username: data.username,
               schoolType: data.school_type || 'abu_obaida',
               schoolName: data.school_type === 'other' ? (data.school_name || 'مدرسة أخرى') : 'مدرسة أبو عبيدة',
               grade: data.grade,
@@ -250,6 +280,7 @@ export const studentIdentity = {
               localStorage.setItem(STORAGE_KEY, JSON.stringify(verifiedIdentity));
               localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify({
                 name: verifiedIdentity.name,
+                username: verifiedIdentity.username,
                 grade: verifiedIdentity.grade,
                 section: verifiedIdentity.section,
                 sessionId: verifiedIdentity.sessionId
@@ -264,6 +295,7 @@ export const studentIdentity = {
 
           // Profile incomplete, prepare prefilled data for modal
           if (data.full_name) storedIdentity.name = data.full_name;
+          if (data.username) storedIdentity.username = data.username;
           if (data.grade) storedIdentity.grade = data.grade;
           if (data.section) storedIdentity.section = data.section;
           if (data.school_type) storedIdentity.schoolType = data.school_type;
@@ -295,7 +327,7 @@ export const studentIdentity = {
     });
   },
 
-  async _renderModal({ activityName, prefilled, user, onConfirm }) {
+  async _renderModal({ activityName, prefilled, user, onConfirm, isLogin = false, allowClose = false, onClose = null }) {
     // Remove any existing identity modal
     document.querySelector('.siraj-identity-backdrop')?.remove();
 
@@ -326,15 +358,25 @@ export const studentIdentity = {
       'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'
     ];
 
+    const modalTitle = isLogin ? 'تسجيل الدخول كطالب (بدون حساب)' : 'تأكيد بيانات الطالب';
+    const modalSubtitle = isLogin
+      ? 'أدخل بياناتك للانضمام الفوري والمشاركة دون الحاجة لإنشاء حساب أو كلمة مرور'
+      : `يرجى مراجعة وتأكيد بياناتك قبل بدء ${activityName}`;
+    const submitText = isLogin ? 'دخول إلى المنصة' : 'موافق — تأكيد ومتابعة';
+
     backdrop.innerHTML = `
       <div class="siraj-identity-modal">
+        ${allowClose ? `
+          <button type="button" id="si-close-modal-btn" class="si-modal-close-btn" aria-label="إغلاق">&times;</button>
+        ` : ''}
+
         <div class="si-modal-header">
           <div class="si-icon-badge">
             <span>🎓</span>
           </div>
           <div class="si-header-text">
-            <h2 id="si-modal-title">تأكيد بيانات الطالب</h2>
-            <p>يرجى مراجعة وتأكيد بياناتك قبل بدء ${activityName}</p>
+            <h2 id="si-modal-title">${modalTitle}</h2>
+            <p>${modalSubtitle}</p>
           </div>
         </div>
 
@@ -354,6 +396,28 @@ export const studentIdentity = {
               required
               autocomplete="name"
             >
+          </div>
+
+          <!-- Username (Unique to prevent duplicate names) -->
+          <div class="si-field">
+            <label for="si-username" class="si-label">
+              <span>اسم المستخدم (فريد لمنع تشابه الأسماء)</span>
+              <span class="si-req">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="si-username" 
+              class="si-input" 
+              placeholder="مثال: ahmed_2026 أو mohammed_om" 
+              value="${this._escape(prefilled.username || '')}" 
+              required
+              autocomplete="username"
+              dir="ltr"
+              style="text-align: right;"
+            >
+            <div class="si-field-hint" style="margin-top: 0.35rem; font-size: 0.8rem; color: var(--color-text-muted);">
+              💡 اختر اسم مستخدم فريد لتمييز مشاركاتك ومنع تداخل درجاتك مع طالب آخر يحمل نفس الاسم.
+            </div>
           </div>
 
           <!-- School Type Selector -->
@@ -458,6 +522,11 @@ export const studentIdentity = {
                 <span>🔐</span>
                 <span>أنت مسجل الدخول بحساب <strong>${this._escape(user.email)}</strong>. سيتم ربط مشاركتك بملفك الدائم.</span>
               </div>
+            ` : isLogin ? `
+              <div class="si-notice-row">
+                <span>⚡</span>
+                <span>دخول فوري مباشر: تُحفظ بياناتك ودرجاتك تحت اسم المستخدم هذا على هذا المتصفح دون الحاجة لكلمة مرور.</span>
+              </div>
             ` : `
               <div class="si-notice-row">
                 <span>🌐</span>
@@ -466,10 +535,10 @@ export const studentIdentity = {
             `}
           </div>
 
-          <!-- Action Button: Must Click "موافق" -->
+          <!-- Action Button -->
           <div class="si-actions">
             <button type="submit" id="si-submit-btn" class="btn btn-primary si-submit-btn">
-              <span>موافق — تأكيد ومتابعة</span>
+              <span>${submitText}</span>
               <span class="si-btn-arrow">←</span>
             </button>
           </div>
@@ -482,6 +551,7 @@ export const studentIdentity = {
     // Grab elements
     const form = backdrop.querySelector('#si-form');
     const nameInput = backdrop.querySelector('#si-name');
+    const usernameInput = backdrop.querySelector('#si-username');
     const radioTypeEls = backdrop.querySelectorAll('input[name="si_school_type"]');
     const abuBox = backdrop.querySelector('#si-abu-obaida-box');
     const otherBox = backdrop.querySelector('#si-other-box');
@@ -490,6 +560,19 @@ export const studentIdentity = {
     const otherSchoolInput = backdrop.querySelector('#si-other-school-name');
     const otherGradeSelect = backdrop.querySelector('#si-other-grade');
     const otherSectionInput = backdrop.querySelector('#si-other-section');
+
+    if (allowClose) {
+      const closeBtn = backdrop.querySelector('#si-close-modal-btn');
+      const dismiss = () => {
+        backdrop.classList.add('si-closing');
+        setTimeout(() => backdrop.remove(), 250);
+        if (onClose) onClose();
+      };
+      if (closeBtn) closeBtn.addEventListener('click', dismiss);
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) dismiss();
+      });
+    }
 
     // Populate Abu Obaida sections based on initial grade
     const updateAoSections = async (chosenGrade, currentSection) => {
@@ -537,6 +620,7 @@ export const studentIdentity = {
 
     setTimeout(() => {
       if (!nameInput.value) nameInput.focus();
+      else if (!usernameInput.value) usernameInput.focus();
     }, 100);
 
     // Form submission
@@ -547,6 +631,13 @@ export const studentIdentity = {
       if (!nameVal || nameVal.length < 2) {
         Toast.error('يرجى إدخال اسم الطالب كاملاً (حرفين على الأقل).');
         nameInput.focus();
+        return;
+      }
+
+      const usernameVal = usernameInput.value.trim();
+      if (!usernameVal || usernameVal.length < 3) {
+        Toast.error('يرجى إدخال اسم مستخدم صحيح لا يقل عن 3 أحرف لمنع تشابه الأسماء.');
+        usernameInput.focus();
         return;
       }
 
@@ -572,6 +663,7 @@ export const studentIdentity = {
 
         verifiedData = {
           name: nameVal,
+          username: usernameVal,
           schoolType: 'abu_obaida',
           schoolName: 'مدرسة أبو عبيدة',
           grade: gradeVal,
@@ -596,6 +688,7 @@ export const studentIdentity = {
 
         verifiedData = {
           name: nameVal,
+          username: usernameVal,
           schoolType: 'other',
           schoolName: schoolNameVal,
           grade: gradeVal,

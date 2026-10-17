@@ -54,7 +54,6 @@
 .header,
 .main-content,
 .footer,
-.modal,
 .card,
 .empty-state,
 .floating-card,
@@ -67,8 +66,7 @@
 .card,
 .empty-state,
 .floating-card,
-.footer,
-.toast {
+.footer {
   background-color: var(--color-bg-secondary) !important;
   opacity: 1 !important;
 }

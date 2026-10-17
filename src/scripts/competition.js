@@ -193,6 +193,7 @@ const AttemptService = {
       }
       if (studentInfo) {
         payload.guest_name = studentInfo.name || 'مشارك';
+        payload.guest_username = studentInfo.username || null;
         payload.guest_grade = studentInfo.grade || null;
         payload.guest_section = studentInfo.section || null;
         payload.guest_school_type = studentInfo.schoolType || 'abu_obaida';

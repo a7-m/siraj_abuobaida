@@ -6,6 +6,7 @@
 import { supabase } from '../services/supabase.js';
 import { Toast } from '../utils/toast.js';
 import { showConfirmModal } from './teacher-nav.js';
+import { openQuestionBankPicker } from '../utils/question-picker.js';
 
 let currentChallenges = [];
 let challengeCategories = [];
@@ -28,6 +29,8 @@ export function setupChallenges() {
 
   // Level Question buttons
   const btnAddLq = document.getElementById('btn-add-level-question');
+  const btnChooseQBankLq = document.getElementById('btn-choose-qbank-lq');
+  const btnImportQBankLq = document.getElementById('btn-import-qbank-lq');
   const btnCancelLq = document.getElementById('btn-cancel-lq');
   const btnSaveLq = document.getElementById('btn-save-lq');
   const lqTypeSelect = document.getElementById('lq-type');
@@ -46,6 +49,49 @@ export function setupChallenges() {
   if (btnSaveLq) btnSaveLq.addEventListener('click', saveLevelQuestion);
   if (lqTypeSelect) {
     lqTypeSelect.addEventListener('change', () => renderLevelQuestionOptionsForm(lqTypeSelect.value));
+  }
+
+  // Question Bank Picker buttons for Challenges
+  if (btnChooseQBankLq) {
+    btnChooseQBankLq.addEventListener('click', () => {
+      if (!editingLevelId) {
+        Toast.error('يرجى حفظ المرحلة أولاً قبل إضافة أسئلة من بنك الأسئلة');
+        return;
+      }
+      openQuestionBankPicker({
+        title: 'اختيار سؤال لمرحلة التحدي من بنك الأسئلة',
+        subtitle: 'اختر سؤالاً لإدراجه مباشرة في هذه المرحلة أو استيراده للتعديل',
+        excludeIds: currentLevelQuestions.map(q => q.id),
+        onDirectInsert: async (question) => {
+          const orderNum = currentLevelQuestions.length + 1;
+          const { error: clqErr } = await supabase
+            .from('challenge_questions')
+            .insert({
+              challenge_level_id: editingLevelId,
+              question_id: question.id,
+              order_num: orderNum
+            });
+          if (clqErr) throw clqErr;
+          Toast.success('تمت إضافة السؤال من بنك الأسئلة إلى المرحلة بنجاح!');
+          await loadChallengeLevels(editingChallengeId);
+        },
+        onSelect: (question) => {
+          openLevelQuestionEditor(question, true);
+        }
+      });
+    });
+  }
+
+  if (btnImportQBankLq) {
+    btnImportQBankLq.addEventListener('click', () => {
+      openQuestionBankPicker({
+        title: 'استيراد سؤال من بنك الأسئلة إلى المحرر',
+        subtitle: 'اختر سؤالاً لتعبئة بياناته في نموذج السؤال وتعديلها بحرية',
+        onSelect: (question) => {
+          loadQuestionIntoLevelEditor(question);
+        }
+      });
+    });
   }
 
   // Load initial
@@ -736,7 +782,7 @@ function renderLevelQuestionsList() {
   });
 }
 
-function openLevelQuestionEditor(q = null) {
+function openLevelQuestionEditor(q = null, isFromBank = false) {
   const editor = document.getElementById('level-question-editor');
   if (!editor) return;
   editor.style.display = 'block';
@@ -753,6 +799,15 @@ function openLevelQuestionEditor(q = null) {
     if (textEl) textEl.value = '';
     if (pointsEl) pointsEl.value = '1';
     renderLevelQuestionOptionsForm('mcq');
+  } else if (isFromBank) {
+    editingLevelQuestionId = null;
+    if (titleEl) titleEl.textContent = 'سؤال جديد (مستورد من بنك الأسئلة)';
+    if (typeEl) typeEl.value = (q.type === 'mcq' || q.type === 'tf') ? q.type : 'mcq';
+    if (textEl) textEl.value = q.text || '';
+    if (pointsEl) pointsEl.value = q.points || 1;
+    const correctIndex = (q.metadata?.options || []).indexOf(q.metadata?.correct_answer);
+    renderLevelQuestionOptionsForm(typeEl.value, q.metadata || {}, Math.max(0, correctIndex));
+    Toast.success('تم استيراد بيانات السؤال من البنك إلى نموذج المحرر.');
   } else {
     editingLevelQuestionId = q.id;
     if (titleEl) titleEl.textContent = 'تعديل السؤال';
@@ -762,6 +817,32 @@ function openLevelQuestionEditor(q = null) {
     const correctIndex = (q.metadata?.options || []).indexOf(q.metadata?.correct_answer);
     renderLevelQuestionOptionsForm(q.type || 'mcq', q.metadata, Math.max(0, correctIndex));
   }
+}
+
+function loadQuestionIntoLevelEditor(q) {
+  const editor = document.getElementById('level-question-editor');
+  if (!editor) return;
+  editor.style.display = 'block';
+
+  const typeEl = document.getElementById('lq-type');
+  const textEl = document.getElementById('lq-text');
+  const pointsEl = document.getElementById('lq-points');
+
+  if (typeEl) {
+    typeEl.value = (q.type === 'mcq' || q.type === 'tf') ? q.type : 'mcq';
+  }
+  if (textEl) textEl.value = q.text || '';
+  if (pointsEl) pointsEl.value = q.points || 1;
+
+  const type = typeEl ? typeEl.value : 'mcq';
+  const meta = q.metadata || {};
+  let correctIndex = 0;
+  if (Array.isArray(meta.options)) {
+    const idx = meta.options.indexOf(meta.correct_answer);
+    if (idx >= 0) correctIndex = idx;
+  }
+  renderLevelQuestionOptionsForm(type, meta, correctIndex);
+  Toast.success('تم استيراد بيانات السؤال إلى المحرر بنجاح.');
 }
 
 function closeLevelQuestionEditor() {

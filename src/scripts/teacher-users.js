@@ -165,7 +165,11 @@ function renderTable() {
           <div class="flex gap-2">
             <button class="btn btn-outline btn-sm btn-edit-usr" data-id="${u.id}">✏️ تعديل</button>
             <button class="btn btn-outline btn-sm btn-view-act" data-id="${u.id}" title="سجل الأنشطة والنتائج">📊 السجل</button>
-            <button class="btn btn-outline-danger btn-sm btn-delete-usr" data-id="${u.id}" data-name="${escapeHtml(u.full_name || 'المستخدم')}" title="حذف الحساب">🗑️</button>
+            ${isTeacher ? `
+              <button class="btn btn-outline btn-sm" disabled title="لا يمكن حذف حساب معلم" style="opacity: 0.5; cursor: not-allowed;">🔒</button>
+            ` : `
+              <button class="btn btn-outline-danger btn-sm btn-delete-usr" data-id="${u.id}" data-name="${escapeHtml(u.full_name || 'الطالب')}" title="حذف حساب الطالب نهائياً">🗑️</button>
+            `}
           </div>
         </td>
       </tr>
@@ -317,11 +321,11 @@ async function openActivityModal(user) {
   modal.classList.add('active');
 
   try {
-    // 1. Fetch competition attempts
+    // 1. Fetch competition attempts using existing DB columns (total_score, submitted_at)
     const { data: attempts, error: attErr } = await supabase
       .from('competition_attempts')
       .select(`
-        id, score, started_at, completed_at, status,
+        id, total_score, started_at, submitted_at, status,
         competitions:competition_id ( title )
       `)
       .eq('student_id', user.id)
@@ -336,47 +340,50 @@ async function openActivityModal(user) {
         <div style="background: var(--color-bg-alt); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <strong>${escapeHtml(a.competitions?.title || 'مسابقة')}</strong>
-            <div style="font-size: 0.8rem; color: var(--color-text-muted);">${formatDate(a.started_at)}</div>
+            <div style="font-size: 0.8rem; color: var(--color-text-muted);">${formatDate(a.submitted_at || a.started_at)}</div>
           </div>
           <div style="text-align: left;">
-            <span class="badge ${a.status === 'completed' ? 'badge-published' : 'badge-draft'}">${a.status === 'completed' ? 'مكتملة' : a.status}</span>
-            <span style="font-weight: 800; color: var(--color-primary); margin-right: 0.5rem;">${a.score || 0} نقطة</span>
+            <span class="badge ${a.status === 'completed' ? 'badge-published' : 'badge-draft'}">${a.status === 'completed' ? 'مكتملة' : (a.status || '-')}</span>
+            <span style="font-weight: 800; color: var(--color-primary); margin-right: 0.5rem;">${a.total_score !== null && a.total_score !== undefined ? a.total_score : 0} نقطة</span>
           </div>
         </div>
       `).join('');
     }
 
-    // 2. Fetch challenge levels progress
+    // 2. Fetch challenge levels progress using existing DB columns (status, completed_at)
     const { data: progress, error: progErr } = await supabase
       .from('student_progress')
       .select(`
-        id, score, is_completed, updated_at,
+        id, score, status, completed_at,
         challenge_levels:challenge_level_id (
           level_number, title,
           challenges:challenge_id ( title )
         )
       `)
       .eq('student_id', user.id)
-      .order('updated_at', { ascending: false });
+      .order('completed_at', { ascending: false, nullsFirst: false });
 
     if (progErr) throw progErr;
 
     if (!progress || progress.length === 0) {
       progList.innerHTML = '<div style="padding: 0.75rem; color: var(--color-text-muted); font-size: 0.88rem;">لم يبدأ الطالب أي تحدٍ قرائي بعد.</div>';
     } else {
-      progList.innerHTML = progress.map(p => `
-        <div style="background: var(--color-bg-alt); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <strong>${escapeHtml(p.challenge_levels?.challenges?.title || 'تحدي قراءة')}</strong> - 
-            <span style="font-size: 0.9rem;">المستوى ${p.challenge_levels?.level_number || 1}: ${escapeHtml(p.challenge_levels?.title || '')}</span>
-            <div style="font-size: 0.8rem; color: var(--color-text-muted);">${formatDate(p.updated_at)}</div>
+      progList.innerHTML = progress.map(p => {
+        const isCompleted = p.status === 'completed';
+        return `
+          <div style="background: var(--color-bg-alt); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong>${escapeHtml(p.challenge_levels?.challenges?.title || 'تحدي قراءة')}</strong> - 
+              <span style="font-size: 0.9rem;">المستوى ${p.challenge_levels?.level_number || 1}: ${escapeHtml(p.challenge_levels?.title || '')}</span>
+              <div style="font-size: 0.8rem; color: var(--color-text-muted);">${formatDate(p.completed_at)}</div>
+            </div>
+            <div>
+              <span class="badge ${isCompleted ? 'badge-published' : 'badge-draft'}">${isCompleted ? 'مجتاز ✓' : (p.status || 'قيد المحاولة')}</span>
+              <span style="font-weight: 700; color: var(--color-primary); margin-right: 0.5rem;">${p.score !== null && p.score !== undefined ? p.score : 0} نقطة</span>
+            </div>
           </div>
-          <div>
-            <span class="badge ${p.is_completed ? 'badge-published' : 'badge-draft'}">${p.is_completed ? 'مجتاز ✓' : 'قيد المحاولة'}</span>
-            <span style="font-weight: 700; color: var(--color-primary); margin-right: 0.5rem;">${p.score || 0} نقطة</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
   } catch (err) {
@@ -391,27 +398,30 @@ function closeActivityModal() {
 }
 
 function confirmDeleteUser(user) {
-  const isTeacher = user.role === 'teacher' || user.role === 'admin';
+  if (user.role === 'teacher' || user.role === 'admin') {
+    Toast.warning('حسابات المعلمين والإدارة محمية ولا يمكن حذفها.');
+    return;
+  }
+
   showConfirmModal({
-    title: 'حذف حساب المستخدم',
-    message: `هل أنت متأكد من حذف حساب «${user.full_name || 'المستخدم'}»؟${isTeacher ? ' تنبيه: هذا الحساب له دور معلم.' : ''} لن يمكن التراجع عن هذا الإجراء.`,
+    title: 'حذف حساب الطالب نهائياً',
+    message: `هل أنت متأكد من رغبتك في حذف حساب الطالب «${user.full_name || 'الطالب'}» نهائياً؟ سيتم حذف بيانات الدخول والملف الشخصي وسجل المحاولات من النظام ولا يمكن التراجع عن هذا الإجراء.`,
     confirmText: 'نعم، حذف الحساب',
     confirmClass: 'btn-danger',
     onConfirm: async () => {
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', user.id);
+        const { data, error } = await supabase.rpc('delete_user_by_teacher', {
+          target_user_id: user.id
+        });
 
         if (error) throw error;
 
         allProfiles = allProfiles.filter(u => u.id !== user.id);
-        Toast.success('تم حذف حساب المستخدم بنجاح');
+        Toast.success(`تم حذف حساب الطالب «${user.full_name || ''}» نهائياً من النظام`);
         renderTable();
       } catch (err) {
         console.error('Delete user error:', err);
-        Toast.error('تعذر حذف الحساب: ' + err.message);
+        Toast.error('تعذر حذف الحساب: ' + (err.message || 'حدث خطأ'));
       }
     }
   });

@@ -7,6 +7,7 @@ import { supabase } from '../services/supabase.js';
 import { authService } from '../services/auth.js';
 import { Toast } from '../utils/toast.js';
 import { showConfirmModal } from './teacher-nav.js';
+import { openQuestionBankPicker } from '../utils/question-picker.js';
 
 let currentCompetitions = [];
 let editingCompetitionId = null;
@@ -23,6 +24,8 @@ export function setupCompetitions() {
   const coverArea = document.getElementById('comp-cover-upload-area');
   const btnRemoveCover = document.getElementById('btn-remove-comp-cover');
   const btnAddQuestion = document.getElementById('btn-add-question');
+  const btnChooseQBankComp = document.getElementById('btn-choose-qbank-comp');
+  const btnImportQBankComp = document.getElementById('btn-import-qbank-comp');
   const btnSaveQuestion = document.getElementById('btn-save-question');
   const btnCancelQuestion = document.getElementById('btn-cancel-question');
   const qTypeSelect = document.getElementById('q-type');
@@ -60,6 +63,49 @@ export function setupCompetitions() {
   if (btnSaveQuestion) btnSaveQuestion.addEventListener('click', saveQuestion);
   if (qTypeSelect) {
     qTypeSelect.addEventListener('change', () => renderQuestionOptionsForm(qTypeSelect.value));
+  }
+
+  // Question Bank Picker buttons for Competitions
+  if (btnChooseQBankComp) {
+    btnChooseQBankComp.addEventListener('click', () => {
+      if (!editingCompetitionId) {
+        Toast.error('يرجى حفظ المسابقة أولاً قبل إضافة أسئلة من بنك الأسئلة');
+        return;
+      }
+      openQuestionBankPicker({
+        title: 'اختيار سؤال للمسابقة من بنك الأسئلة',
+        subtitle: 'اختر سؤالاً لإدراجه مباشرة في هذه المسابقة أو استيراده للتعديل',
+        excludeIds: currentQuestions.map(q => q.id),
+        onDirectInsert: async (question) => {
+          const orderNum = currentQuestions.length + 1;
+          const { error: cqErr } = await supabase
+            .from('competition_questions')
+            .insert({
+              competition_id: editingCompetitionId,
+              question_id: question.id,
+              order_num: orderNum
+            });
+          if (cqErr) throw cqErr;
+          Toast.success('تمت إضافة السؤال من بنك الأسئلة إلى المسابقة بنجاح!');
+          await loadCompetitionQuestions(editingCompetitionId);
+        },
+        onSelect: (question) => {
+          openQuestionEditor(question, true);
+        }
+      });
+    });
+  }
+
+  if (btnImportQBankComp) {
+    btnImportQBankComp.addEventListener('click', () => {
+      openQuestionBankPicker({
+        title: 'استيراد سؤال من بنك الأسئلة إلى المحرر',
+        subtitle: 'اختر سؤالاً لتعبئة بياناته في نموذج تحرير السؤال وتعديلها بحرية',
+        onSelect: (question) => {
+          loadQuestionIntoCompEditor(question);
+        }
+      });
+    });
   }
 
   // Initial load
@@ -504,7 +550,7 @@ function renderQuestionsList() {
   });
 }
 
-function openQuestionEditor(q = null) {
+function openQuestionEditor(q = null, isFromBank = false) {
   const editor = document.getElementById('question-editor');
   if (!editor) return;
   editor.style.display = 'block';
@@ -521,6 +567,16 @@ function openQuestionEditor(q = null) {
     if (textEl) textEl.value = '';
     if (pointsEl) pointsEl.value = '1';
     renderQuestionOptionsForm('mcq');
+  } else if (isFromBank) {
+    editingQuestionId = null;
+    if (titleEl) titleEl.textContent = 'سؤال جديد (مستورد من بنك الأسئلة)';
+    const supportedTypes = ['mcq', 'tf', 'order'];
+    const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
+    if (typeSelect) typeSelect.value = chosenType;
+    if (textEl) textEl.value = q.text || '';
+    if (pointsEl) pointsEl.value = q.points || 1;
+    renderQuestionOptionsForm(chosenType, q.metadata || {});
+    Toast.success('تم استيراد بيانات السؤال من البنك إلى نموذج المحرر.');
   } else {
     editingQuestionId = q.id;
     if (titleEl) titleEl.textContent = 'تعديل السؤال';
@@ -530,6 +586,27 @@ function openQuestionEditor(q = null) {
     renderQuestionOptionsForm(q.type || 'mcq', q.metadata);
   }
 
+  editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function loadQuestionIntoCompEditor(q) {
+  const editor = document.getElementById('question-editor');
+  if (!editor) return;
+  editor.style.display = 'block';
+
+  const typeSelect = document.getElementById('q-type');
+  const textEl = document.getElementById('q-text');
+  const pointsEl = document.getElementById('q-points');
+
+  const supportedTypes = ['mcq', 'tf', 'order'];
+  const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
+
+  if (typeSelect) typeSelect.value = chosenType;
+  if (textEl) textEl.value = q.text || '';
+  if (pointsEl) pointsEl.value = q.points || 1;
+
+  renderQuestionOptionsForm(chosenType, q.metadata || {});
+  Toast.success('تم استيراد بيانات السؤال إلى المحرر بنجاح.');
   editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 

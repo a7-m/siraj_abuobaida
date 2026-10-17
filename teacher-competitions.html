@@ -10,7 +10,9 @@
   <link rel="stylesheet" href="./src/styles/global.css">
   <link rel="stylesheet" href="./src/styles/layout.css">
   <link rel="stylesheet" href="./src/styles/components.css">
-  <link rel="stylesheet" href="./src/styles/dotgrid.css">`n  <link rel="stylesheet" href="./src/styles/page-transitions.css">`n  <link rel="stylesheet" href="./src/styles/footer.css">
+  <link rel="stylesheet" href="./src/styles/dotgrid.css">
+  <link rel="stylesheet" href="./src/styles/page-transitions.css">
+  <link rel="stylesheet" href="./src/styles/footer.css">
   <link rel="stylesheet" href="./src/styles/teacher-dashboard.css">
   <script>
     (function () {
@@ -203,14 +205,20 @@
                   أضف الأسئلة وحدد خياراتها ودرجاتها وإجاباتها الصحيحة.
                 </p>
               </div>
-              <button id="btn-add-question" class="btn btn-primary btn-sm">+ إضافة سؤال للمسابقة</button>
+              <div class="flex gap-2">
+                <button type="button" id="btn-choose-qbank-comp" class="btn btn-outline btn-sm" style="border-color: var(--color-primary); color: var(--color-primary); font-weight: 600;">📚 اختيار من بنك الأسئلة</button>
+                <button id="btn-add-question" class="btn btn-primary btn-sm">+ إضافة سؤال للمسابقة</button>
+              </div>
             </div>
 
             <!-- Question Editor Form (inline) -->
             <div id="question-editor" class="card" style="display: none; padding: 1.75rem; margin-bottom: 1.5rem; border: 2px solid var(--color-primary);">
-              <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+              <div class="flex justify-between items-center" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                 <h5 id="q-editor-title" style="margin: 0; color: var(--color-primary); font-size: 1.05rem;">سؤال جديد</h5>
-                <button id="btn-cancel-question" class="btn btn-outline btn-sm">إلغاء</button>
+                <div class="flex gap-2">
+                  <button type="button" id="btn-import-qbank-comp" class="btn btn-outline btn-sm" style="border-color: var(--color-primary); color: var(--color-primary); font-size: 0.8rem;">📚 اختيار من بنك الأسئلة</button>
+                  <button id="btn-cancel-question" class="btn btn-outline btn-sm">إلغاء</button>
+                </div>
               </div>
 
               <div class="grid grid-3" style="gap: 1rem; margin-bottom: 1rem;">

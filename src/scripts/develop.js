@@ -403,10 +403,11 @@ class DevelopController {
             .from('student_progress')
             .update({
               guest_name: iden.name || 'مشارك زائر',
+              guest_username: iden.username || null,
               guest_grade: iden.grade || null,
               guest_section: iden.section || null,
-              guest_school_type: iden.school_type || 'abu_obaida',
-              guest_school_name: iden.school_name || (iden.school_type === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+              guest_school_type: iden.schoolType || iden.school_type || 'abu_obaida',
+              guest_school_name: iden.schoolName || iden.school_name || (iden.schoolType === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
               status,
               score: bestScore,
               completed_at: new Date().toISOString()
@@ -420,10 +421,11 @@ class DevelopController {
             .insert({
               student_id: null,
               guest_name: iden.name || 'مشارك زائر',
+              guest_username: iden.username || null,
               guest_grade: iden.grade || null,
               guest_section: iden.section || null,
-              guest_school_type: iden.school_type || 'abu_obaida',
-              guest_school_name: iden.school_name || (iden.school_type === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
+              guest_school_type: iden.schoolType || iden.school_type || 'abu_obaida',
+              guest_school_name: iden.schoolName || iden.school_name || (iden.schoolType === 'abu_obaida' ? 'مدرسة أبو عبيدة بن الجراح' : 'مدرسة أخرى'),
               guest_session_id: sessionId,
               challenge_level_id: levelId,
               status,
