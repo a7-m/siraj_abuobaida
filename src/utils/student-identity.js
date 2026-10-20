@@ -614,8 +614,8 @@ export const studentIdentity = {
           </div>
 
           <!-- Other School Section (Conditional) -->
-          <div id="si-other-box" class="si-branch-box" style="${isLogin || isAbuObaida ? 'display: none;' : ''}">
-            <div class="si-field" style="margin-bottom: 0.75rem;">
+          <div id="si-other-box" class="si-branch-box" style="${isAbuObaida ? 'display: none;' : ''}">
+            <div class="si-field" style="margin-bottom: ${isLogin ? '0' : '0.75rem'};">
               <label for="si-other-school-name" class="si-label">
                 <span>اسم المدرسة</span>
                 <span class="si-req">*</span>
@@ -629,7 +629,7 @@ export const studentIdentity = {
               >
             </div>
 
-            <div class="si-grid-2">
+            <div class="si-grid-2" style="${isLogin ? 'display: none;' : ''}">
               <div class="si-field">
                 <label for="si-other-grade" class="si-label">
                   <span>الصف الدراسي (1 - 12)</span>
@@ -753,16 +753,15 @@ export const studentIdentity = {
         backdrop.querySelectorAll('.si-radio-pill').forEach(p => p.classList.remove('active'));
         r.closest('.si-radio-pill').classList.add('active');
 
-        if (isLogin) {
-          abuBox.style.display = 'none';
-          otherBox.style.display = 'none';
-        } else if (r.value === 'abu_obaida') {
-          abuBox.style.display = '';
+        if (r.value === 'abu_obaida') {
+          abuBox.style.display = isLogin ? 'none' : '';
           otherBox.style.display = 'none';
         } else {
           abuBox.style.display = 'none';
           otherBox.style.display = '';
-          setTimeout(() => otherSchoolInput.focus(), 50);
+          if (otherSchoolInput) {
+            setTimeout(() => otherSchoolInput.focus(), 50);
+          }
         }
       });
     });
@@ -814,6 +813,14 @@ export const studentIdentity = {
       // Quick guest login: auto-generate credentials and skip validation
       if (isLogin) {
         const selectedType = backdrop.querySelector('input[name="si_school_type"]:checked').value;
+        const otherSchoolVal = (otherSchoolInput?.value || '').trim();
+
+        if (selectedType === 'other' && (!otherSchoolVal || otherSchoolVal.length < 2)) {
+          Toast.error('يرجى إدخال اسم مدرستك.');
+          if (otherSchoolInput) otherSchoolInput.focus();
+          return;
+        }
+
         const autoUsername = 'g' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
         const autoPassword = 'SirajGuest!_' + autoUsername + '_2026';
         const verifiedData = {
@@ -821,7 +828,7 @@ export const studentIdentity = {
           username: autoUsername,
           password: autoPassword,
           schoolType: selectedType,
-          schoolName: selectedType === 'abu_obaida' ? 'مدرسة أبو عبيدة' : 'مدرسة أخرى',
+          schoolName: selectedType === 'abu_obaida' ? 'مدرسة أبو عبيدة' : otherSchoolVal,
           grade: '',
           section: ''
         };
@@ -868,18 +875,6 @@ export const studentIdentity = {
         }
       }
 
-      // Validate password for guest login
-      let passwordVal = '';
-      if (isLogin) {
-        const pwdInput = backdrop.querySelector('#si-password');
-        passwordVal = pwdInput ? pwdInput.value : '';
-        if (!passwordVal || passwordVal.length < 6) {
-          Toast.error('يرجى إدخال كلمة مرور لا تقل عن 6 خانات.');
-          pwdInput?.focus();
-          return;
-        }
-      }
-
       const selectedType = backdrop.querySelector('input[name="si_school_type"]:checked').value;
 
       let verifiedData = {};
@@ -903,7 +898,6 @@ export const studentIdentity = {
         verifiedData = {
           name: nameVal,
           username: usernameVal,
-          ...(isLogin && passwordVal ? { password: passwordVal } : {}),
           schoolType: 'abu_obaida',
           schoolName: 'مدرسة أبو عبيدة',
           grade: gradeVal,
@@ -929,7 +923,6 @@ export const studentIdentity = {
         verifiedData = {
           name: nameVal,
           username: usernameVal,
-          ...(isLogin && passwordVal ? { password: passwordVal } : {}),
           schoolType: 'other',
           schoolName: schoolNameVal,
           grade: gradeVal,
