@@ -287,6 +287,25 @@ async function saveUserProfile() {
   saveBtn.textContent = 'جاري الحفظ...';
 
   try {
+    const isRoleChanged = role !== editingUser.role;
+
+    // If role changed, invoke dedicated secure RPC function for maximum reliability
+    if (isRoleChanged) {
+      try {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc('update_user_role', {
+          target_user_id: editingUser.id,
+          new_role: role
+        });
+        if (rpcErr) {
+          console.warn('RPC update_user_role error:', rpcErr);
+        } else {
+          console.log('Role updated via RPC successfully:', rpcData);
+        }
+      } catch (e) {
+        console.warn('RPC call exception:', e);
+      }
+    }
+
     const payload = {
       full_name,
       role,
@@ -305,10 +324,15 @@ async function saveUserProfile() {
 
     if (error) throw error;
 
-    const idx = allProfiles.findIndex(u => u.id === editingUser.id);
-    if (idx !== -1) allProfiles[idx] = data;
+    const updatedUser = data || { ...editingUser, ...payload };
+    if (isRoleChanged) {
+      updatedUser.role = role;
+    }
 
-    Toast.success('تم تحديث بيانات المستخدم بنجاح');
+    const idx = allProfiles.findIndex(u => u.id === editingUser.id);
+    if (idx !== -1) allProfiles[idx] = updatedUser;
+
+    Toast.success(isRoleChanged ? 'تم تحديث دور المستخدم وبياناته بنجاح' : 'تم تحديث بيانات المستخدم بنجاح');
     closeEditModal();
     renderTable();
   } catch (err) {

@@ -64,8 +64,9 @@ class StudentDashboardController {
         return;
       }
 
-      // Check if profile is complete
-      if (!this.profile?.grade || !this.profile?.section) {
+      // Check if profile is complete (guests don't require grade/section)
+      const isGuest = this.user?.email?.includes('@guest.siraj.om') || this.profile?.username?.startsWith('guest_');
+      if (!isGuest && (!this.profile?.grade || !this.profile?.section)) {
         window.location.replace('complete-profile.html');
         return;
       }

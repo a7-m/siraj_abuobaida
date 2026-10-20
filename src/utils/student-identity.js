@@ -310,10 +310,10 @@ export const studentIdentity = {
     // ─────────────────────────────────────────────────────────────
     if (user && !forcePrompt) {
       // 1. Check if localStorage already has complete data
+      const isGuestUser = user.email?.includes('@guest.siraj.om');
       const isLocalCompleteForUser = Boolean(
         storedIdentity.name &&
-        storedIdentity.grade &&
-        storedIdentity.section &&
+        (isGuestUser || (storedIdentity.grade && storedIdentity.section)) &&
         storedIdentity.verifiedAt
       );
 
@@ -344,7 +344,7 @@ export const studentIdentity = {
           .single();
 
         if (!error && data) {
-          const isDbComplete = Boolean(data.full_name && data.grade && data.section);
+          const isDbComplete = Boolean(data.full_name && (isGuestUser || (data.grade && data.section)));
           if (isDbComplete) {
             const verifiedIdentity = {
               name: data.full_name,
@@ -472,11 +472,11 @@ export const studentIdentity = {
     ];
 
     const isRegisteredUser = Boolean(user && user.id && !isLogin);
-    const modalTitle = isLogin ? 'تسجيل الدخول كطالب (بدون حساب)' : 'تأكيد بيانات الطالب';
+    const modalTitle = isLogin ? 'الدخول السريع كطالب' : 'تأكيد بيانات الطالب';
     const modalSubtitle = isLogin
-      ? 'أدخل بياناتك للانضمام الفوري والمشاركة دون الحاجة لإنشاء حساب أو كلمة مرور'
+      ? 'أدخل اسمك واختر مدرستك للانضمام الفوري بدون حساب'
       : `يرجى مراجعة وتأكيد بياناتك قبل بدء ${activityName}`;
-    const submitText = isLogin ? 'دخول إلى المنصة' : 'موافق — تأكيد ومتابعة';
+    const submitText = isLogin ? 'دخول سريع ←' : 'موافق — تأكيد ومتابعة';
 
     backdrop.innerHTML = `
       <div class="siraj-identity-modal">
@@ -494,26 +494,26 @@ export const studentIdentity = {
           </div>
         </div>
 
-        <form id="si-form" class="si-form">
+        <form id="si-form" class="si-form" novalidate>
           <!-- Full Name -->
           <div class="si-field">
             <label for="si-name" class="si-label">
-              <span>اسم الطالب الثلاثي أو الرباعي</span>
+              <span>${isLogin ? 'الاسم الثلاثي والقبيلة' : 'اسم الطالب الثلاثي أو الرباعي'}</span>
               <span class="si-req">*</span>
             </label>
             <input 
               type="text" 
               id="si-name" 
               class="si-input" 
-              placeholder="مثال: أحمد بن محمد المعمري" 
+              placeholder="${isLogin ? 'مثال: أحمد بن سالم بن علي المعمري' : 'مثال: أحمد بن محمد بن خلفان المعمري'}" 
               value="${this._escape(prefilled.name)}" 
               required
               autocomplete="name"
             >
           </div>
 
-          <!-- Username (Optional for registered user, Mandatory for guest) -->
-          <div class="si-field">
+          <!-- Username (Optional for registered user, hidden for quick guest login) -->
+          <div class="si-field" style="${isLogin ? 'display:none' : ''}">
             <label for="si-username" class="si-label">
               <span>اسم المستخدم ${isRegisteredUser ? '<span style="font-size:0.85em; font-weight:normal; opacity:0.75;">(اختياري)</span>' : '(فريد لمنع تشابه الأسماء)'}</span>
               ${isRegisteredUser ? '' : '<span class="si-req">*</span>'}
@@ -537,8 +537,8 @@ export const studentIdentity = {
             </div>
           </div>
 
-          <!-- Password Field (Mandatory for Guest Login) -->
-          ${isLogin ? `
+          <!-- Password Field (hidden for quick guest login) -->
+          ${false ? `
             <div class="si-field">
               <label for="si-password" class="si-label">
                 <span>كلمة المرور</span>
@@ -584,7 +584,7 @@ export const studentIdentity = {
           </div>
 
           <!-- Abu Obaida Section (Conditional) -->
-          <div id="si-abu-obaida-box" class="si-branch-box" style="${isAbuObaida ? '' : 'display: none;'}">
+          <div id="si-abu-obaida-box" class="si-branch-box" style="${isLogin || !isAbuObaida ? 'display: none;' : ''}">
             <div class="si-grid-2">
               <div class="si-field">
                 <label for="si-ao-grade" class="si-label">
@@ -614,7 +614,7 @@ export const studentIdentity = {
           </div>
 
           <!-- Other School Section (Conditional) -->
-          <div id="si-other-box" class="si-branch-box" style="${!isAbuObaida ? '' : 'display: none;'}">
+          <div id="si-other-box" class="si-branch-box" style="${isLogin || isAbuObaida ? 'display: none;' : ''}">
             <div class="si-field" style="margin-bottom: 0.75rem;">
               <label for="si-other-school-name" class="si-label">
                 <span>اسم المدرسة</span>
@@ -671,7 +671,7 @@ export const studentIdentity = {
             ` : isLogin ? `
               <div class="si-notice-row">
                 <span>⚡</span>
-                <span>دخول فوري مباشر: تُحفظ بياناتك ودرجاتك تحت اسم المستخدم هذا على هذا المتصفح دون الحاجة لكلمة مرور.</span>
+                <span>دخول سريع للضيوف: أدخل اسمك واختر مدرستك فقط وانطلق!</span>
               </div>
             ` : `
               <div class="si-notice-row">
@@ -753,7 +753,10 @@ export const studentIdentity = {
         backdrop.querySelectorAll('.si-radio-pill').forEach(p => p.classList.remove('active'));
         r.closest('.si-radio-pill').classList.add('active');
 
-        if (r.value === 'abu_obaida') {
+        if (isLogin) {
+          abuBox.style.display = 'none';
+          otherBox.style.display = 'none';
+        } else if (r.value === 'abu_obaida') {
           abuBox.style.display = '';
           otherBox.style.display = 'none';
         } else {
@@ -794,7 +797,7 @@ export const studentIdentity = {
 
     setTimeout(() => {
       if (!nameInput.value) nameInput.focus();
-      else if (!usernameInput.value) usernameInput.focus();
+      else if (!isLogin && usernameInput && !usernameInput.value) usernameInput.focus();
     }, 100);
 
     // Form submission
@@ -805,6 +808,26 @@ export const studentIdentity = {
       if (!nameVal || nameVal.length < 2) {
         Toast.error('يرجى إدخال اسم الطالب كاملاً (حرفين على الأقل).');
         nameInput.focus();
+        return;
+      }
+
+      // Quick guest login: auto-generate credentials and skip validation
+      if (isLogin) {
+        const selectedType = backdrop.querySelector('input[name="si_school_type"]:checked').value;
+        const autoUsername = 'g' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+        const autoPassword = 'SirajGuest!_' + autoUsername + '_2026';
+        const verifiedData = {
+          name: nameVal,
+          username: autoUsername,
+          password: autoPassword,
+          schoolType: selectedType,
+          schoolName: selectedType === 'abu_obaida' ? 'مدرسة أبو عبيدة' : 'مدرسة أخرى',
+          grade: '',
+          section: ''
+        };
+        backdrop.classList.add('si-closing');
+        setTimeout(() => backdrop.remove(), 250);
+        onConfirm(verifiedData);
         return;
       }
 

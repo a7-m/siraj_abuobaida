@@ -179,6 +179,12 @@ class AuthService {
         return { complete: true, profile };
       }
 
+      // Guest student accounts don't need grade and section
+      const isGuest = this.session?.user?.email?.includes('@guest.siraj.om') || profile?.username?.startsWith('guest_');
+      if (isGuest) {
+        return { complete: true, profile };
+      }
+
       // Students need grade and section
       const isComplete = !!(profile?.grade && profile?.section);
       
