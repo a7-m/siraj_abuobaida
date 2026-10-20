@@ -391,6 +391,33 @@
     .comp-opt-sel.comp-tf-opt { border-color: var(--color-primary); background: rgba(18,117,71,.06); }
     [data-theme="dark"] .comp-opt-sel.comp-tf-opt { background: rgba(16,185,129,.1); }
 
+    /* ── Multi-Choice (Checkboxes) ── */
+    .comp-opt input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+    .comp-opt-box {
+      width: 20px; height: 20px; border-radius: 4px;
+      border: 2px solid var(--color-border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 800; color: transparent;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .comp-opt-sel .comp-opt-box {
+      border-color: var(--color-primary); background: var(--color-primary);
+      color: #fff;
+    }
+
+    /* ── Match & Connect ── */
+    .comp-match-row {
+      transition: border-color .2s, background .2s;
+    }
+    .comp-match-row:hover {
+      border-color: var(--color-primary-light);
+    }
+    .comp-match-select:focus {
+      border-color: var(--color-primary) !important;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(18,117,71,0.12);
+    }
+
     /* ── Ordering ── */
     .comp-order-instr {
       font-size: .9rem; font-weight: 700; color: var(--color-primary);

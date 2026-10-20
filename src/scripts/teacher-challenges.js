@@ -737,14 +737,39 @@ function renderLevelQuestionsList() {
     return;
   }
 
+  const typeLabels = {
+    mcq: 'اختيار من متعدد',
+    tf: 'صح أو خطأ',
+    multi: 'متعدد الخيارات',
+    order: 'ترتيب تسلسلي',
+    match: 'مطابقة وتوصيل'
+  };
+
   listEl.innerHTML = currentLevelQuestions.map((q, idx) => {
-    let corr = q.metadata?.correct_answer || '';
+    let previewAnswer = '-';
+    const meta = q.metadata || {};
+
+    if (q.type === 'mcq') {
+      previewAnswer = meta.correct_answer || (meta.options ? meta.options[meta.correct] : '-');
+    } else if (q.type === 'tf') {
+      previewAnswer = meta.correct_answer || (meta.correct === false ? 'خطأ' : 'صح');
+    } else if (q.type === 'multi') {
+      const correctArr = meta.correct_answers || [];
+      previewAnswer = correctArr.length ? correctArr.join('، ') : 'متعدد';
+    } else if (q.type === 'order') {
+      const ord = meta.correct_order || meta.items || [];
+      previewAnswer = ord.slice(0, 3).join(' ← ') + (ord.length > 3 ? '...' : '');
+    } else if (q.type === 'match') {
+      previewAnswer = `${(meta.pairs || []).length} أزواج مطابقة`;
+    }
+
     return `
-      <div style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:6px; padding:0.75rem; margin-bottom:0.5rem;">
-        <div class="flex justify-between items-center">
-          <div style="font-size:0.9rem; font-weight:600;">
-            <span style="color:var(--color-primary); margin-left:0.35rem;">س ${idx + 1}:</span>
-            ${escapeHtml(q.text)}
+      <div style="background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; padding:0.85rem 1rem; margin-bottom:0.65rem;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:0.5rem;">
+          <div style="font-size:0.95rem; font-weight:600; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span style="color:var(--color-primary); font-weight:700;">س ${idx + 1}:</span>
+            <span class="q-type-badge q-type-${q.type}">${typeLabels[q.type] || q.type}</span>
+            <span>${escapeHtml(q.text)}</span>
           </div>
           <div class="flex gap-2">
             <button class="btn btn-outline btn-sm btn-move-lq" data-id="${q.id}" data-direction="-1" aria-label="تحريك السؤال للأعلى" ${idx === 0 ? 'disabled' : ''}>↑</button>
@@ -753,8 +778,9 @@ function renderLevelQuestionsList() {
             <button class="btn btn-icon-danger btn-delete-lq" data-id="${q.id}">🗑️</button>
           </div>
         </div>
-        <div style="font-size:0.8rem; color:var(--color-text-muted); margin-top:0.25rem;">
-          النوع: ${q.type === 'mcq' ? 'اختيار من متعدد' : q.type === 'tf' ? 'صح أو خطأ' : escapeHtml(q.type)} · النقاط: ${q.points || 1} · الإجابة الصحيحة: <strong style="color:var(--color-primary);">${escapeHtml(corr)}</strong>
+        <div style="font-size:0.8rem; color:var(--color-text-muted); margin-top:0.35rem; display:flex; gap:1rem; flex-wrap:wrap;">
+          <span>النقاط: <strong>${q.points || 1}</strong></span>
+          <span>الإجابة الصحيحة: <strong style="color:var(--color-primary);">${escapeHtml(String(previewAnswer))}</strong></span>
         </div>
       </div>
     `;
@@ -792,6 +818,8 @@ function openLevelQuestionEditor(q = null, isFromBank = false) {
   const textEl = document.getElementById('lq-text');
   const pointsEl = document.getElementById('lq-points');
 
+  const supportedTypes = ['mcq', 'tf', 'multi', 'order', 'match'];
+
   if (!q) {
     editingLevelQuestionId = null;
     if (titleEl) titleEl.textContent = 'سؤال جديد للمرحلة';
@@ -802,20 +830,20 @@ function openLevelQuestionEditor(q = null, isFromBank = false) {
   } else if (isFromBank) {
     editingLevelQuestionId = null;
     if (titleEl) titleEl.textContent = 'سؤال جديد (مستورد من بنك الأسئلة)';
-    if (typeEl) typeEl.value = (q.type === 'mcq' || q.type === 'tf') ? q.type : 'mcq';
+    const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
+    if (typeEl) typeEl.value = chosenType;
     if (textEl) textEl.value = q.text || '';
     if (pointsEl) pointsEl.value = q.points || 1;
-    const correctIndex = (q.metadata?.options || []).indexOf(q.metadata?.correct_answer);
-    renderLevelQuestionOptionsForm(typeEl.value, q.metadata || {}, Math.max(0, correctIndex));
+    renderLevelQuestionOptionsForm(chosenType, q.metadata || {});
     Toast.success('تم استيراد بيانات السؤال من البنك إلى نموذج المحرر.');
   } else {
     editingLevelQuestionId = q.id;
     if (titleEl) titleEl.textContent = 'تعديل السؤال';
-    if (typeEl) typeEl.value = q.type || 'mcq';
+    const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
+    if (typeEl) typeEl.value = chosenType;
     if (textEl) textEl.value = q.text || '';
     if (pointsEl) pointsEl.value = q.points || 1;
-    const correctIndex = (q.metadata?.options || []).indexOf(q.metadata?.correct_answer);
-    renderLevelQuestionOptionsForm(q.type || 'mcq', q.metadata, Math.max(0, correctIndex));
+    renderLevelQuestionOptionsForm(chosenType, q.metadata || {});
   }
 }
 
@@ -828,20 +856,14 @@ function loadQuestionIntoLevelEditor(q) {
   const textEl = document.getElementById('lq-text');
   const pointsEl = document.getElementById('lq-points');
 
-  if (typeEl) {
-    typeEl.value = (q.type === 'mcq' || q.type === 'tf') ? q.type : 'mcq';
-  }
+  const supportedTypes = ['mcq', 'tf', 'multi', 'order', 'match'];
+  const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
+
+  if (typeEl) typeEl.value = chosenType;
   if (textEl) textEl.value = q.text || '';
   if (pointsEl) pointsEl.value = q.points || 1;
 
-  const type = typeEl ? typeEl.value : 'mcq';
-  const meta = q.metadata || {};
-  let correctIndex = 0;
-  if (Array.isArray(meta.options)) {
-    const idx = meta.options.indexOf(meta.correct_answer);
-    if (idx >= 0) correctIndex = idx;
-  }
-  renderLevelQuestionOptionsForm(type, meta, correctIndex);
+  renderLevelQuestionOptionsForm(chosenType, q.metadata || {});
   Toast.success('تم استيراد بيانات السؤال إلى المحرر بنجاح.');
 }
 
@@ -851,68 +873,186 @@ function closeLevelQuestionEditor() {
   editingLevelQuestionId = null;
 }
 
-function renderLevelQuestionOptionsForm(type, metadata = {}, correctIndex = 0) {
+function renderLevelQuestionOptionsForm(type, metadata = {}) {
   const area = document.getElementById('lq-options-area');
   if (!area) return;
 
   if (type === 'mcq') {
     const opts = Array.isArray(metadata.options) && metadata.options.length >= 2
       ? metadata.options
-      : ['', ''];
-    const savedCorrectIndex = opts.indexOf(metadata.correct_answer);
-    if (savedCorrectIndex >= 0) correctIndex = savedCorrectIndex;
-    correctIndex = Math.max(0, Math.min(correctIndex, opts.length - 1));
+      : ['الخيار الأول', 'الخيار الثاني', 'الخيار الثالث', 'الخيار الرابع'];
+    let corrAns = metadata.correct_answer || (typeof metadata.correct === 'number' ? opts[metadata.correct] : opts[0]);
+
     area.innerHTML = `
-      <div style="margin-top:0.5rem;">
-        <label class="form-label" style="font-size:0.8rem; font-weight:600;">خيارات الإجابة (حد أدنى خياران، وحدد الإجابة الصحيحة):</label>
-        <div id="lq-mcq-options">
-          ${opts.map((option, i) => `
-            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-              <input type="radio" name="lq-correct-mcq" value="${i}" ${i === correctIndex ? 'checked' : ''} aria-label="الإجابة الصحيحة للخيار ${i + 1}" style="width:auto;">
-              <input type="text" class="form-control lq-mcq-opt" placeholder="الخيار ${i + 1}" value="${escapeHtml(option)}" style="font-size:0.85rem;">
-              <button type="button" class="btn btn-outline btn-sm lq-remove-option" data-index="${i}" aria-label="حذف الخيار ${i + 1}" ${opts.length <= 2 ? 'disabled' : ''}>حذف</button>
-            </div>
-          `).join('')}
-        </div>
-        <button type="button" id="btn-add-lq-option" class="btn btn-outline btn-sm" style="margin-top:0.35rem;">+ إضافة خيار</button>
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">خيارات السؤال (حدد الدائرة بجانب الإجابة الصحيحة):</div>
+      <div id="lq-mcq-options-list">
+        ${opts.map((opt, i) => `
+          <div class="q-option-row">
+            <input type="radio" name="lq-mcq-correct" value="${i}" ${opt === corrAns ? 'checked' : (i === 0 && !corrAns ? 'checked' : '')}>
+            <input type="text" class="form-control lq-opt-input" value="${escapeHtml(opt)}" placeholder="الخيار ${i + 1}">
+            ${opts.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>` : ''}
+          </div>
+        `).join('')}
       </div>
+      <button type="button" id="btn-add-lq-mcq-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة خيار آخر</button>
     `;
-    document.getElementById('btn-add-lq-option').addEventListener('click', () => {
-      const values = Array.from(area.querySelectorAll('.lq-mcq-opt')).map(input => input.value);
-      const selected = Number(area.querySelector('input[name="lq-correct-mcq"]:checked')?.value || 0);
-      values.push('');
-      renderLevelQuestionOptionsForm(type, { options: values }, selected);
-      area.querySelector('.lq-mcq-opt:last-of-type')?.focus();
-    });
-    area.querySelectorAll('.lq-remove-option').forEach(button => {
-      button.addEventListener('click', () => {
-        const values = Array.from(area.querySelectorAll('.lq-mcq-opt')).map(input => input.value);
-        if (values.length <= 2) return;
-        const removedIndex = Number(button.dataset.index);
-        const selected = Number(area.querySelector('input[name="lq-correct-mcq"]:checked')?.value || 0);
-        values.splice(removedIndex, 1);
-        const nextSelected = selected === removedIndex ? Math.min(removedIndex, values.length - 1)
-          : selected > removedIndex ? selected - 1 : selected;
-        renderLevelQuestionOptionsForm(type, { options: values }, nextSelected);
-      });
-    });
+    bindLqOptionButtons('mcq');
+
   } else if (type === 'tf') {
-    const corr = metadata.correct_answer || 'صح';
+    const corr = metadata.correct_answer || (metadata.correct === false ? 'خطأ' : 'صح');
     area.innerHTML = `
-      <div style="margin-top:0.5rem;">
-        <label class="form-label" style="font-size:0.8rem; font-weight:600;">الإجابة الصحيحة:</label>
-        <div style="display:flex; gap:1.5rem; margin-top:0.25rem;">
-          <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
-            <input type="radio" name="lq-correct-tf" value="صح" ${corr === 'صح' ? 'checked' : ''} style="width:auto;">
-            <span>صح</span>
-          </label>
-          <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
-            <input type="radio" name="lq-correct-tf" value="خطأ" ${corr === 'خطأ' ? 'checked' : ''} style="width:auto;">
-            <span>خطأ</span>
-          </label>
-        </div>
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">حدد الإجابة الصحيحة:</div>
+      <div class="flex gap-4">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; cursor: pointer;">
+          <input type="radio" name="lq-tf-correct" value="صح" ${corr === 'صح' ? 'checked' : ''}>
+          <span>صح ✓</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; cursor: pointer;">
+          <input type="radio" name="lq-tf-correct" value="خطأ" ${corr === 'خطأ' ? 'checked' : ''}>
+          <span>خطأ ✕</span>
+        </label>
       </div>
     `;
+
+  } else if (type === 'multi') {
+    const opts = Array.isArray(metadata.options) && metadata.options.length >= 2 
+      ? metadata.options 
+      : ['خيار 1', 'خيار 2', 'خيار 3'];
+    const correctAnswers = Array.isArray(metadata.correct_answers) ? metadata.correct_answers : [];
+
+    area.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">الخيارات المتاحة (ضع علامة على كل إجابة صحيحة):</div>
+      <div id="lq-multi-options-list">
+        ${opts.map((opt, i) => `
+          <div class="q-option-row">
+            <input type="checkbox" class="lq-multi-check" value="${i}" ${correctAnswers.includes(opt) ? 'checked' : ''}>
+            <input type="text" class="form-control lq-opt-input" value="${escapeHtml(opt)}" placeholder="الخيار ${i + 1}">
+            ${opts.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" id="btn-add-lq-multi-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة خيار</button>
+    `;
+    bindLqOptionButtons('multi');
+
+  } else if (type === 'order') {
+    const items = Array.isArray(metadata.correct_order) || Array.isArray(metadata.items) 
+      ? (metadata.correct_order || metadata.items) 
+      : ['الخطوة الأولى', 'الخطوة الثانية', 'الخطوة الثالثة'];
+
+    area.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">عناصر الترتيب (اكتبها بالترتيب الصحيح المتسلسل):</div>
+      <div id="lq-order-options-list">
+        ${items.map((it, i) => `
+          <div class="q-option-row">
+            <span style="font-weight: 700; width: 25px;">${i + 1}.</span>
+            <input type="text" class="form-control lq-order-input" value="${escapeHtml(it)}" placeholder="العنصر ${i + 1}">
+            ${items.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" id="btn-add-lq-order-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة عنصر للترتيب</button>
+    `;
+    bindLqOptionButtons('order');
+
+  } else if (type === 'match') {
+    const pairs = Array.isArray(metadata.pairs) && metadata.pairs.length 
+      ? metadata.pairs 
+      : [{ left: 'عنصر 1', right: 'مطابقة 1' }, { left: 'عنصر 2', right: 'مطابقة 2' }];
+
+    area.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">أزواج المطابقة والتوصيل (الطرف الأيمن وما يقابله بالأيسر):</div>
+      <div id="lq-match-options-list">
+        ${pairs.map((p, i) => `
+          <div class="q-option-row" style="gap: 0.5rem;">
+            <input type="text" class="form-control lq-match-left" value="${escapeHtml(p.left || '')}" placeholder="الطرف الأيمن">
+            <span style="font-weight: 700;">⇄</span>
+            <input type="text" class="form-control lq-match-right" value="${escapeHtml(p.right || '')}" placeholder="الطرف المقابل">
+            ${pairs.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" id="btn-add-lq-match-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة زوج مطابقة</button>
+    `;
+    bindLqOptionButtons('match');
+  }
+}
+
+function bindLqOptionButtons(type) {
+  const area = document.getElementById('lq-options-area');
+  if (!area) return;
+
+  area.querySelectorAll('.btn-remove-lq-opt').forEach(b => {
+    b.onclick = () => b.closest('.q-option-row').remove();
+  });
+
+  const addMcqBtn = document.getElementById('btn-add-lq-mcq-opt');
+  if (addMcqBtn) {
+    addMcqBtn.onclick = () => {
+      const list = document.getElementById('lq-mcq-options-list');
+      const idx = list.children.length;
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.innerHTML = `
+        <input type="radio" name="lq-mcq-correct" value="${idx}">
+        <input type="text" class="form-control lq-opt-input" placeholder="الخيار ${idx + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-lq-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
+  }
+
+  const addMultiBtn = document.getElementById('btn-add-lq-multi-opt');
+  if (addMultiBtn) {
+    addMultiBtn.onclick = () => {
+      const list = document.getElementById('lq-multi-options-list');
+      const idx = list.children.length;
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.innerHTML = `
+        <input type="checkbox" class="lq-multi-check" value="${idx}">
+        <input type="text" class="form-control lq-opt-input" placeholder="الخيار ${idx + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-lq-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
+  }
+
+  const addOrderBtn = document.getElementById('btn-add-lq-order-opt');
+  if (addOrderBtn) {
+    addOrderBtn.onclick = () => {
+      const list = document.getElementById('lq-order-options-list');
+      const idx = list.children.length;
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.innerHTML = `
+        <span style="font-weight: 700; width: 25px;">${idx + 1}.</span>
+        <input type="text" class="form-control lq-order-input" placeholder="العنصر ${idx + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-lq-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
+  }
+
+  const addMatchBtn = document.getElementById('btn-add-lq-match-opt');
+  if (addMatchBtn) {
+    addMatchBtn.onclick = () => {
+      const list = document.getElementById('lq-match-options-list');
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.style.gap = '0.5rem';
+      row.innerHTML = `
+        <input type="text" class="form-control lq-match-left" placeholder="الطرف الأيمن">
+        <span style="font-weight: 700;">⇄</span>
+        <input type="text" class="form-control lq-match-right" placeholder="الطرف المقابل">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-lq-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-lq-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
   }
 }
 
@@ -937,28 +1077,68 @@ async function saveLevelQuestion() {
   let metadata = {};
 
   if (type === 'mcq') {
-    const inputs = document.querySelectorAll('.lq-mcq-opt');
-    const opts = Array.from(inputs).map(input => input.value.trim());
-    if (opts.length < 2 || opts.some(option => !option)) {
-      Toast.error('أدخل خيارين على الأقل، ولا تترك أي خيار فارغًا');
+    const inputs = document.querySelectorAll('#lq-mcq-options-list .lq-opt-input');
+    const opts = Array.from(inputs).map(input => input.value.trim()).filter(Boolean);
+    if (opts.length < 2) {
+      Toast.error('أدخل خيارين على الأقل لسؤال الاختيار من متعدد');
       return;
     }
-    if (new Set(opts.map(option => option.toLocaleLowerCase())).size !== opts.length) {
-      Toast.error('احذف خيارات الإجابة المكررة قبل الحفظ');
-      return;
-    }
-    const selRadio = document.querySelector('input[name="lq-correct-mcq"]:checked');
-    const selIdx = selRadio ? Number(selRadio.value) : -1;
-    const correct_answer = selIdx >= 0 && inputs[selIdx] ? inputs[selIdx].value.trim() : '';
-    if (!correct_answer) {
-      Toast.error('حدد الإجابة الصحيحة قبل الحفظ');
-      return;
-    }
+    const selRadio = document.querySelector('input[name="lq-mcq-correct"]:checked');
+    const selIdx = selRadio ? Number(selRadio.value) : 0;
+    const correct_answer = (inputs[selIdx] ? inputs[selIdx].value : opts[0]).trim();
     metadata = { options: opts, correct_answer };
+
   } else if (type === 'tf') {
-    const selRadio = document.querySelector('input[name="lq-correct-tf"]:checked');
+    const selRadio = document.querySelector('input[name="lq-tf-correct"]:checked');
     const correct_answer = selRadio ? selRadio.value : 'صح';
     metadata = { options: ['صح', 'خطأ'], correct_answer };
+
+  } else if (type === 'multi') {
+    const rows = Array.from(document.querySelectorAll('#lq-multi-options-list .q-option-row'));
+    const options = [];
+    const correct_answers = [];
+    rows.forEach(r => {
+      const val = r.querySelector('.lq-opt-input')?.value.trim();
+      const isChecked = r.querySelector('.lq-multi-check')?.checked;
+      if (val) {
+        options.push(val);
+        if (isChecked) correct_answers.push(val);
+      }
+    });
+    if (options.length < 2) {
+      Toast.error('أدخل خيارين على الأقل لسؤال متعدد الخيارات');
+      return;
+    }
+    if (correct_answers.length === 0) {
+      Toast.error('حدد إجابة صحيحة واحدة على الأقل');
+      return;
+    }
+    metadata = { options, correct_answers };
+
+  } else if (type === 'order') {
+    const inputs = Array.from(document.querySelectorAll('#lq-order-options-list .lq-order-input'));
+    const items = inputs.map(i => i.value.trim()).filter(Boolean);
+    if (items.length < 2) {
+      Toast.error('أدخل عنصرين على الأقل لسؤال الترتيب');
+      return;
+    }
+    metadata = { items, correct_order: [...items] };
+
+  } else if (type === 'match') {
+    const rows = Array.from(document.querySelectorAll('#lq-match-options-list .q-option-row'));
+    const pairs = [];
+    rows.forEach(r => {
+      const left = r.querySelector('.lq-match-left')?.value.trim();
+      const right = r.querySelector('.lq-match-right')?.value.trim();
+      if (left && right) {
+        pairs.push({ left, right });
+      }
+    });
+    if (pairs.length < 2) {
+      Toast.error('أدخل زوجين من المطابقة على الأقل');
+      return;
+    }
+    metadata = { pairs };
   }
 
   const saveButton = document.getElementById('btn-save-lq');

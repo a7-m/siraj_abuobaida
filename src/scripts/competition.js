@@ -62,6 +62,23 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('ar-OM', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+const TYPE_LABELS = {
+  mcq: 'اختيار من متعدد',
+  tf: 'صح أو خطأ',
+  multi: 'متعدد الخيارات',
+  order: 'ترتيب تسلسلي',
+  match: 'مطابقة وتوصيل'
+};
+
 // ─────────────────────────────────────────────────────────────
 // QuestionRenderer — Strategy Pattern
 // ─────────────────────────────────────────────────────────────
@@ -70,26 +87,34 @@ const QuestionRenderer = {
   render(q, idx, total) {
     let body = '';
     switch (q.type) {
-      case 'mcq':
-      case 'multi': body = QuestionRenderer._mcq(q); break;
+      case 'mcq':   body = QuestionRenderer._mcq(q); break;
       case 'tf':    body = QuestionRenderer._tf(q);  break;
+      case 'multi': body = QuestionRenderer._multi(q); break;
       case 'order': body = QuestionRenderer._order(q); break;
+      case 'match': body = QuestionRenderer._match(q); break;
       default:
-        body = `<p class="comp-q-unsupported">نوع السؤال غير مدعوم: ${q.type}</p>`;
+        body = `<p class="comp-q-unsupported">نوع السؤال غير مدعوم: ${escapeHtml(q.type)}</p>`;
     }
 
     const imgHtml = q.image_url
-      ? `<div class="comp-q-img-wrap"><img src="${q.image_url}" alt="صورة السؤال" class="comp-q-img" onerror="this.parentElement.style.display='none'"></div>`
+      ? `<div class="comp-q-img-wrap"><img src="${escapeHtml(q.image_url)}" alt="صورة السؤال" class="comp-q-img" onerror="this.parentElement.style.display='none'"></div>`
+      : '';
+
+    const typeBadge = TYPE_LABELS[q.type]
+      ? `<span class="badge" style="background:rgba(18,117,71,0.08); color:var(--color-primary); font-size:0.75rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:999px;">${TYPE_LABELS[q.type]}</span>`
       : '';
 
     return `
       <div class="comp-question" id="comp-q-${q.id}" data-q-id="${q.id}" data-q-type="${q.type}">
         <div class="comp-q-header">
-          <span class="comp-q-num">${idx + 1} / ${total}</span>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="comp-q-num">السؤال ${idx + 1} / ${total}</span>
+            ${typeBadge}
+          </div>
           <span class="comp-q-pts">${q.points || 1} نقطة</span>
         </div>
         ${imgHtml}
-        <p class="comp-q-text">${q.text}</p>
+        <p class="comp-q-text">${escapeHtml(q.text)}</p>
         <div class="comp-q-body">${body}</div>
       </div>`;
   },
@@ -99,9 +124,9 @@ const QuestionRenderer = {
     return `<div class="comp-opts" role="radiogroup">
       ${opts.map((o, i) => `
         <label class="comp-opt" for="o_${q.id}_${i}">
-          <input type="radio" id="o_${q.id}_${i}" name="q_${q.id}" value="${o}" data-q-id="${q.id}">
+          <input type="radio" id="o_${q.id}_${i}" name="q_${q.id}" value="${escapeHtml(o)}" data-q-id="${q.id}">
           <span class="comp-opt-dot"></span>
-          <span class="comp-opt-txt">${o}</span>
+          <span class="comp-opt-txt">${escapeHtml(o)}</span>
         </label>`).join('')}
     </div>`;
   },
@@ -111,24 +136,40 @@ const QuestionRenderer = {
     return `<div class="comp-tf-wrap" role="radiogroup">
       ${opts.map((o, i) => `
         <label class="comp-tf-opt" for="tf_${q.id}_${i}">
-          <input type="radio" id="tf_${q.id}_${i}" name="q_${q.id}" value="${o}" data-q-id="${q.id}">
+          <input type="radio" id="tf_${q.id}_${i}" name="q_${q.id}" value="${escapeHtml(o)}" data-q-id="${q.id}">
           <span class="comp-tf-dot"></span>
-          <span>${o}</span>
+          <span>${escapeHtml(o)}</span>
         </label>`).join('')}
     </div>`;
   },
 
+  _multi(q) {
+    const opts = q.metadata?.options || [];
+    return `
+      <p style="font-size:0.85rem; color:var(--color-primary); font-weight:600; margin-bottom:0.75rem;">
+        ☑️ اختر جميع الإجابات الصحيحة (يمكن تحديد أكثر من خيار):
+      </p>
+      <div class="comp-opts">
+        ${opts.map((o, i) => `
+          <label class="comp-opt" for="mo_${q.id}_${i}">
+            <input type="checkbox" id="mo_${q.id}_${i}" name="q_${q.id}" value="${escapeHtml(o)}" data-q-id="${q.id}">
+            <span class="comp-opt-box">✓</span>
+            <span class="comp-opt-txt">${escapeHtml(o)}</span>
+          </label>`).join('')}
+      </div>`;
+  },
+
   _order(q) {
-    const items = q.metadata?.items || [];
-    const instruction = q.metadata?.instruction || 'رتّب العناصر بالترتيب الصحيح';
+    const items = q.metadata?.correct_order || q.metadata?.items || [];
+    const instruction = q.metadata?.instruction || 'رتّب العناصر بالترتيب الصحيح المتسلسل';
     const shuffled = [...items].sort(() => Math.random() - 0.5);
     return `
-      <p class="comp-order-instr">📋 ${instruction}</p>
+      <p class="comp-order-instr">📋 ${escapeHtml(instruction)}</p>
       <ul class="comp-order-list" data-q-id="${q.id}">
         ${shuffled.map(item => `
-          <li class="comp-order-item" draggable="true" data-val="${item}">
+          <li class="comp-order-item" draggable="true" data-val="${escapeHtml(item)}">
             <span class="comp-order-handle" aria-hidden="true">⠿</span>
-            <span class="comp-order-txt">${item}</span>
+            <span class="comp-order-txt">${escapeHtml(item)}</span>
             <div class="comp-order-btns">
               <button class="comp-ord-up" type="button" aria-label="للأعلى">▲</button>
               <button class="comp-ord-dn" type="button" aria-label="للأسفل">▼</button>
@@ -138,17 +179,62 @@ const QuestionRenderer = {
       <p class="comp-order-hint">💡 اسحب العناصر أو استخدم الأسهم للترتيب</p>`;
   },
 
+  _match(q) {
+    const pairs = q.metadata?.pairs || [];
+    // Shuffle the right-side options so they aren't pre-aligned
+    const rightOptions = [...pairs.map(p => p.right)].sort(() => Math.random() - 0.5);
+    return `
+      <p class="comp-order-instr" style="margin-bottom: 0.85rem;">
+        🔗 صِل كل عنصر في العمود الأيمن بما يناسبه من القائمة المقابلة:
+      </p>
+      <div class="comp-match-list" data-q-id="${q.id}" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        ${pairs.map((p, idx) => `
+          <div class="comp-match-row" data-left="${escapeHtml(p.left)}" style="display: flex; align-items: center; gap: 0.75rem; background: var(--color-bg); padding: 0.85rem 1rem; border: 1.5px solid var(--color-border); border-radius: var(--border-radius); flex-wrap: wrap;">
+            <div class="comp-match-left" style="flex: 1; min-width: 140px; font-weight: 700; color: var(--color-text);">
+              <span style="color: var(--color-primary); margin-left: 0.35rem;">${idx + 1}.</span> ${escapeHtml(p.left)}
+            </div>
+            <div style="color: var(--color-primary); font-weight: bold; font-size: 1.1rem;">⇄</div>
+            <div class="comp-match-right-wrap" style="flex: 1.2; min-width: 180px;">
+              <select class="form-control comp-match-select" data-left="${escapeHtml(p.left)}" style="width: 100%; font-size: 0.95rem; font-weight: 600; padding: 0.5rem 0.75rem; border-radius: var(--border-radius); border: 1.5px solid var(--color-border); background: var(--color-surface); color: var(--color-text);">
+                <option value="">-- اختر الإجابة المناسبة --</option>
+                ${rightOptions.map(ro => `<option value="${escapeHtml(ro)}">${escapeHtml(ro)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+  },
+
   /** Extract current answer from DOM. Returns null if unanswered. */
   extractAnswer(q) {
     switch (q.type) {
-      case 'mcq': case 'multi': case 'tf': {
+      case 'mcq':
+      case 'tf': {
         const r = document.querySelector(`input[name="q_${q.id}"]:checked`);
         return r ? r.value : null;
+      }
+      case 'multi': {
+        const checks = Array.from(document.querySelectorAll(`input[name="q_${q.id}"]:checked`));
+        return checks.length > 0 ? checks.map(c => c.value) : null;
       }
       case 'order': {
         const list = document.querySelector(`.comp-order-list[data-q-id="${q.id}"]`);
         if (!list) return null;
         return Array.from(list.querySelectorAll('.comp-order-item')).map(li => li.dataset.val);
+      }
+      case 'match': {
+        const rows = document.querySelectorAll(`.comp-match-list[data-q-id="${q.id}"] .comp-match-row`);
+        if (!rows.length) return null;
+        const pairAnswers = [];
+        let allChosen = true;
+        rows.forEach(r => {
+          const left = r.dataset.left;
+          const sel = r.querySelector('.comp-match-select');
+          const right = sel ? sel.value.trim() : '';
+          if (!right) allChosen = false;
+          pairAnswers.push({ left, right });
+        });
+        return allChosen ? pairAnswers : null;
       }
       default: return null;
     }
@@ -159,15 +245,30 @@ const QuestionRenderer = {
     if (answer === null || answer === undefined) return { isCorrect: false, earnedPoints: 0 };
     const pts = q.points || 1;
     switch (q.type) {
-      case 'mcq': case 'multi': case 'tf': {
+      case 'mcq':
+      case 'tf': {
         const correct = (q.metadata?.correct_answer || '').trim();
         const ok = String(answer).trim() === correct;
+        return { isCorrect: ok, earnedPoints: ok ? pts : 0 };
+      }
+      case 'multi': {
+        const correctArr = (q.metadata?.correct_answers || []).map(s => String(s).trim()).sort();
+        const studentArr = Array.isArray(answer) ? answer.map(s => String(s).trim()).sort() : [];
+        const ok = correctArr.length > 0 &&
+                   correctArr.length === studentArr.length &&
+                   correctArr.every((v, i) => v === studentArr[i]);
         return { isCorrect: ok, earnedPoints: ok ? pts : 0 };
       }
       case 'order': {
         const correctOrder = q.metadata?.correct_order || q.metadata?.items || [];
         if (!Array.isArray(answer) || answer.length !== correctOrder.length) return { isCorrect: false, earnedPoints: 0 };
         const ok = answer.every((v, i) => String(v).trim() === String(correctOrder[i]).trim());
+        return { isCorrect: ok, earnedPoints: ok ? pts : 0 };
+      }
+      case 'match': {
+        const pairs = q.metadata?.pairs || [];
+        if (!Array.isArray(answer) || answer.length !== pairs.length) return { isCorrect: false, earnedPoints: 0 };
+        const ok = answer.every(ans => pairs.some(p => p.left === ans.left && p.right === ans.right));
         return { isCorrect: ok, earnedPoints: ok ? pts : 0 };
       }
       default: return { isCorrect: false, earnedPoints: 0 };
@@ -473,31 +574,69 @@ class QuizEngine {
   _restoreAnswer(q) {
     const saved = this.answers[q.id];
     if (!saved) return;
-    if (['mcq', 'multi', 'tf'].includes(q.type)) {
+    if (['mcq', 'tf'].includes(q.type)) {
       const r = document.querySelector(`input[name="q_${q.id}"][value="${saved}"]`);
       if (r) { r.checked = true; r.closest('.comp-opt,.comp-tf-opt')?.classList.add('comp-opt-sel'); }
+    }
+    if (q.type === 'multi' && Array.isArray(saved)) {
+      saved.forEach(val => {
+        const cb = document.querySelector(`input[name="q_${q.id}"][value="${val}"]`);
+        if (cb) { cb.checked = true; cb.closest('.comp-opt')?.classList.add('comp-opt-sel'); }
+      });
     }
     if (q.type === 'order' && Array.isArray(saved)) {
       const list = document.querySelector(`.comp-order-list[data-q-id="${q.id}"]`);
       if (list) {
         const map = {};
         list.querySelectorAll('.comp-order-item').forEach(li => { map[li.dataset.val] = li; });
-        saved.forEach(v => list.appendChild(map[v]));
+        saved.forEach(v => { if (map[v]) list.appendChild(map[v]); });
       }
+    }
+    if (q.type === 'match' && Array.isArray(saved)) {
+      saved.forEach(pair => {
+        const sel = document.querySelector(`.comp-match-list[data-q-id="${q.id}"] select[data-left="${pair.left}"]`);
+        if (sel) sel.value = pair.right;
+      });
     }
   }
 
   _attachHandlers(q) {
-    this.container.querySelectorAll(`input[name="q_${q.id}"]`).forEach(r => {
-      r.addEventListener('change', () => {
-        document.getElementById(`comp-q-${q.id}`)
-          ?.querySelectorAll('.comp-opt,.comp-tf-opt')
-          .forEach(l => l.classList.remove('comp-opt-sel'));
-        r.closest('.comp-opt,.comp-tf-opt')?.classList.add('comp-opt-sel');
-        this.answers[q.id] = r.value;
+    if (['mcq', 'tf'].includes(q.type)) {
+      this.container.querySelectorAll(`input[name="q_${q.id}"]`).forEach(r => {
+        r.addEventListener('change', () => {
+          document.getElementById(`comp-q-${q.id}`)
+            ?.querySelectorAll('.comp-opt,.comp-tf-opt')
+            .forEach(l => l.classList.remove('comp-opt-sel'));
+          r.closest('.comp-opt,.comp-tf-opt')?.classList.add('comp-opt-sel');
+          this.answers[q.id] = r.value;
+        });
       });
-    });
-    if (q.type === 'order') this._initOrderDrag(q.id);
+    }
+
+    if (q.type === 'multi') {
+      this.container.querySelectorAll(`input[name="q_${q.id}"]`).forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) {
+            cb.closest('.comp-opt')?.classList.add('comp-opt-sel');
+          } else {
+            cb.closest('.comp-opt')?.classList.remove('comp-opt-sel');
+          }
+          this.answers[q.id] = QuestionRenderer.extractAnswer(q);
+        });
+      });
+    }
+
+    if (q.type === 'order') {
+      this._initOrderDrag(q.id);
+    }
+
+    if (q.type === 'match') {
+      this.container.querySelectorAll(`.comp-match-list[data-q-id="${q.id}"] .comp-match-select`).forEach(sel => {
+        sel.addEventListener('change', () => {
+          this.answers[q.id] = QuestionRenderer.extractAnswer(q);
+        });
+      });
+    }
   }
 
   _initOrderDrag(qId) {

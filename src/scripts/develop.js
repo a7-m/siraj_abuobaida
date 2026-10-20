@@ -65,17 +65,60 @@ const DEFAULT_CHALLENGE = {
           order_num: 3,
           questions: {
             id: 'q1000000-0000-0000-0000-000000000003',
-            type: 'mcq',
-            text: 'ما الذي ساعد قلاع عُمان على الصمود لفترات طويلة أثناء الحصار؟',
+            type: 'multi',
+            text: 'ما الميزات المعمارية والدفاعية التي احتوت عليها الحصون العمانية؟ (حدد جميع الإجابات الصحيحة)',
             points: 1,
             metadata: {
               options: [
-                'آبار المياه العذبة ومخازن المؤن داخلها',
-                'مدرجات خشبية مؤقتة خارج الأسوار',
-                'أبواب زجاجية للإنارة الطبيعية',
-                'أسقف مفتوحة غير مسقوفة'
+                'الأبراج الدائرية المتعددة المستويات',
+                'الممرات السرية المتشعبة',
+                'آبار المياه العذبة المحفورة في الصخر',
+                'المباني الزجاجية الحديثة'
               ],
-              correct_answer: 'آبار المياه العذبة ومخازن المؤن داخلها'
+              correct_answers: [
+                'الأبراج الدائرية المتعددة المستويات',
+                'الممرات السرية المتشعبة',
+                'آبار المياه العذبة المحفورة في الصخر'
+              ]
+            }
+          }
+        },
+        {
+          order_num: 4,
+          questions: {
+            id: 'q1000000-0000-0000-0000-000000000004_ord',
+            type: 'order',
+            text: 'رتّب تسلسل عناصر الحصن الدفاعية من المحيط الخارجي إلى الداخل:',
+            points: 1,
+            metadata: {
+              items: [
+                'الأسوار والأبراج الدفاعية الخارجية',
+                'البوابات الضخمة والمداخل المتعرجة',
+                'الساحات والممرات السرية الداخلية',
+                'مخازن المؤن وآبار المياه الحصينة'
+              ],
+              correct_order: [
+                'الأسوار والأبراج الدفاعية الخارجية',
+                'البوابات الضخمة والمداخل المتعرجة',
+                'الساحات والممرات السرية الداخلية',
+                'مخازن المؤن وآبار المياه الحصينة'
+              ]
+            }
+          }
+        },
+        {
+          order_num: 5,
+          questions: {
+            id: 'q1000000-0000-0000-0000-000000000005_mat',
+            type: 'match',
+            text: 'صِل كل عنصر دفاعي بوظيفته الأساسية في القلعة العمانية:',
+            points: 1,
+            metadata: {
+              pairs: [
+                { left: 'الأبراج الدائرية', right: 'كشف المحيط والمراقبة العسكرية' },
+                { left: 'الممرات السرية', right: 'المناورة والإخلاء أثناء الحصار' },
+                { left: 'الآبار والمخازن', right: 'تأمين المياه والمؤن لأشهر الحصار' }
+              ]
             }
           }
         }
@@ -923,6 +966,14 @@ class DevelopController {
     }
 
     // ── Questions Section ──────────────────────────────────
+    const typeLabels = {
+      mcq: 'اختيار من متعدد',
+      tf: 'صح أو خطأ',
+      multi: 'متعدد الخيارات',
+      order: 'ترتيب تسلسلي',
+      match: 'مطابقة وتوصيل'
+    };
+
     html += `
       <section class="dev-quiz-section">
         <div class="dev-quiz-header">
@@ -935,29 +986,123 @@ class DevelopController {
     `;
 
     questions.forEach((q, qIdx) => {
-      const options = q.metadata?.options || [];
+      const qType = q.type || 'mcq';
+      const meta = q.metadata || {};
+
+      let bodyHtml = '';
+
+      if (qType === 'mcq') {
+        const options = meta.options || [];
+        bodyHtml = `
+          <div class="dev-options-list" role="radiogroup" aria-label="خيارات السؤال ${qIdx + 1}">
+            ${options.map((optText, optIdx) => {
+              const inputId = `q_${q.id}_opt_${optIdx}`;
+              return `
+                <label class="dev-option" for="${inputId}">
+                  <input type="radio" id="${inputId}" name="q_${q.id}" value="${escapeHtml(optText)}" data-q-id="${q.id}">
+                  <span class="dev-option-indicator"></span>
+                  <span class="dev-option-text">${escapeHtml(optText)}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (qType === 'tf') {
+        bodyHtml = `
+          <div class="dev-tf-wrap" role="radiogroup" aria-label="صح أو خطأ للسؤال ${qIdx + 1}">
+            <label class="dev-tf-opt" for="q_${q.id}_tf_true">
+              <input type="radio" id="q_${q.id}_tf_true" name="q_${q.id}" value="صح" data-q-id="${q.id}">
+              <span class="dev-tf-dot"></span>
+              <span>صح ✓</span>
+            </label>
+            <label class="dev-tf-opt" for="q_${q.id}_tf_false">
+              <input type="radio" id="q_${q.id}_tf_false" name="q_${q.id}" value="خطأ" data-q-id="${q.id}">
+              <span class="dev-tf-dot"></span>
+              <span>خطأ ✕</span>
+            </label>
+          </div>
+        `;
+      } else if (qType === 'multi') {
+        const options = meta.options || [];
+        bodyHtml = `
+          <p style="font-size: 0.85rem; color: var(--color-primary); font-weight: 700; margin-bottom: 0.75rem;">
+            ☑️ حدد كل الإجابات الصحيحة (يمكن اختيار أكثر من إجابة):
+          </p>
+          <div class="dev-options-list">
+            ${options.map((optText, optIdx) => {
+              const inputId = `q_${q.id}_multi_${optIdx}`;
+              return `
+                <label class="dev-option" for="${inputId}">
+                  <input type="checkbox" id="${inputId}" name="q_${q.id}" value="${escapeHtml(optText)}" data-q-id="${q.id}">
+                  <span class="dev-option-checkbox">✓</span>
+                  <span class="dev-option-text">${escapeHtml(optText)}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (qType === 'order') {
+        const items = meta.correct_order || meta.items || [];
+        const instruction = meta.instruction || 'رتّب العناصر بالترتيب الصحيح المتسلسل (استخدم الأسهم أو السحب):';
+        const shuffled = [...items].sort(() => Math.random() - 0.5);
+        bodyHtml = `
+          <p class="dev-order-instr">📋 ${escapeHtml(instruction)}</p>
+          <ul class="dev-order-list" data-q-id="${q.id}">
+            ${shuffled.map(item => `
+              <li class="dev-order-item" draggable="true" data-val="${escapeHtml(item)}">
+                <span class="dev-order-handle" aria-hidden="true">⠿</span>
+                <span class="dev-order-txt">${escapeHtml(item)}</span>
+                <div class="dev-order-btns">
+                  <button class="dev-ord-up" type="button" aria-label="للأعلى">▲</button>
+                  <button class="dev-ord-dn" type="button" aria-label="للأسفل">▼</button>
+                </div>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+      } else if (qType === 'match') {
+        const pairs = meta.pairs || [];
+        const rightOptions = [...pairs.map(p => p.right)].sort(() => Math.random() - 0.5);
+        bodyHtml = `
+          <p class="dev-order-instr">🔗 صِل كل عنصر في العمود الأيمن بما يناسبه من القائمة المقابلة:</p>
+          <div class="dev-match-list" data-q-id="${q.id}">
+            ${pairs.map((p, pIdx) => `
+              <div class="dev-match-row" data-left="${escapeHtml(p.left)}">
+                <div class="dev-match-left">
+                  <span style="color: var(--color-primary); margin-left: 0.35rem;">${pIdx + 1}.</span> ${escapeHtml(p.left)}
+                </div>
+                <div class="dev-match-arrow">⇄</div>
+                <div class="dev-match-right-wrap">
+                  <select class="dev-match-select" data-left="${escapeHtml(p.left)}" data-q-id="${q.id}">
+                    <option value="">-- اختر الإجابة المناسبة --</option>
+                    ${rightOptions.map(ro => `<option value="${escapeHtml(ro)}">${escapeHtml(ro)}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
 
       html += `
-        <div class="dev-question-card" id="q-card-${q.id}">
+        <div class="dev-question-card" id="q-card-${q.id}" data-q-id="${q.id}" data-q-type="${qType}">
           <div class="dev-question-header">
             <span class="dev-question-num">${qIdx + 1}</span>
-            <p class="dev-question-text">${escapeHtml(q.text)}</p>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                <span class="dev-q-type-badge">${typeLabels[qType] || qType}</span>
+                <span class="dev-q-pts-badge">${q.points || 1} نقطة</span>
+              </div>
+              <p class="dev-question-text">${escapeHtml(q.text)}</p>
+            </div>
           </div>
-          <div class="dev-options-list" role="radiogroup" aria-label="خيارات السؤال ${qIdx + 1}">
-      `;
-
-      options.forEach((optText, optIdx) => {
-        const inputId = `q_${q.id}_opt_${optIdx}`;
-        html += `
-          <label class="dev-option" for="${inputId}" id="opt-label-${q.id}-${optIdx}">
-            <input type="radio" id="${inputId}" name="q_${q.id}" value="${escapeHtml(optText)}" data-q-id="${q.id}">
-            <span class="dev-option-indicator"></span>
-            <span class="dev-option-text">${escapeHtml(optText)}</span>
-          </label>
-        `;
-      });
-
-      html += `
+          ${q.image_url ? `
+            <div class="dev-q-img-wrap">
+              <img src="${escapeHtml(q.image_url)}" alt="صورة السؤال" class="dev-q-img" onerror="this.parentElement.style.display='none'">
+            </div>
+          ` : ''}
+          <div class="dev-question-body">
+            ${bodyHtml}
           </div>
         </div>
       `;
@@ -984,24 +1129,115 @@ class DevelopController {
       this.renderLevelsList();
     });
 
-    // Radio change handlers
-    this.container.querySelectorAll('input[type="radio"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        const qId = radio.getAttribute('data-q-id');
-        this.selectedAnswers[qId] = radio.value;
+    // Attach interactive handlers for each question
+    questions.forEach(q => {
+      const qType = q.type || 'mcq';
+      const card = document.getElementById(`q-card-${q.id}`);
+      if (!card) return;
 
-        // Update visual selection within the question card
-        const card = document.getElementById(`q-card-${qId}`);
-        card.querySelectorAll('.dev-option').forEach(lbl => lbl.classList.remove('dev-option-selected'));
-        radio.closest('.dev-option').classList.add('dev-option-selected');
+      if (qType === 'mcq') {
+        card.querySelectorAll('input[type="radio"]').forEach(radio => {
+          radio.addEventListener('change', () => {
+            this.selectedAnswers[q.id] = radio.value;
+            card.querySelectorAll('.dev-option').forEach(lbl => lbl.classList.remove('dev-option-selected'));
+            radio.closest('.dev-option')?.classList.add('dev-option-selected');
+            card.classList.remove('dev-question-unanswered');
+            this.updateSubmitHint(questions);
+          });
+        });
 
-        // Clear error highlight
-        card.classList.remove('dev-question-unanswered');
+      } else if (qType === 'tf') {
+        card.querySelectorAll('input[type="radio"]').forEach(radio => {
+          radio.addEventListener('change', () => {
+            this.selectedAnswers[q.id] = radio.value;
+            card.querySelectorAll('.dev-tf-opt').forEach(lbl => lbl.classList.remove('dev-tf-opt-sel'));
+            radio.closest('.dev-tf-opt')?.classList.add('dev-tf-opt-sel');
+            card.classList.remove('dev-question-unanswered');
+            this.updateSubmitHint(questions);
+          });
+        });
 
-        // Update submit hint
-        this.updateSubmitHint(questions);
-      });
+      } else if (qType === 'multi') {
+        card.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            cb.closest('.dev-option')?.classList.toggle('dev-option-selected', cb.checked);
+            const checkedVals = Array.from(card.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+            this.selectedAnswers[q.id] = checkedVals.length > 0 ? checkedVals : null;
+            card.classList.remove('dev-question-unanswered');
+            this.updateSubmitHint(questions);
+          });
+        });
+
+      } else if (qType === 'order') {
+        const list = card.querySelector('.dev-order-list');
+        if (list) {
+          // Pre-populate with current order so it is considered answered
+          this.selectedAnswers[q.id] = Array.from(list.querySelectorAll('.dev-order-item')).map(li => li.dataset.val);
+
+          // Arrow buttons
+          list.addEventListener('click', e => {
+            const item = e.target.closest('.dev-order-item');
+            if (!item) return;
+            if (e.target.closest('.dev-ord-up')) {
+              const p = item.previousElementSibling;
+              if (p) list.insertBefore(item, p);
+            }
+            if (e.target.closest('.dev-ord-dn')) {
+              const n = item.nextElementSibling;
+              if (n) list.insertBefore(n, item);
+            }
+            this.selectedAnswers[q.id] = Array.from(list.querySelectorAll('.dev-order-item')).map(li => li.dataset.val);
+            card.classList.remove('dev-question-unanswered');
+            this.updateSubmitHint(questions);
+          });
+
+          // Drag and drop
+          let dragged = null;
+          list.querySelectorAll('.dev-order-item').forEach(item => {
+            item.addEventListener('dragstart', () => {
+              dragged = item;
+              setTimeout(() => item.classList.add('dev-dragging'), 0);
+            });
+            item.addEventListener('dragend', () => {
+              dragged = null;
+              item.classList.remove('dev-dragging');
+              list.querySelectorAll('.dev-order-item').forEach(i => i.classList.remove('dev-drag-over'));
+              this.selectedAnswers[q.id] = Array.from(list.querySelectorAll('.dev-order-item')).map(li => li.dataset.val);
+              card.classList.remove('dev-question-unanswered');
+              this.updateSubmitHint(questions);
+            });
+            item.addEventListener('dragover', e => {
+              e.preventDefault();
+              if (!dragged || dragged === item) return;
+              item.classList.add('dev-drag-over');
+              const mid = item.getBoundingClientRect().top + item.getBoundingClientRect().height / 2;
+              list.insertBefore(dragged, e.clientY < mid ? item : item.nextSibling);
+            });
+            item.addEventListener('dragleave', () => item.classList.remove('dev-drag-over'));
+          });
+        }
+
+      } else if (qType === 'match') {
+        card.querySelectorAll('.dev-match-select').forEach(sel => {
+          sel.addEventListener('change', () => {
+            const rows = card.querySelectorAll('.dev-match-row');
+            const chosen = [];
+            let allFilled = true;
+            rows.forEach(r => {
+              const left = r.dataset.left;
+              const val = r.querySelector('.dev-match-select')?.value.trim();
+              if (!val) allFilled = false;
+              chosen.push({ left, right: val });
+            });
+            this.selectedAnswers[q.id] = allFilled ? chosen : null;
+            card.classList.remove('dev-question-unanswered');
+            this.updateSubmitHint(questions);
+          });
+        });
+      }
     });
+
+    this.updateSubmitHint(questions);
 
     // Form submit
     document.getElementById('quiz-form').addEventListener('submit', async e => {
@@ -1016,8 +1252,23 @@ class DevelopController {
     });
   }
 
+  isQuestionAnswered(q) {
+    const ans = this.selectedAnswers[q.id];
+    if (ans === undefined || ans === null) return false;
+    const type = q.type || 'mcq';
+    if (type === 'mcq' || type === 'tf') return Boolean(String(ans).trim());
+    if (type === 'multi') return Array.isArray(ans) && ans.length > 0;
+    if (type === 'order') return Array.isArray(ans) && ans.length > 0;
+    if (type === 'match') {
+      const pairs = q.metadata?.pairs || [];
+      if (!Array.isArray(ans) || ans.length !== pairs.length) return false;
+      return ans.every(p => Boolean(p.right));
+    }
+    return false;
+  }
+
   updateSubmitHint(questions) {
-    const answeredCount = Object.keys(this.selectedAnswers).length;
+    const answeredCount = questions.filter(q => this.isQuestionAnswered(q)).length;
     const total = questions.length;
     const hint = document.getElementById('submit-hint');
     if (!hint) return;
@@ -1033,7 +1284,7 @@ class DevelopController {
 
   // ── Quiz Grading ───────────────────────────────────────────
   async handleQuizSubmit(level, questions) {
-    const unanswered = questions.filter(q => !this.selectedAnswers[q.id]);
+    const unanswered = questions.filter(q => !this.isQuestionAnswered(q));
 
     if (unanswered.length > 0) {
       // Shake and highlight unanswered
@@ -1044,7 +1295,7 @@ class DevelopController {
           setTimeout(() => card.classList.remove('dev-question-unanswered'), 600);
         }
       });
-      Toast.error(`${unanswered.length} سؤال لم تُجب عليه بعد.`);
+      Toast.error(`${unanswered.length} سؤال لم تُجب عليه بعد بصورة كاملة.`);
 
       // Scroll to first unanswered
       const firstCard = document.getElementById(`q-card-${unanswered[0].id}`);
@@ -1052,26 +1303,47 @@ class DevelopController {
       return;
     }
 
-    // Grade
+    // Grade each question based on type
     let earnedScore = 0;
     let totalScore = 0;
     const results = [];
 
     questions.forEach(q => {
+      const qType = q.type || 'mcq';
       const pts = q.points || 1;
       totalScore += pts;
-      const studentAnswer = (this.selectedAnswers[q.id] || '').trim();
-      const correctAnswer = (q.metadata?.correct_answer || '').trim();
-      const isCorrect = studentAnswer === correctAnswer;
+      const ans = this.selectedAnswers[q.id];
+      let isCorrect = false;
+
+      if (qType === 'mcq' || qType === 'tf') {
+        const studentAnswer = String(ans || '').trim();
+        const correctAnswer = (q.metadata?.correct_answer || (qType === 'tf' ? 'صح' : '')).trim();
+        isCorrect = studentAnswer === correctAnswer;
+      } else if (qType === 'multi') {
+        const correctArr = (q.metadata?.correct_answers || []).map(s => String(s).trim()).sort();
+        const studentArr = Array.isArray(ans) ? ans.map(s => String(s).trim()).sort() : [];
+        isCorrect = correctArr.length > 0 &&
+                    correctArr.length === studentArr.length &&
+                    correctArr.every((v, i) => v === studentArr[i]);
+      } else if (qType === 'order') {
+        const correctOrder = q.metadata?.correct_order || q.metadata?.items || [];
+        isCorrect = Array.isArray(ans) &&
+                    ans.length === correctOrder.length &&
+                    ans.every((v, i) => String(v).trim() === String(correctOrder[i]).trim());
+      } else if (qType === 'match') {
+        const pairs = q.metadata?.pairs || [];
+        isCorrect = Array.isArray(ans) &&
+                    ans.length === pairs.length &&
+                    ans.every(a => pairs.some(p => p.left === a.left && p.right === a.right));
+      }
+
       if (isCorrect) earnedScore += pts;
 
       results.push({
         questionId: q.id,
-        questionText: q.text,
-        studentAnswer,
-        correctAnswer,
-        isCorrect,
-        options: q.metadata?.options || []
+        question: q,
+        studentAnswer: ans,
+        isCorrect
       });
     });
 
@@ -1092,37 +1364,107 @@ class DevelopController {
     const correctCount = results.filter(r => r.isCorrect).length;
     const pct = Math.round((earnedScore / totalScore) * 100);
 
-    // Highlight each option in-place
+    // Highlight each question in-place
     results.forEach(r => {
+      const q = r.question;
+      const qType = q.type || 'mcq';
       const card = document.getElementById(`q-card-${r.questionId}`);
       if (!card) return;
 
       // Add feedback class to card
       card.classList.add(r.isCorrect ? 'dev-q-correct' : 'dev-q-wrong');
 
-      // Mark each option
-      card.querySelectorAll('.dev-option').forEach(label => {
-        const radio = label.querySelector('input[type="radio"]');
-        if (!radio) return;
-        const val = radio.value.trim();
+      let feedbackText = '';
 
-        if (val === r.correctAnswer) {
-          label.classList.add('dev-opt-correct');
-        } else if (val === r.studentAnswer && !r.isCorrect) {
-          label.classList.add('dev-opt-wrong');
-        }
+      if (qType === 'mcq') {
+        const corrAns = (q.metadata?.correct_answer || '').trim();
+        card.querySelectorAll('.dev-option').forEach(label => {
+          const radio = label.querySelector('input[type="radio"]');
+          if (!radio) return;
+          const val = radio.value.trim();
+          if (val === corrAns) {
+            label.classList.add('dev-opt-correct');
+          } else if (val === String(r.studentAnswer).trim() && !r.isCorrect) {
+            label.classList.add('dev-opt-wrong');
+          }
+          radio.disabled = true;
+        });
+        feedbackText = r.isCorrect
+          ? `<span>✓</span> إجابة صحيحة`
+          : `<span>✕</span> الإجابة الصحيحة: <strong>${escapeHtml(corrAns)}</strong>`;
 
-        // Disable all radios
-        radio.disabled = true;
-      });
+      } else if (qType === 'tf') {
+        const corrAns = (q.metadata?.correct_answer || 'صح').trim();
+        card.querySelectorAll('.dev-tf-opt').forEach(label => {
+          const radio = label.querySelector('input[type="radio"]');
+          if (!radio) return;
+          const val = radio.value.trim();
+          if (val === corrAns) {
+            label.classList.add('dev-tf-opt-sel', 'dev-opt-correct');
+          } else if (val === String(r.studentAnswer).trim() && !r.isCorrect) {
+            label.classList.add('dev-opt-wrong');
+          }
+          radio.disabled = true;
+        });
+        feedbackText = r.isCorrect
+          ? `<span>✓</span> إجابة صحيحة`
+          : `<span>✕</span> الإجابة الصحيحة: <strong>${escapeHtml(corrAns)}</strong>`;
 
-      // Add explanation chip
+      } else if (qType === 'multi') {
+        const correctAnswers = q.metadata?.correct_answers || [];
+        const studentAns = Array.isArray(r.studentAnswer) ? r.studentAnswer : [];
+        card.querySelectorAll('.dev-option').forEach(label => {
+          const cb = label.querySelector('input[type="checkbox"]');
+          if (!cb) return;
+          const val = cb.value.trim();
+          if (correctAnswers.includes(val)) {
+            label.classList.add('dev-opt-correct');
+          } else if (studentAns.includes(val)) {
+            label.classList.add('dev-opt-wrong');
+          }
+          cb.disabled = true;
+        });
+        feedbackText = r.isCorrect
+          ? `<span>✓</span> أحسنت! حددت جميع الإجابات الصحيحة`
+          : `<span>✕</span> الإجابات الصحيحة هي: <strong>${escapeHtml(correctAnswers.join('، '))}</strong>`;
+
+      } else if (qType === 'order') {
+        const correctOrder = q.metadata?.correct_order || q.metadata?.items || [];
+        card.querySelectorAll('.dev-ord-up, .dev-ord-dn').forEach(btn => btn.disabled = true);
+        card.querySelectorAll('.dev-order-item').forEach(it => it.setAttribute('draggable', 'false'));
+        feedbackText = r.isCorrect
+          ? `<span>✓</span> ترتيب تسلسلي متقن وصحيح`
+          : `<span>✕</span> الترتيب الصحيح: <strong>${escapeHtml(correctOrder.join(' ← '))}</strong>`;
+
+      } else if (qType === 'match') {
+        const pairs = q.metadata?.pairs || [];
+        card.querySelectorAll('.dev-match-select').forEach(sel => sel.disabled = true);
+        card.querySelectorAll('.dev-match-row').forEach(row => {
+          const left = row.dataset.left;
+          const matchedRight = row.querySelector('.dev-match-select')?.value.trim();
+          const targetPair = pairs.find(p => p.left === left);
+          const isRowCorrect = targetPair && targetPair.right === matchedRight;
+          row.style.borderColor = isRowCorrect ? 'var(--color-primary)' : '#e53935';
+          row.style.background = isRowCorrect ? 'rgba(18, 117, 71, 0.08)' : 'rgba(229, 57, 53, 0.08)';
+        });
+        feedbackText = r.isCorrect
+          ? `<span>✓</span> جميع أزواج التوصيل صحيحة`
+          : `<span>✕</span> التوصيل الصحيح: <strong>${escapeHtml(pairs.map(p => `${p.left} ⇄ ${p.right}`).join(' | '))}</strong>`;
+      }
+
+      // Add feedback chip
       const feedbackChip = document.createElement('div');
       feedbackChip.className = r.isCorrect ? 'dev-q-feedback-chip dev-chip-correct' : 'dev-q-feedback-chip dev-chip-wrong';
-      feedbackChip.innerHTML = r.isCorrect
-        ? `<span>✓</span> إجابة صحيحة`
-        : `<span>✕</span> الإجابة الصحيحة: <strong>${escapeHtml(r.correctAnswer)}</strong>`;
+      feedbackChip.innerHTML = feedbackText;
       card.appendChild(feedbackChip);
+
+      // Add explanation chip if exists
+      if (q.metadata?.explanation) {
+        const expChip = document.createElement('div');
+        expChip.style.cssText = 'margin-top:0.5rem; font-size:0.83rem; color:var(--color-text-muted); background:var(--color-bg-secondary); padding:0.4rem 0.75rem; border-radius:6px; border-right:3px solid var(--color-primary);';
+        expChip.innerHTML = `💡 <strong>شرح وتوضيح:</strong> ${escapeHtml(q.metadata.explanation)}`;
+        card.appendChild(expChip);
+      }
     });
 
     // Replace submit button with result summary bar + go-to-result btn

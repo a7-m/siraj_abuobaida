@@ -498,7 +498,9 @@ function renderQuestionsList() {
   const typeLabels = {
     'mcq': 'اختيار من متعدد',
     'tf': 'صح وخطأ',
-    'order': 'ترتيب'
+    'multi': 'متعدد الخيارات',
+    'order': 'ترتيب تسلسلي',
+    'match': 'مطابقة وتوصيل'
   };
 
   listEl.innerHTML = currentQuestions.map((q, idx) => {
@@ -514,17 +516,28 @@ function renderQuestionsList() {
     } else if (q.type === 'tf') {
       const corr = q.metadata?.correct_answer || '';
       detailsHtml = `<div style="font-size:0.85rem; color:var(--color-primary); margin-top:0.35rem;">الإجابة الصحيحة: ${escapeHtml(corr)}</div>`;
+    } else if (q.type === 'multi') {
+      const opts = q.metadata?.options || [];
+      const correctArr = q.metadata?.correct_answers || [];
+      detailsHtml = `
+        <div style="font-size:0.85rem; color:var(--color-text-muted); margin-top:0.35rem;">
+          الخيارات: ${opts.map(o => correctArr.includes(o) ? `<strong style="color:var(--color-primary);">${escapeHtml(o)} ✓</strong>` : escapeHtml(o)).join(' | ')}
+        </div>
+      `;
     } else if (q.type === 'order') {
       const items = q.metadata?.correct_order || q.metadata?.items || [];
       detailsHtml = `<div style="font-size:0.85rem; color:var(--color-text-muted); margin-top:0.35rem;">الترتيب الصحيح: ${items.map((it, i) => `${i + 1}. ${escapeHtml(it)}`).join(' ← ')}</div>`;
+    } else if (q.type === 'match') {
+      const pairs = q.metadata?.pairs || [];
+      detailsHtml = `<div style="font-size:0.85rem; color:var(--color-text-muted); margin-top:0.35rem;">الأزواج: ${pairs.map(p => `${escapeHtml(p.left)} ⇄ ${escapeHtml(p.right)}`).join(' | ')}</div>`;
     }
 
     return `
       <div class="card" style="padding:1rem; margin-bottom:0.75rem; border-right:4px solid var(--color-primary);">
-        <div class="flex justify-between items-center">
-          <div style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:0.5rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             <span class="badge" style="background:var(--color-primary); color:white; font-size:0.75rem;">سؤال ${idx + 1}</span>
-            <span class="badge" style="background:rgba(0,0,0,0.06); font-size:0.75rem;">${typeLabels[q.type] || q.type}</span>
+            <span class="q-type-badge q-type-${q.type}" style="font-size:0.75rem;">${typeLabels[q.type] || q.type}</span>
             <span style="font-size:0.8rem; color:var(--color-text-muted);">${q.points || 1} نقطة</span>
           </div>
           <div class="flex gap-2">
@@ -560,6 +573,8 @@ function openQuestionEditor(q = null, isFromBank = false) {
   const textEl = document.getElementById('q-text');
   const pointsEl = document.getElementById('q-points');
 
+  const supportedTypes = ['mcq', 'tf', 'multi', 'order', 'match'];
+
   if (!q) {
     editingQuestionId = null;
     if (titleEl) titleEl.textContent = 'سؤال جديد';
@@ -570,7 +585,6 @@ function openQuestionEditor(q = null, isFromBank = false) {
   } else if (isFromBank) {
     editingQuestionId = null;
     if (titleEl) titleEl.textContent = 'سؤال جديد (مستورد من بنك الأسئلة)';
-    const supportedTypes = ['mcq', 'tf', 'order'];
     const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
     if (typeSelect) typeSelect.value = chosenType;
     if (textEl) textEl.value = q.text || '';
@@ -580,10 +594,11 @@ function openQuestionEditor(q = null, isFromBank = false) {
   } else {
     editingQuestionId = q.id;
     if (titleEl) titleEl.textContent = 'تعديل السؤال';
-    if (typeSelect) typeSelect.value = q.type || 'mcq';
+    const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
+    if (typeSelect) typeSelect.value = chosenType;
     if (textEl) textEl.value = q.text || '';
     if (pointsEl) pointsEl.value = q.points || 1;
-    renderQuestionOptionsForm(q.type || 'mcq', q.metadata);
+    renderQuestionOptionsForm(chosenType, q.metadata || {});
   }
 
   editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -598,7 +613,7 @@ function loadQuestionIntoCompEditor(q) {
   const textEl = document.getElementById('q-text');
   const pointsEl = document.getElementById('q-points');
 
-  const supportedTypes = ['mcq', 'tf', 'order'];
+  const supportedTypes = ['mcq', 'tf', 'multi', 'order', 'match'];
   const chosenType = supportedTypes.includes(q.type) ? q.type : 'mcq';
 
   if (typeSelect) typeSelect.value = chosenType;
@@ -621,49 +636,181 @@ function renderQuestionOptionsForm(type, metadata = {}) {
   if (!area) return;
 
   if (type === 'mcq') {
-    const opts = metadata.options || ['', '', '', ''];
-    const corr = metadata.correct_answer || opts[0] || '';
+    const opts = Array.isArray(metadata.options) && metadata.options.length >= 2 
+      ? metadata.options 
+      : ['الخيار الأول', 'الخيار الثاني', 'الخيار الثالث', 'الخيار الرابع'];
+    let corrAns = metadata.correct_answer || (typeof metadata.correct === 'number' ? opts[metadata.correct] : opts[0]);
+
     area.innerHTML = `
-      <div style="margin-top:0.75rem;">
-        <label class="form-label" style="font-size:0.85rem; font-weight:600;">الخيارات وحدد الإجابة الصحيحة بالدائرة:</label>
-        ${[0, 1, 2, 3].map(i => `
-          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-            <input type="radio" name="q-correct-mcq" value="${i}" ${opts[i] && opts[i] === corr ? 'checked' : (i === 0 ? 'checked' : '')} style="width:auto;">
-            <input type="text" class="form-control q-mcq-opt" placeholder="الخيار ${i + 1}" value="${escapeHtml(opts[i] || '')}">
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">الخيارات وحدد الإجابة الصحيحة بالدائرة:</div>
+      <div id="comp-mcq-options-list">
+        ${opts.map((opt, i) => `
+          <div class="q-option-row">
+            <input type="radio" name="comp-mcq-correct" value="${i}" ${opt === corrAns ? 'checked' : (i === 0 && !corrAns ? 'checked' : '')}>
+            <input type="text" class="form-control comp-opt-input" value="${escapeHtml(opt)}" placeholder="الخيار ${i + 1}">
+            ${opts.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>` : ''}
           </div>
         `).join('')}
       </div>
+      <button type="button" id="btn-add-comp-mcq-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة خيار آخر</button>
     `;
+    bindCompOptionButtons('mcq');
+
   } else if (type === 'tf') {
-    const corr = metadata.correct_answer || 'صح';
+    const corr = metadata.correct_answer || (metadata.correct === false ? 'خطأ' : 'صح');
     area.innerHTML = `
-      <div style="margin-top:0.75rem;">
-        <label class="form-label" style="font-size:0.85rem; font-weight:600;">الإجابة الصحيحة:</label>
-        <div style="display:flex; gap:1.5rem; margin-top:0.25rem;">
-          <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
-            <input type="radio" name="q-correct-tf" value="صح" ${corr === 'صح' ? 'checked' : ''} style="width:auto;">
-            <span>صح</span>
-          </label>
-          <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
-            <input type="radio" name="q-correct-tf" value="خطأ" ${corr === 'خطأ' ? 'checked' : ''} style="width:auto;">
-            <span>خطأ</span>
-          </label>
-        </div>
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">الإجابة الصحيحة:</div>
+      <div class="flex gap-4">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; cursor: pointer;">
+          <input type="radio" name="comp-tf-correct" value="صح" ${corr === 'صح' ? 'checked' : ''}>
+          <span>صح ✓</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; cursor: pointer;">
+          <input type="radio" name="comp-tf-correct" value="خطأ" ${corr === 'خطأ' ? 'checked' : ''}>
+          <span>خطأ ✕</span>
+        </label>
       </div>
     `;
-  } else if (type === 'order') {
-    const items = metadata.correct_order || metadata.items || ['', '', '', ''];
+
+  } else if (type === 'multi') {
+    const opts = Array.isArray(metadata.options) && metadata.options.length >= 2 
+      ? metadata.options 
+      : ['خيار 1', 'خيار 2', 'خيار 3'];
+    const correctAnswers = Array.isArray(metadata.correct_answers) ? metadata.correct_answers : [];
+
     area.innerHTML = `
-      <div style="margin-top:0.75rem;">
-        <label class="form-label" style="font-size:0.85rem; font-weight:600;">عناصر الترتيب (اكتبها بالترتيب الصحيح من 1 إلى 4):</label>
-        ${[0, 1, 2, 3].map(i => `
-          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-            <span style="font-weight:700; width:20px;">${i + 1}.</span>
-            <input type="text" class="form-control q-order-item" placeholder="العنصر ${i + 1}" value="${escapeHtml(items[i] || '')}">
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">الخيارات المتاحة (حدد كل إجابة صحيحة):</div>
+      <div id="comp-multi-options-list">
+        ${opts.map((opt, i) => `
+          <div class="q-option-row">
+            <input type="checkbox" class="comp-multi-check" value="${i}" ${correctAnswers.includes(opt) ? 'checked' : ''}>
+            <input type="text" class="form-control comp-opt-input" value="${escapeHtml(opt)}" placeholder="الخيار ${i + 1}">
+            ${opts.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>` : ''}
           </div>
         `).join('')}
       </div>
+      <button type="button" id="btn-add-comp-multi-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة خيار</button>
     `;
+    bindCompOptionButtons('multi');
+
+  } else if (type === 'order') {
+    const items = Array.isArray(metadata.correct_order) || Array.isArray(metadata.items) 
+      ? (metadata.correct_order || metadata.items) 
+      : ['العنصر 1', 'العنصر 2', 'العنصر 3'];
+
+    area.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">عناصر الترتيب (اكتبها بالترتيب الصحيح المتسلسل):</div>
+      <div id="comp-order-options-list">
+        ${items.map((it, i) => `
+          <div class="q-option-row">
+            <span style="font-weight: 700; width: 25px;">${i + 1}.</span>
+            <input type="text" class="form-control comp-order-input" value="${escapeHtml(it)}" placeholder="العنصر ${i + 1}">
+            ${items.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" id="btn-add-comp-order-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة عنصر للترتيب</button>
+    `;
+    bindCompOptionButtons('order');
+
+  } else if (type === 'match') {
+    const pairs = Array.isArray(metadata.pairs) && metadata.pairs.length 
+      ? metadata.pairs 
+      : [{ left: 'عنصر 1', right: 'مطابقة 1' }, { left: 'عنصر 2', right: 'مطابقة 2' }];
+
+    area.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem;">أزواج المطابقة والتوصيل (الطرف الأيمن وما يقابله بالأيسر):</div>
+      <div id="comp-match-options-list">
+        ${pairs.map((p, i) => `
+          <div class="q-option-row" style="gap: 0.5rem;">
+            <input type="text" class="form-control comp-match-left" value="${escapeHtml(p.left || '')}" placeholder="الطرف الأيمن">
+            <span style="font-weight: 700;">⇄</span>
+            <input type="text" class="form-control comp-match-right" value="${escapeHtml(p.right || '')}" placeholder="الطرف المقابل">
+            ${pairs.length > 2 ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <button type="button" id="btn-add-comp-match-opt" class="btn btn-sm btn-outline" style="margin-top: 0.35rem;">+ إضافة زوج مطابقة</button>
+    `;
+    bindCompOptionButtons('match');
+  }
+}
+
+function bindCompOptionButtons(type) {
+  const area = document.getElementById('q-options-area');
+  if (!area) return;
+
+  area.querySelectorAll('.btn-remove-comp-opt').forEach(b => {
+    b.onclick = () => b.closest('.q-option-row').remove();
+  });
+
+  const addMcqBtn = document.getElementById('btn-add-comp-mcq-opt');
+  if (addMcqBtn) {
+    addMcqBtn.onclick = () => {
+      const list = document.getElementById('comp-mcq-options-list');
+      const idx = list.children.length;
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.innerHTML = `
+        <input type="radio" name="comp-mcq-correct" value="${idx}">
+        <input type="text" class="form-control comp-opt-input" placeholder="الخيار ${idx + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-comp-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
+  }
+
+  const addMultiBtn = document.getElementById('btn-add-comp-multi-opt');
+  if (addMultiBtn) {
+    addMultiBtn.onclick = () => {
+      const list = document.getElementById('comp-multi-options-list');
+      const idx = list.children.length;
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.innerHTML = `
+        <input type="checkbox" class="comp-multi-check" value="${idx}">
+        <input type="text" class="form-control comp-opt-input" placeholder="الخيار ${idx + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-comp-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
+  }
+
+  const addOrderBtn = document.getElementById('btn-add-comp-order-opt');
+  if (addOrderBtn) {
+    addOrderBtn.onclick = () => {
+      const list = document.getElementById('comp-order-options-list');
+      const idx = list.children.length;
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.innerHTML = `
+        <span style="font-weight: 700; width: 25px;">${idx + 1}.</span>
+        <input type="text" class="form-control comp-order-input" placeholder="العنصر ${idx + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-comp-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
+  }
+
+  const addMatchBtn = document.getElementById('btn-add-comp-match-opt');
+  if (addMatchBtn) {
+    addMatchBtn.onclick = () => {
+      const list = document.getElementById('comp-match-options-list');
+      const row = document.createElement('div');
+      row.className = 'q-option-row';
+      row.style.gap = '0.5rem';
+      row.innerHTML = `
+        <input type="text" class="form-control comp-match-left" placeholder="الطرف الأيمن">
+        <span style="font-weight: 700;">⇄</span>
+        <input type="text" class="form-control comp-match-right" placeholder="الطرف المقابل">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-comp-opt">✕</button>
+      `;
+      row.querySelector('.btn-remove-comp-opt').onclick = () => row.remove();
+      list.appendChild(row);
+    };
   }
 }
 
@@ -684,29 +831,65 @@ async function saveQuestion() {
   let metadata = {};
 
   if (type === 'mcq') {
-    const inputs = document.querySelectorAll('.q-mcq-opt');
+    const inputs = document.querySelectorAll('#comp-mcq-options-list .comp-opt-input');
     const opts = Array.from(inputs).map(inp => (inp.value || '').trim()).filter(Boolean);
     if (opts.length < 2) {
       Toast.error('يرجى إدخال خيارين على الأقل لسؤال الاختيار من متعدد');
       return;
     }
-    const selectedRadio = document.querySelector('input[name="q-correct-mcq"]:checked');
+    const selectedRadio = document.querySelector('input[name="comp-mcq-correct"]:checked');
     const selIdx = selectedRadio ? parseInt(selectedRadio.value, 10) : 0;
     const correct_answer = (inputs[selIdx] ? inputs[selIdx].value : opts[0]).trim();
 
     metadata = { options: opts, correct_answer };
   } else if (type === 'tf') {
-    const sel = document.querySelector('input[name="q-correct-tf"]:checked');
+    const sel = document.querySelector('input[name="comp-tf-correct"]:checked');
     const correct_answer = sel ? sel.value : 'صح';
     metadata = { options: ['صح', 'خطأ'], correct_answer };
+  } else if (type === 'multi') {
+    const rows = Array.from(document.querySelectorAll('#comp-multi-options-list .q-option-row'));
+    const options = [];
+    const correct_answers = [];
+    rows.forEach(r => {
+      const val = r.querySelector('.comp-opt-input')?.value.trim();
+      const isChecked = r.querySelector('.comp-multi-check')?.checked;
+      if (val) {
+        options.push(val);
+        if (isChecked) correct_answers.push(val);
+      }
+    });
+    if (options.length < 2) {
+      Toast.error('يرجى إدخال خيارين على الأقل لسؤال متعدد الخيارات');
+      return;
+    }
+    if (correct_answers.length === 0) {
+      Toast.error('يرجى تحديد إجابة صحيحة واحدة على الأقل');
+      return;
+    }
+    metadata = { options, correct_answers };
   } else if (type === 'order') {
-    const inputs = document.querySelectorAll('.q-order-item');
+    const inputs = document.querySelectorAll('#comp-order-options-list .comp-order-input');
     const items = Array.from(inputs).map(inp => (inp.value || '').trim()).filter(Boolean);
     if (items.length < 2) {
       Toast.error('يرجى إدخال عنصرين على الأقل لسؤال الترتيب');
       return;
     }
     metadata = { items, correct_order: [...items] };
+  } else if (type === 'match') {
+    const rows = Array.from(document.querySelectorAll('#comp-match-options-list .q-option-row'));
+    const pairs = [];
+    rows.forEach(r => {
+      const left = r.querySelector('.comp-match-left')?.value.trim();
+      const right = r.querySelector('.comp-match-right')?.value.trim();
+      if (left && right) {
+        pairs.push({ left, right });
+      }
+    });
+    if (pairs.length < 2) {
+      Toast.error('يرجى إدخال زوجين من المطابقة على الأقل');
+      return;
+    }
+    metadata = { pairs };
   }
 
   try {

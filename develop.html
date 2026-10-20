@@ -699,6 +699,242 @@
       line-height: 1.4;
     }
 
+    /* ── Question Header Badges & Images ── */
+    .dev-q-type-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(18, 117, 71, 0.08);
+      color: var(--color-primary);
+    }
+    .dev-q-pts-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(194, 153, 56, 0.12);
+      color: var(--color-gold);
+      border: 1px solid rgba(194, 153, 56, 0.25);
+    }
+    .dev-q-img-wrap {
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      margin-bottom: 1rem;
+      max-height: 240px;
+    }
+    .dev-q-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ── Multi Checkbox ── */
+    .dev-option input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .dev-option-checkbox {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid var(--color-border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: transparent;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .dev-option-selected .dev-option-checkbox {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: #fff;
+    }
+
+    /* ── True/False ── */
+    .dev-tf-wrap {
+      display: flex;
+      gap: 1rem;
+    }
+    @media (max-width: 480px) {
+      .dev-tf-wrap { flex-direction: column; }
+    }
+    .dev-tf-opt {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 1.1rem;
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius-lg);
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--color-text);
+      background: var(--color-bg-secondary);
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+      user-select: none;
+      position: relative;
+    }
+    .dev-tf-opt:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+    .dev-tf-opt input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .dev-tf-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--color-border);
+      flex-shrink: 0;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dev-tf-opt-sel .dev-tf-dot {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+    }
+    .dev-tf-opt-sel {
+      border-color: var(--color-primary) !important;
+      background: rgba(18, 117, 71, 0.08) !important;
+    }
+    [data-theme="dark"] .dev-tf-opt-sel {
+      background: rgba(16, 185, 129, 0.12) !important;
+    }
+
+    /* ── Sequence Ordering ── */
+    .dev-order-instr {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 0.875rem;
+      padding: 0.5rem 0.875rem;
+      background: rgba(18, 117, 71, 0.06);
+      border-radius: var(--border-radius-sm);
+      border-right: 3px solid var(--color-primary);
+    }
+    .dev-order-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .dev-order-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--color-bg-secondary);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: 0.875rem 1rem;
+      cursor: grab;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      user-select: none;
+    }
+    .dev-order-item:active { cursor: grabbing; }
+    .dev-order-handle {
+      font-size: 1.1rem;
+      color: var(--color-text-muted);
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    .dev-order-txt {
+      flex: 1;
+      font-size: 0.97rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .dev-order-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .dev-ord-up, .dev-ord-dn {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+    .dev-ord-up:hover, .dev-ord-dn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    .dev-order-item.dev-dragging {
+      opacity: 0.5;
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-primary);
+    }
+    .dev-order-item.dev-drag-over {
+      border-color: var(--color-primary);
+      background: rgba(18, 117, 71, 0.08);
+    }
+
+    /* ── Matching Pairs ── */
+    .dev-match-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .dev-match-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--color-bg-secondary);
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--border-radius);
+      flex-wrap: wrap;
+      transition: border-color 0.2s;
+    }
+    .dev-match-row:hover {
+      border-color: var(--color-primary-light);
+    }
+    .dev-match-left {
+      flex: 1;
+      min-width: 140px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .dev-match-arrow {
+      color: var(--color-primary);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .dev-match-right-wrap {
+      flex: 1.2;
+      min-width: 180px;
+    }
+    .dev-match-select {
+      width: 100%;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--border-radius);
+      border: 1.5px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: inherit;
+    }
+    .dev-match-select:focus {
+      border-color: var(--color-primary) !important;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(18, 117, 71, 0.12);
+    }
+
     /* ── Unanswered shake ── */
     @keyframes devShake {
       0%, 100% { transform: translateX(0); }
