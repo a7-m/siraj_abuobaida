@@ -18,7 +18,7 @@ export function createFooter() {
   footer.innerHTML = `
     <div class="siraj-footer-content">
       <div class="siraj-footer-label">إعداد الطالبين</div>
-      <div class="siraj-footer-names">لؤي الكندي وأحمد عصام</div>
+      <div class="siraj-footer-names">لؤي بن يحيى الكندي و أحمد عصام عبدالمنعم</div>
       <div class="siraj-footer-supervision"> إشراف : جماعة اللغة العربية -- مركز مصادر التعلم </div>
       <div class="siraj-footer-copy">  سراج – مدرسة أبو عبيدة. جميع الحقوق محفوظة &copy; 2026 </div>
     </div>
